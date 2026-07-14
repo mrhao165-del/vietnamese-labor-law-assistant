@@ -1,0 +1,49 @@
+{
+  "status": "NOT_READY",
+  "source_data": {
+    "path": "data/raw/labor_law.docx",
+    "sha256": "1386441b1f513defdd55186d7e65b8432dcac87c2e0d78676de25facb9c5e6ff",
+    "metadata_status": "VALID_FILENAME_DERIVED_IDENTITY"
+  },
+  "ingestion": {
+    "status": "PASS",
+    "articles": 220,
+    "chunks": 680,
+    "blocking_issues": [
+      "21 selected source-review rows remain pending in docs/week1_manual_validation.csv"
+    ]
+  },
+  "evaluation_dataset": {
+    "path": "data/evaluation/labor_law_eval_v1.jsonl",
+    "sha256": "56975dfcfc05b8f952e96637c27ceb8d5e48c5fcb3e7ccebb8f67c164bfe14c4",
+    "questions": 60,
+    "status": "PROVISIONAL_AI_REVIEW_ONLY",
+    "split_status": "FROZEN_42_DEV_18_TEST"
+  },
+  "week5": {
+    "selected_config": "R2_H2_C10_O5_L512_B1",
+    "official_result_status": "PROVISIONAL_PENDING_INDEPENDENT_HUMAN_LABEL_CONFIRMATION",
+    "dataset_sha256": "56975dfcfc05b8f952e96637c27ceb8d5e48c5fcb3e7ccebb8f67c164bfe14c4",
+    "chunk_sha256": "3ce4672b64f0928796693ac8e1f1836acb043d380d9fa4e7e4c9d718835317b7"
+  },
+  "quality": {
+    "ruff": "PASS",
+    "pyright": "PASS (0 errors, 0 warnings, 0 information)",
+    "pytest": "PASS (71 passed, 1 third-party deprecation warning)",
+    "coverage": "PASS (85.82%; threshold 82%)"
+  },
+  "blocking_issues": [
+    "Week 1 source manual-review worksheet has 21 pending rows.",
+    "Week 3 evaluation labels have AI-assisted review evidence only; independent human legal confirmation is required before finalization."
+  ],
+  "deferred_to_week6": [
+    "LegalRetriever facade/service",
+    "Unified dense/sparse/hybrid/rerank interface",
+    "Metadata filters",
+    "Query embedding cache",
+    "Complete structured retrieval logging",
+    "Direct search API",
+    "Production Hybrid + Reranker wiring",
+    "Retrieval Engine API unit tests"
+  ]
+}

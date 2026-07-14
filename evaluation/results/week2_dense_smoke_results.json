@@ -1,0 +1,156 @@
+{
+  "kind": "smoke baseline; synthetic_from_article_title; not human validated",
+  "generated_at": "2026-07-13T10:23:13.208686+00:00",
+  "embedding_model": "BAAI/bge-m3",
+  "collection": "labor_law_chunks",
+  "top_k": 5,
+  "input_jsonl_sha256": "3ce4672b64f0928796693ac8e1f1836acb043d380d9fa4e7e4c9d718835317b7",
+  "hit_rate_at_1": 0.9,
+  "hit_rate_at_5": 1.0,
+  "recall_at_5": 1.0,
+  "mrr": 0.95,
+  "mean_latency_ms": 1137.830940001004,
+  "p95_latency_ms": 9488.518199999817,
+  "results": [
+    {
+      "question_id": "week2-001",
+      "expected_articles": [
+        1
+      ],
+      "returned_articles": [
+        1,
+        84,
+        84,
+        82,
+        157
+      ],
+      "latency_ms": 9488.518199999817
+    },
+    {
+      "question_id": "week2-024",
+      "expected_articles": [
+        24
+      ],
+      "returned_articles": [
+        24,
+        24,
+        24,
+        25,
+        26
+      ],
+      "latency_ms": 188.99039999814704
+    },
+    {
+      "question_id": "week2-047",
+      "expected_articles": [
+        47
+      ],
+      "returned_articles": [
+        47,
+        47,
+        47,
+        47,
+        42
+      ],
+      "latency_ms": 207.76309999928344
+    },
+    {
+      "question_id": "week2-070",
+      "expected_articles": [
+        70
+      ],
+      "returned_articles": [
+        70,
+        70,
+        70,
+        70,
+        72
+      ],
+      "latency_ms": 220.09309999702964
+    },
+    {
+      "question_id": "week2-093",
+      "expected_articles": [
+        93
+      ],
+      "returned_articles": [
+        93,
+        93,
+        212,
+        93,
+        103
+      ],
+      "latency_ms": 213.34729999944102
+    },
+    {
+      "question_id": "week2-116",
+      "expected_articles": [
+        116
+      ],
+      "returned_articles": [
+        116,
+        108,
+        108,
+        105,
+        107
+      ],
+      "latency_ms": 240.64350000116974
+    },
+    {
+      "question_id": "week2-139",
+      "expected_articles": [
+        139
+      ],
+      "returned_articles": [
+        139,
+        139,
+        139,
+        139,
+        137
+      ],
+      "latency_ms": 194.78810000873636
+    },
+    {
+      "question_id": "week2-162",
+      "expected_articles": [
+        162
+      ],
+      "returned_articles": [
+        162,
+        164,
+        162,
+        162,
+        163
+      ],
+      "latency_ms": 230.6416000064928
+    },
+    {
+      "question_id": "week2-185",
+      "expected_articles": [
+        185
+      ],
+      "returned_articles": [
+        185,
+        185,
+        185,
+        185,
+        185
+      ],
+      "latency_ms": 202.62270000239369
+    },
+    {
+      "question_id": "week2-220",
+      "expected_articles": [
+        220
+      ],
+      "returned_articles": [
+        121,
+        220,
+        220,
+        78,
+        23
+      ],
+      "latency_ms": 190.90139999752864
+    }
+  ]
+}

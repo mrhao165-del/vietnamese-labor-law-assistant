@@ -1,0 +1,39 @@
+{
+  "pipeline_version": "week2-v1",
+  "embedding_text_version": "v1",
+  "source_jsonl": "data/processed/labor_law_clauses.jsonl",
+  "source_jsonl_sha256": "3ce4672b64f0928796693ac8e1f1836acb043d380d9fa4e7e4c9d718835317b7",
+  "embedding_model": "BAAI/bge-m3",
+  "tokenizer_name": "BAAI/bge-m3",
+  "embedding_device": "cpu",
+  "use_fp16": false,
+  "batch_size": 4,
+  "max_length": 1024,
+  "vector_name": "dense",
+  "vector_dimension": 1024,
+  "distance": "Cosine",
+  "qdrant_collection": "labor_law_chunks",
+  "qdrant_mode": "local",
+  "chunk_count_input": 680,
+  "point_count_before_index": 680,
+  "point_count_after_index": 680,
+  "failed_chunk_count": 0,
+  "idempotence": {
+    "checked": true,
+    "point_count_unchanged": true,
+    "sample_chunk_ids": [
+      "ll_db36995f206fdb025dd84afd1fa0c9e5",
+      "ll_8e9ffdc059fd1d20863063a1286b04c9",
+      "ll_d7bfa2286e7367988429d05513c47b0e"
+    ],
+    "sample_point_uuids_unchanged": true
+  },
+  "indexed_at": "2026-07-13T10:21:47.500369+00:00",
+  "python_version": "3.11.15",
+  "torch_version": "2.13.0+cpu",
+  "torch_cuda_version": null,
+  "cuda_available": false,
+  "flagembedding_version": "unknown",
+  "transformers_version": "5.13.1",
+  "qdrant_client_version": "1.18.0"
+}

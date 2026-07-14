@@ -1,0 +1,31 @@
+{
+  "dataset_version": "labor_law_eval_v1",
+  "created_at": "2026-07-13T11:53:03.073603+00:00",
+  "generator_version": "week3-v1",
+  "split_seed": 20260713,
+  "split_algorithm": "fixed modulo assignment; one source article per generated record",
+  "source_articles_sha256": "03a11738f9796cb1664a0959d6d21235f5cde3adbbf2eaf6d75d4a185d22b822",
+  "source_chunks_sha256": "3ce4672b64f0928796693ac8e1f1836acb043d380d9fa4e7e4c9d718835317b7",
+  "dataset_sha256": "21d368771645d6341f321246bc540d03ff04fd928a1b9995236851381bf40410",
+  "total_questions": 60,
+  "category_counts": {
+    "direct": 10,
+    "natural_paraphrase": 10,
+    "legal_keyword": 10,
+    "ambiguous": 10,
+    "calculation": 10,
+    "out_of_scope": 10
+  },
+  "difficulty_counts": {
+    "easy": 27,
+    "medium": 17,
+    "hard": 16
+  },
+  "split_counts": {
+    "dev": 42,
+    "test": 18
+  },
+  "unique_covered_articles": 50,
+  "human_reviewed_count": 0,
+  "pending_review_count": 60
+}

@@ -1,0 +1,82 @@
+# Repository structure
+
+## Why this project uses a `src` layout
+
+The installable code is isolated under `src/`, so imports exercised in tests and deployments resolve the installed package rather than accidentally resolving files from the repository root. This prevents a root-level module from shadowing production code and makes the package boundary explicit.
+
+`vietnamese_labor_law_assistant` is the sole production import package. Production code imports it with absolute paths such as `from vietnamese_labor_law_assistant.retrieval.hybrid import HybridRetriever`. Imports beginning with `src` are prohibited.
+
+## Directory responsibilities
+
+| Path | Responsibility |
+| --- | --- |
+| `src/vietnamese_labor_law_assistant/api/` | FastAPI factory, routes, HTTP schemas, and dependency wiring. |
+| `src/vietnamese_labor_law_assistant/common/` | Configuration, logging, and genuinely shared primitives. |
+| `src/vietnamese_labor_law_assistant/ingestion/` | DOCX parsing, normalization, chunking, identifiers, writers, and validation. |
+| `src/vietnamese_labor_law_assistant/retrieval/` | Embedding, Qdrant, BM25S, tokenization, RRF, hybrid retrieval, and reranking. |
+| `src/vietnamese_labor_law_assistant/generation/` | Prompts, LLM adapter, answer contracts, citations, and RAG orchestration. |
+| `src/vietnamese_labor_law_assistant/evaluation/` | Reusable evaluation contracts, datasets, metrics, and runners. |
+| `src/vietnamese_labor_law_assistant/agent/` | Future agent logic only, when that roadmap item is implemented. |
+| `src/vietnamese_labor_law_assistant/guardrails/` | Future citation verification/guardrails only, when implemented. |
+| `apps/` | Independent application entrypoints, principally a future frontend. |
+| `mcp_servers/` | Future MCP transports, tool schemas, and server entrypoints that call core services. |
+| `scripts/` | Thin operational CLIs: parse arguments, invoke the package, write artefacts, return an exit code. |
+| `tests/` | Tests mirroring production areas: `unit`, `integration`, and `end_to_end`. |
+| `data/` | Source data, processed artefacts, and evaluation datasets; never Python code. |
+| `evaluation/results/` | Benchmark outputs only; never production logic. |
+| `docs/` | Human documentation only; never Python code. |
+
+Empty roadmap directories are intentionally not versioned. Create an adapter directory only with its first real entrypoint, not with a placeholder Python file.
+
+## Adding a module
+
+1. Read `pyproject.toml`, this guide, and the current tree.
+2. Choose the owning bounded area before writing code.
+3. Add the production module below `src/vietnamese_labor_law_assistant/<area>/` and a mirrored unit test below `tests/unit/<area>/`.
+4. Use absolute imports from `vietnamese_labor_law_assistant` and keep `__init__.py` inert.
+5. If the module changes the visible architecture, update this document and the README.
+
+Correct placement:
+
+```text
+src/vietnamese_labor_law_assistant/retrieval/query_expansion.py
+tests/unit/retrieval/test_query_expansion.py
+scripts/rebuild_lexical_index.py              # thin CLI calling retrieval code
+```
+
+Incorrect placement:
+
+```text
+apps/frontend/retrieval.py                    # core logic in an application adapter
+mcp_servers/legal_retrieval/hybrid.py         # duplicated retrieval algorithm
+data/parse_law.py                             # executable code in data
+src/retrieval/hybrid.py                       # breaks the primary package boundary
+```
+
+## Dependency direction
+
+```text
+adapters: apps / scripts / mcp_servers
+                  |
+                  v
+api -> generation -> retrieval -> ingestion
+ |         |            |
+ v         v            v
+common   evaluation    common
+```
+
+`api` is an HTTP adapter and wires services; it must not duplicate retrieval or generation algorithms. `generation` may consume retrieval contracts. `retrieval` may consume ingestion data contracts. `evaluation` may use package contracts and metrics, but benchmark artefacts remain outside the package. `common` stays small and cannot become a catch-all dependency sink.
+
+## Structural audit, 2026-07-14
+
+| Current path | Actual role | Correct layer | Action | Reason and impact |
+| --- | --- | --- | --- | --- |
+| `src/vietnamese_labor_law_assistant/**` | Reusable production code | `src` primary package | Keep | Already follows the required package and absolute-import model; no imports need relocation. |
+| `src/vietnamese_labor_law_assistant/__init__.py` | Placeholder console function | Package metadata | Simplify | Removed `main()` and its print side effect. The unused `project.scripts` entry was removed with it. |
+| `apps/api`, `apps/frontend` | Empty scaffold | Future adapters | Remove empty scaffold | FastAPI already lives in `src/.../api`; no duplicate API or references exist. |
+| `mcp_servers/legal_retrieval`, `mcp_servers/legal_calculator` | Empty scaffold | Future MCP adapters | Remove empty scaffold | MCP is not implemented; no transport or core service is present. |
+| `src/.../agent`, `src/.../guardrails` | `__init__.py`-only scaffold | Future production areas | Remove placeholder files | Roadmap items are unimplemented; empty package files would falsely imply functionality. |
+| `scripts/` | Operational CLIs and benchmarks | Entry points | Keep | Scripts use package imports; no production module is duplicated. |
+| `data/`, `docs/`, `evaluation/results/` | Data, documentation, benchmark artefacts | Non-code storage | Keep protected | No source or Week 3–5 artefacts are moved, deleted, or altered. |
+
+No files were moved or renamed: the audit found no competing implementation and the repository's Git index contains no tracked source files, so `git mv` was not applicable.

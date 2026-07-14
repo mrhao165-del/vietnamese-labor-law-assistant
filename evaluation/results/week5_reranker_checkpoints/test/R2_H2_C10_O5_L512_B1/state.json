@@ -1,0 +1,29 @@
+{
+  "status": "COMPLETE",
+  "completed": 18,
+  "total": 18,
+  "completed_question_ids": [
+    "w3-007",
+    "w3-008",
+    "w3-009",
+    "w3-017",
+    "w3-018",
+    "w3-019",
+    "w3-027",
+    "w3-028",
+    "w3-029",
+    "w3-037",
+    "w3-038",
+    "w3-039",
+    "w3-047",
+    "w3-048",
+    "w3-049",
+    "w3-057",
+    "w3-058",
+    "w3-059"
+  ],
+  "next_question_id": null,
+  "elapsed_seconds": 11.389999999999873,
+  "updated_at": "2026-07-14T04:47:17.147255+00:00",
+  "fingerprint": "160e60fcd442a19ee200a1ec76d42f1a69ac01f60b6c8bb132c5bff919a9a3ee"
+}

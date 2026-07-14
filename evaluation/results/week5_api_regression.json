@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "results": {
+    "health": 200,
+    "ready": 200,
+    "reranker_disabled": 200,
+    "citation": 1,
+    "source_endpoint": 200,
+    "dense_rerank": 200,
+    "h2_rerank": 200,
+    "out_of_scope": 200,
+    "out_of_scope_insufficient_context": true
+  },
+  "api_lifecycle": "TestClient exited; no API process remains."
+}

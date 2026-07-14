@@ -1,0 +1,553 @@
+{
+  "timestamp": "2026-07-13T16:38:49.045104+00:00",
+  "line_coverage_percent": 89.70588235294117,
+  "statements": 1496,
+  "missed": 154,
+  "test_count": 39,
+  "test_files_added": [
+    "tests/unit/evaluation/test_dataset.py",
+    "tests/unit/evaluation/test_metrics.py",
+    "tests/unit/retrieval/test_bm25_store.py",
+    "tests/unit/retrieval/test_rrf_hybrid_lexical.py"
+  ],
+  "production_source_files_changed": [],
+  "coverage_configuration_changed": [
+    "pyproject.toml"
+  ],
+  "module_coverage": [
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\__init__.py",
+      "statements": 2,
+      "missed": 1,
+      "coverage_percent": 50.0,
+      "missing_lines": [
+        2
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\agent\\__init__.py",
+      "statements": 0,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\api\\__init__.py",
+      "statements": 0,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\api\\dependencies.py",
+      "statements": 33,
+      "missed": 18,
+      "coverage_percent": 45.45454545454545,
+      "missing_lines": [
+        17,
+        22,
+        23,
+        28,
+        29,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\api\\main.py",
+      "statements": 81,
+      "missed": 11,
+      "coverage_percent": 86.41975308641975,
+      "missing_lines": [
+        90,
+        91,
+        96,
+        133,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\common\\__init__.py",
+      "statements": 0,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\common\\logging.py",
+      "statements": 10,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\common\\settings.py",
+      "statements": 56,
+      "missed": 3,
+      "coverage_percent": 94.64285714285714,
+      "missing_lines": [
+        52,
+        56,
+        61
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\evaluation\\__init__.py",
+      "statements": 0,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\evaluation\\dataset.py",
+      "statements": 20,
+      "missed": 1,
+      "coverage_percent": 95.0,
+      "missing_lines": [
+        36
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\evaluation\\metrics.py",
+      "statements": 53,
+      "missed": 3,
+      "coverage_percent": 94.33962264150944,
+      "missing_lines": [
+        14,
+        36,
+        37
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\evaluation\\models.py",
+      "statements": 67,
+      "missed": 6,
+      "coverage_percent": 91.04477611940298,
+      "missing_lines": [
+        50,
+        51,
+        52,
+        53,
+        55,
+        57
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\generation\\__init__.py",
+      "statements": 0,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\generation\\citations.py",
+      "statements": 43,
+      "missed": 3,
+      "coverage_percent": 93.02325581395348,
+      "missing_lines": [
+        36,
+        39,
+        55
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\generation\\llm.py",
+      "statements": 34,
+      "missed": 2,
+      "coverage_percent": 94.11764705882354,
+      "missing_lines": [
+        37,
+        61
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\generation\\models.py",
+      "statements": 56,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\generation\\prompts.py",
+      "statements": 31,
+      "missed": 5,
+      "coverage_percent": 83.87096774193549,
+      "missing_lines": [
+        30,
+        35,
+        44,
+        46,
+        48
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\generation\\service.py",
+      "statements": 42,
+      "missed": 5,
+      "coverage_percent": 88.0952380952381,
+      "missing_lines": [
+        47,
+        85,
+        86,
+        87,
+        88
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\guardrails\\__init__.py",
+      "statements": 0,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\ingestion\\__init__.py",
+      "statements": 0,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\ingestion\\chunking.py",
+      "statements": 41,
+      "missed": 2,
+      "coverage_percent": 95.1219512195122,
+      "missing_lines": [
+        30,
+        70
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\ingestion\\identifiers.py",
+      "statements": 15,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\ingestion\\models.py",
+      "statements": 165,
+      "missed": 10,
+      "coverage_percent": 93.93939393939394,
+      "missing_lines": [
+        32,
+        38,
+        39,
+        40,
+        68,
+        75,
+        88,
+        153,
+        168,
+        170
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\ingestion\\normalize.py",
+      "statements": 19,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\ingestion\\parser.py",
+      "statements": 166,
+      "missed": 9,
+      "coverage_percent": 94.57831325301204,
+      "missing_lines": [
+        150,
+        151,
+        226,
+        227,
+        237,
+        239,
+        252,
+        253,
+        254
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\ingestion\\patterns.py",
+      "statements": 49,
+      "missed": 3,
+      "coverage_percent": 93.87755102040816,
+      "missing_lines": [
+        70,
+        71,
+        72
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\ingestion\\validation.py",
+      "statements": 70,
+      "missed": 8,
+      "coverage_percent": 88.57142857142857,
+      "missing_lines": [
+        16,
+        32,
+        43,
+        60,
+        136,
+        145,
+        163,
+        174
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\ingestion\\writers.py",
+      "statements": 32,
+      "missed": 3,
+      "coverage_percent": 90.625,
+      "missing_lines": [
+        37,
+        38,
+        54
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\__init__.py",
+      "statements": 0,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\bm25_store.py",
+      "statements": 33,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\dense.py",
+      "statements": 34,
+      "missed": 1,
+      "coverage_percent": 97.05882352941177,
+      "missing_lines": [
+        42
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\embeddings.py",
+      "statements": 62,
+      "missed": 18,
+      "coverage_percent": 70.96774193548387,
+      "missing_lines": [
+        31,
+        32,
+        33,
+        51,
+        52,
+        53,
+        54,
+        56,
+        57,
+        62,
+        67,
+        71,
+        77,
+        82,
+        93,
+        96,
+        98,
+        101
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\hybrid.py",
+      "statements": 18,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\lexical_normalization.py",
+      "statements": 9,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\lexical_text.py",
+      "statements": 11,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\lexical_tokenizers.py",
+      "statements": 24,
+      "missed": 3,
+      "coverage_percent": 87.5,
+      "missing_lines": [
+        32,
+        33,
+        40
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\models.py",
+      "statements": 61,
+      "missed": 2,
+      "coverage_percent": 96.72131147540983,
+      "missing_lines": [
+        53,
+        71
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\qdrant_store.py",
+      "statements": 79,
+      "missed": 31,
+      "coverage_percent": 60.75949367088607,
+      "missing_lines": [
+        34,
+        52,
+        53,
+        55,
+        56,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        76,
+        83,
+        84,
+        101,
+        115,
+        116,
+        121,
+        122,
+        125,
+        136,
+        137,
+        146,
+        147,
+        148,
+        164,
+        187,
+        188,
+        189,
+        190
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\rrf.py",
+      "statements": 13,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\sparse.py",
+      "statements": 18,
+      "missed": 0,
+      "coverage_percent": 100.0,
+      "missing_lines": [],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\text_builder.py",
+      "statements": 26,
+      "missed": 4,
+      "coverage_percent": 84.61538461538461,
+      "missing_lines": [
+        19,
+        20,
+        28,
+        37
+      ],
+      "priority": "P1"
+    },
+    {
+      "module": "src\\vietnamese_labor_law_assistant\\retrieval\\tokenization.py",
+      "statements": 23,
+      "missed": 2,
+      "coverage_percent": 91.30434782608695,
+      "missing_lines": [
+        28,
+        30
+      ],
+      "priority": "P1"
+    }
+  ],
+  "official_artifact_checksums": {
+    "dataset": {
+      "sha256": "56975dfcfc05b8f952e96637c27ceb8d5e48c5fcb3e7ccebb8f67c164bfe14c4",
+      "matches_baseline": true
+    },
+    "week3_dense_retrieval": {
+      "sha256": "3d3c4c12686e65f15e649e51b4eae713ab181a240accd0146ba2b43590b065ab",
+      "matches_baseline": true
+    },
+    "week3_dense_rag": {
+      "sha256": "68b9ee0b1e0e5c5b126f2f2f2736ff4a13a845cb734e84c2f94e9ed2fcb09bb0",
+      "matches_baseline": true
+    },
+    "week4_comparison": {
+      "sha256": "0fe3d481a4df67576f8b50a8cfbb14d233a384ea1ee488fc6c6e37aaccc03cb1",
+      "matches_baseline": true
+    }
+  },
+  "default_retrieval_mode": "dense",
+  "external_services_called_by_default_tests": false
+}

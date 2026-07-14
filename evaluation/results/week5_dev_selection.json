@@ -1,0 +1,92 @@
+{
+  "status": "DEV_SELECTED",
+  "final_config": {
+    "id": "R2_H2_C10_O5_L512_B1",
+    "source": "h2",
+    "candidates": 10,
+    "output": 5,
+    "length": 512,
+    "batch": 1
+  },
+  "selection_split": "dev",
+  "selection_policy": [
+    "recall_at_5_desc",
+    "mrr_desc",
+    "hit_rate_at_1_desc",
+    "p95_latency_ms_asc",
+    "peak_rss_bytes_asc_when_available",
+    "smaller_configuration_for_exact_metric_ties"
+  ],
+  "dev_decision": {
+    "selection_split": "dev",
+    "candidates": [
+      {
+        "configuration": "R1_DENSE_C10_O5_L512_B1",
+        "metrics": {
+          "recall_at_5": 1.0,
+          "mrr": 0.9772727272727273,
+          "hit_rate_at_1": 0.9545454545454546,
+          "p95_latency_ms": 9873.114599991823
+        },
+        "peak_rss_bytes": null,
+        "complexity": {
+          "candidates": 10,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        }
+      },
+      {
+        "configuration": "R1_DENSE_C10_O5_L768_B1",
+        "metrics": {
+          "recall_at_5": 1.0,
+          "mrr": 0.9545454545454546,
+          "hit_rate_at_1": 0.9090909090909091,
+          "p95_latency_ms": 8195.23620000109
+        },
+        "peak_rss_bytes": null,
+        "complexity": {
+          "candidates": 10,
+          "output": 5,
+          "length": 768,
+          "batch": 1
+        }
+      },
+      {
+        "configuration": "R2_H2_C10_O5_L512_B1",
+        "metrics": {
+          "recall_at_5": 1.0,
+          "mrr": 0.9772727272727273,
+          "hit_rate_at_1": 0.9545454545454546,
+          "p95_latency_ms": 8557.76149997837
+        },
+        "peak_rss_bytes": null,
+        "complexity": {
+          "candidates": 10,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        }
+      },
+      {
+        "configuration": "R2_H2_C10_O5_L768_B1",
+        "metrics": {
+          "recall_at_5": 1.0,
+          "mrr": 0.9545454545454546,
+          "hit_rate_at_1": 0.9090909090909091,
+          "p95_latency_ms": 8572.429899970302
+        },
+        "peak_rss_bytes": null,
+        "complexity": {
+          "candidates": 10,
+          "output": 5,
+          "length": 768,
+          "batch": 1
+        }
+      }
+    ],
+    "winner": "R2_H2_C10_O5_L512_B1",
+    "peak_rss_note": "not recorded in checkpoints"
+  },
+  "updated_at": "2026-07-14T04:43:32.144046+00:00"
+}

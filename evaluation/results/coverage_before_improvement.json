@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-07-13T00:00:00+00:00",
+  "line_coverage_percent": 73.0,
+  "statements": 1496,
+  "missed": 407,
+  "test_count": 30,
+  "priority_modules_before": [
+    {
+      "module": "src/vietnamese_labor_law_assistant/evaluation/dataset.py",
+      "coverage_percent": 0.0,
+      "priority": "P0",
+      "test_priority": "Add deterministic unit coverage first"
+    },
+    {
+      "module": "src/vietnamese_labor_law_assistant/evaluation/metrics.py",
+      "coverage_percent": 0.0,
+      "priority": "P0",
+      "test_priority": "Add deterministic unit coverage first"
+    },
+    {
+      "module": "src/vietnamese_labor_law_assistant/evaluation/models.py",
+      "coverage_percent": 0.0,
+      "priority": "P0",
+      "test_priority": "Add deterministic unit coverage first"
+    },
+    {
+      "module": "src/vietnamese_labor_law_assistant/retrieval/rrf.py",
+      "coverage_percent": 0.0,
+      "priority": "P0",
+      "test_priority": "Add deterministic unit coverage first"
+    },
+    {
+      "module": "src/vietnamese_labor_law_assistant/retrieval/hybrid.py",
+      "coverage_percent": 0.0,
+      "priority": "P0",
+      "test_priority": "Add deterministic unit coverage first"
+    },
+    {
+      "module": "src/vietnamese_labor_law_assistant/retrieval/sparse.py",
+      "coverage_percent": 0.0,
+      "priority": "P0",
+      "test_priority": "Add deterministic unit coverage first"
+    }
+  ],
+  "audit_limitation": "The original terminal audit retained total coverage and P0 gaps; this durable report preserves that priority summary rather than reconstructing missing-line lists from the changed worktree.",
+  "official_artifact_checksums": {
+    "dataset": {
+      "sha256": "56975dfcfc05b8f952e96637c27ceb8d5e48c5fcb3e7ccebb8f67c164bfe14c4",
+      "matches_baseline": true
+    },
+    "week3_dense_retrieval": {
+      "sha256": "3d3c4c12686e65f15e649e51b4eae713ab181a240accd0146ba2b43590b065ab",
+      "matches_baseline": true
+    },
+    "week3_dense_rag": {
+      "sha256": "68b9ee0b1e0e5c5b126f2f2f2736ff4a13a845cb734e84c2f94e9ed2fcb09bb0",
+      "matches_baseline": true
+    },
+    "week4_comparison": {
+      "sha256": "0fe3d481a4df67576f8b50a8cfbb14d233a384ea1ee488fc6c6e37aaccc03cb1",
+      "matches_baseline": true
+    }
+  }
+}

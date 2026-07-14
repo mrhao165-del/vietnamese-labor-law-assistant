@@ -1,0 +1,136 @@
+{
+  "status": "DEV_COMPLETE",
+  "created_at": "2026-07-13T18:45:38.275355+00:00",
+  "selection_split": "dev",
+  "stages": {
+    "A": {
+      "status": "COMPLETE",
+      "configurations": [
+        {
+          "id": "R1_DENSE_C10_O5_L512_B1",
+          "source": "dense",
+          "candidates": 10,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        },
+        {
+          "id": "R1_DENSE_C20_O5_L512_B1",
+          "source": "dense",
+          "candidates": 20,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        },
+        {
+          "id": "R1_DENSE_C30_O5_L512_B1",
+          "source": "dense",
+          "candidates": 30,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        },
+        {
+          "id": "R2_H2_C10_O5_L512_B1",
+          "source": "h2",
+          "candidates": 10,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        },
+        {
+          "id": "R2_H2_C20_O5_L512_B1",
+          "source": "h2",
+          "candidates": 20,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        },
+        {
+          "id": "R2_H2_C30_O5_L512_B1",
+          "source": "h2",
+          "candidates": 30,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        }
+      ]
+    },
+    "B": {
+      "status": "COMPLETE",
+      "rule": "best candidate from each pipeline; O5/O8, L512, B1",
+      "configurations": [
+        {
+          "id": "R1_DENSE_C10_O5_L512_B1",
+          "source": "dense",
+          "candidates": 10,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        },
+        {
+          "id": "R1_DENSE_C10_O8_L512_B1",
+          "source": "dense",
+          "candidates": 10,
+          "output": 8,
+          "length": 512,
+          "batch": 1
+        },
+        {
+          "id": "R2_H2_C10_O5_L512_B1",
+          "source": "h2",
+          "candidates": 10,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        },
+        {
+          "id": "R2_H2_C10_O8_L512_B1",
+          "source": "h2",
+          "candidates": 10,
+          "output": 8,
+          "length": 512,
+          "batch": 1
+        }
+      ]
+    },
+    "C": {
+      "status": "COMPLETE",
+      "rule": "best candidate/output per pipeline; L512/L768, B1",
+      "configurations": [
+        {
+          "id": "R1_DENSE_C10_O5_L512_B1",
+          "source": "dense",
+          "candidates": 10,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        },
+        {
+          "id": "R1_DENSE_C10_O5_L768_B1",
+          "source": "dense",
+          "candidates": 10,
+          "output": 5,
+          "length": 768,
+          "batch": 1
+        },
+        {
+          "id": "R2_H2_C10_O5_L512_B1",
+          "source": "h2",
+          "candidates": 10,
+          "output": 5,
+          "length": 512,
+          "batch": 1
+        },
+        {
+          "id": "R2_H2_C10_O5_L768_B1",
+          "source": "h2",
+          "candidates": 10,
+          "output": 5,
+          "length": 768,
+          "batch": 1
+        }
+      ]
+    }
+  }
+}

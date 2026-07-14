@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.pyright/
+.coverage
+htmlcov/
+
+# Virtual environment
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Operating system
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.log
+~$*.docx
+
+# Model cache - dùng ở các tuần sau
+.cache/
+models/
+huggingface/
+data/qdrant_local/
+
+# Jupyter
+.ipynb_checkpoints/
+
+.env
+.env.*
+!.env.example
+coverage.json
