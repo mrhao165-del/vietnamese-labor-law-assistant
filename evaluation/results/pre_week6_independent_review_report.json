@@ -1,0 +1,41 @@
+{
+  "status": "INDEPENDENT_HUMAN_REVIEW_RECORDED",
+  "packet_path": "data/evaluation/labor_law_eval_v1_independent_review_packet.csv",
+  "packet_sha256": "52d0182c9c75789b7fecce8b94512ffee1a291e99c2eeb61ffee5055496e3ed5",
+  "dataset_path": "data/evaluation/labor_law_eval_v1.jsonl",
+  "dataset_sha256_before": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+  "dataset_sha256_after": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+  "source_chunks_sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
+  "source_chunk_count": 682,
+  "total_rows": 60,
+  "pass_count": 60,
+  "corrected_count": 0,
+  "rejected_count": 0,
+  "needs_discussion_count": 0,
+  "pending_count": 0,
+  "duplicate_question_ids": [],
+  "missing_question_ids": [],
+  "invalid_chunk_ids": [],
+  "reviewer_name": "Tran Phu Hao",
+  "reviewer_role": "Independent reviewer - law student",
+  "reviewer_independent_from_project_author": true,
+  "reviewer_ai_or_machine": false,
+  "evidence_classification": "declared independent human review",
+  "policy_requirement": "complete independent human review evidence",
+  "policy_satisfied": true,
+  "semantic_labels_changed": false,
+  "split_changed": false,
+  "question_ids_changed": false,
+  "author_review_preserved": true,
+  "manifest_status_before": "PROVISIONAL_PROJECT_AUTHOR_AI_ASSISTED_APPROVAL",
+  "manifest_status_after": "INDEPENDENT_HUMAN_REVIEWED",
+  "blockers": [],
+  "files_created": [
+    "docs/pre_week6_independent_review_report.md",
+    "evaluation/results/pre_week6_independent_review_report.json"
+  ],
+  "files_modified": [
+    "data/evaluation/labor_law_eval_v1_manifest.json",
+    "evaluation/results/labor_law_eval_v1_independent_review_packet_validation.json"
+  ]
+}

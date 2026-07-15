@@ -13,7 +13,7 @@ from docx.table import Table
 from docx.text.paragraph import Paragraph
 
 from .models import ValidationIssue
-from .normalize import is_probable_header_or_footer, normalize_legal_text
+from .normalize import is_probable_header_or_footer, join_docx_runs, normalize_legal_text
 from .patterns import (
     parse_article_heading,
     parse_chapter_heading,
@@ -79,6 +79,17 @@ def _table_text(table: Table) -> str:
     return "\n".join(rows)
 
 
+def _paragraph_text(paragraph: Paragraph) -> str:
+    """Extract paragraph text without numeric superscript footnote markers."""
+    return join_docx_runs((run.text, run.font.superscript) for run in paragraph.runs)
+
+
+def _is_certification_table(text: str) -> bool:
+    """Recognize a document certification table, never legal article content."""
+    normalized = normalize_legal_text(text).casefold()
+    return "xác thực văn bản hợp nhất" in normalized and "văn phòng quốc hội" in normalized
+
+
 def iter_docx_blocks(document: DocumentType):
     """Yield paragraph/table objects in document XML order."""
     for child in document.element.body.iterchildren():
@@ -97,7 +108,7 @@ class LegalDocumentParser:
         blocks: list[ParsedBlock] = []
         for index, item in enumerate(iter_docx_blocks(document)):
             if isinstance(item, Paragraph):
-                blocks.append(ParsedBlock(index, "paragraph", normalize_legal_text(item.text)))
+                blocks.append(ParsedBlock(index, "paragraph", _paragraph_text(item)))
             else:
                 blocks.append(ParsedBlock(index, "table", _table_text(item)))
         return self.parse_blocks(blocks)
@@ -128,6 +139,16 @@ class LegalDocumentParser:
             current_clause = None
             current_point = None
 
+        def current_article_content_end() -> int:
+            if current_article is None:
+                return 0
+            indexes = [block.index for block in current_article.blocks]
+            for clause in current_article.clauses:
+                indexes.extend(block.index for block in clause.blocks)
+                for point in clause.points:
+                    indexes.extend(block.index for block in point.blocks)
+            return max(indexes, default=current_article.start_index)
+
         def append_to_current(block: ParsedBlock) -> bool:
             if current_point is not None:
                 current_point.blocks.append(block)
@@ -146,6 +167,22 @@ class LegalDocumentParser:
                 continue
             if block.block_type == "table":
                 table_count += 1
+                if _is_certification_table(text):
+                    flush_article(current_article_content_end())
+                    orphans.append(block)
+                    issues.append(
+                        ValidationIssue(
+                            code="CERTIFICATION_TABLE",
+                            severity="info",
+                            message=(
+                                "Document certification/signature table is outside legal article "
+                                "content."
+                            ),
+                            source_block_index=block.index,
+                            raw_text=text,
+                        )
+                    )
+                    continue
                 if not append_to_current(block):
                     orphans.append(block)
                     issues.append(

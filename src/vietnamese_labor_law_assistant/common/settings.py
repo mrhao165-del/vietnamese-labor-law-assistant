@@ -40,16 +40,16 @@ class Settings(BaseSettings):
         "hybrid_underthesea",
         "dense_rerank",
         "hybrid_underthesea_rerank",
-    ] = "dense"
-    reranker_enabled: bool = False
+    ] = "hybrid_underthesea_rerank"
+    reranker_enabled: bool = True
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
     reranker_device: Literal["auto", "cpu", "cuda"] = "auto"
     reranker_use_fp16: bool | None = None
     reranker_batch_size: int = Field(default=1, ge=1, le=32)
     reranker_max_length: int = Field(default=512, ge=1, le=2048)
-    reranker_candidate_k: int = Field(default=20, ge=1, le=100)
+    reranker_candidate_k: int = Field(default=10, ge=1, le=100)
     reranker_output_k: int = Field(default=5, ge=1, le=100)
-    reranker_fallback_mode: Literal["skip", "error"] = "skip"
+    reranker_fallback_mode: Literal["skip", "error"] = "error"
     reranker_cache_size: int = Field(default=128, ge=0, le=4096)
     query_embedding_cache_enabled: bool = True
     query_embedding_cache_size: int = Field(default=256, ge=0, le=4096)

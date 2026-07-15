@@ -89,7 +89,7 @@ def main() -> int:
     rows = [
         {
             "configuration": name,
-            "status": "OFFICIAL",
+            "status": "PROVISIONAL_PENDING_INDEPENDENT_HUMAN_LABEL_CONFIRMATION",
             "metrics": retrieval_metrics(questions, preds),
             "by_group": grouped(questions, preds),
         }
@@ -98,7 +98,7 @@ def main() -> int:
     best = max(rows, key=lambda row: row["by_group"]["split"]["dev"]["mrr"] or -1)
     out = {
         "generated_at": datetime.now(UTC).isoformat(),
-        "status": "OFFICIAL",
+        "status": "PROVISIONAL_PENDING_INDEPENDENT_HUMAN_LABEL_CONFIRMATION",
         "dataset_sha256": calculate_file_sha256(DATASET),
         "input_chunk_sha256": calculate_file_sha256(
             ROOT / "data/processed/labor_law_clauses.jsonl"

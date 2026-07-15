@@ -365,7 +365,7 @@ def main() -> int:
     tokens = token_report(question_by_id, r2_all, corpus)
     resources = resource_report()
     report = {
-        "status": "OFFICIAL",
+        "status": "PROVISIONAL_PENDING_INDEPENDENT_HUMAN_LABEL_CONFIRMATION",
         "generated_at": datetime.now(UTC).isoformat(),
         "dataset_sha256": dataset_hash,
         "input_chunk_sha256": corpus_hash,
@@ -455,7 +455,7 @@ def main() -> int:
     print(
         json.dumps(
             {
-                "status": "OFFICIAL_REPORTS_WRITTEN",
+                "status": "PROVISIONAL_REPORTS_WRITTEN",
                 "resource_report": resources,
                 "token_report": tokens,
             },

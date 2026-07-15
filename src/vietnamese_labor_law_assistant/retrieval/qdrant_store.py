@@ -11,6 +11,8 @@ from qdrant_client import QdrantClient, models
 from vietnamese_labor_law_assistant.common.settings import Settings
 from vietnamese_labor_law_assistant.ingestion.models import LegalChunk
 
+from .models import LegalSearchFilters
+
 VECTOR_NAME = "dense"
 POINT_NAMESPACE = uuid.UUID("9b8a970c-1e2f-5230-a7de-4057e980d023")
 
@@ -109,15 +111,9 @@ class QdrantStore:
         ]
         self.client.upsert(collection_name=self.collection_name, points=points, wait=True)
 
-    def _filter(
-        self, article_number: int | None, clause_number: int | None, document_id: str | None
-    ):
+    def _filter(self, filters: LegalSearchFilters | None):
         conditions = []
-        for key, value in (
-            ("article_number", article_number),
-            ("clause_number", clause_number),
-            ("document_id", document_id),
-        ):
+        for key, value in filters.as_dict().items() if filters is not None else []:
             if value is not None:
                 conditions.append(
                     models.FieldCondition(key=key, match=models.MatchValue(value=value))
@@ -131,6 +127,7 @@ class QdrantStore:
         article_number: int | None = None,
         clause_number: int | None = None,
         document_id: str | None = None,
+        filters: LegalSearchFilters | None = None,
     ) -> list[Any]:
         """Search named dense vectors and return scored Qdrant point objects."""
         try:
@@ -138,7 +135,14 @@ class QdrantStore:
                 collection_name=self.collection_name,
                 query=list(vector),
                 using=VECTOR_NAME,
-                query_filter=self._filter(article_number, clause_number, document_id),
+                query_filter=self._filter(
+                    filters
+                    or LegalSearchFilters(
+                        article_number=article_number,
+                        clause_number=clause_number,
+                        document_id=document_id,
+                    )
+                ),
                 limit=limit,
                 with_payload=True,
                 with_vectors=False,

@@ -1,0 +1,74 @@
+{
+  "reviewed_at": "2026-07-15T20:55:09+07:00",
+  "reviewer_model": "OpenAI GPT-5.6 Thinking — AI-assisted reviewer",
+  "independent_human_review": false,
+  "basis": [
+    "DOCX block-by-block comparison",
+    "run-level superscript/footnote-marker inspection",
+    "article title/chapter/section/clause-count comparison",
+    "evaluation packet versus JSONL consistency check",
+    "source excerpt versus DOCX clause comparison",
+    "reference-answer legal-basis review against supplied consolidated DOCX",
+    "calculator date arithmetic and project-scope alignment review"
+  ],
+  "week1": {
+    "total": 21,
+    "counts": {
+      "PASS": 18,
+      "CORRECTED": 3
+    },
+    "correction_ids": [
+      "W1-ARTICLE-059",
+      "W1-ARTICLE-139",
+      "W1-ARTICLE-220"
+    ],
+    "discussion_ids": []
+  },
+  "evaluation": {
+    "total": 60,
+    "counts": {
+      "PASS": 44,
+      "CORRECTED": 14,
+      "NEEDS_DISCUSSION": 2
+    },
+    "correction_ids": [
+      "w3-019",
+      "w3-031",
+      "w3-032",
+      "w3-033",
+      "w3-035",
+      "w3-036",
+      "w3-037",
+      "w3-038",
+      "w3-044",
+      "w3-045",
+      "w3-046",
+      "w3-047",
+      "w3-048",
+      "w3-049"
+    ],
+    "discussion_ids": [
+      "w3-041",
+      "w3-042"
+    ],
+    "truncated_source_excerpt_ids": [
+      "w3-008",
+      "w3-014",
+      "w3-031",
+      "w3-044",
+      "w3-045"
+    ],
+    "packet_json_consistency_issues": []
+  },
+  "readiness_effect": {
+    "technical_review_completed": true,
+    "evidence_gate_satisfied": false,
+    "reason": "The repository explicitly requires an independent human reviewer. AI recommendations are support evidence only and all original human review fields remain untouched."
+  },
+  "outputs": [
+    "/mnt/data/week1_manual_validation_ai_assisted.csv",
+    "/mnt/data/labor_law_eval_v1_human_review_packet_ai_assisted.csv",
+    "/mnt/data/pre_week6_ai_assisted_review_report.md",
+    "/mnt/data/pre_week6_ai_assisted_review_summary.json"
+  ]
+}

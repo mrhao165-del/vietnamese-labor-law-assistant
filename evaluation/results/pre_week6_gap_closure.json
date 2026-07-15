@@ -1,0 +1,48 @@
+{
+  "status": "MANUAL_ACTION_REQUIRED",
+  "technical_readiness": "READY",
+  "evidence_readiness": "MANUAL_ACTION_REQUIRED",
+  "week1_manual_review": {
+    "total_rows": 21,
+    "completed": 0,
+    "pending": 21,
+    "file_human_must_edit": "docs/week1_manual_validation.csv"
+  },
+  "evaluation_label_review": {
+    "total_questions": 60,
+    "independent_human_reviewed": 0,
+    "ai_assisted_only": 60,
+    "file_human_must_edit": "data/evaluation/labor_law_eval_v1_human_review_packet.csv"
+  },
+  "quality_gates": {
+    "uv_sync": "PASS",
+    "ruff_format": "PASS",
+    "ruff_check": "PASS",
+    "pyright": "PASS (0 errors)",
+    "pytest": "PASS (77 passed)",
+    "coverage": "PASS (82.40%; threshold 82%)",
+    "ingestion_reproducibility_integration": "PASS",
+    "pre_week6_provenance_integration": "PASS"
+  },
+  "status_consistency": {
+    "active_official_provisional_conflicts": 0,
+    "metrics_modified": false,
+    "backup_directory": "evaluation/results/archive/pre_week6_gap_closure_20260715"
+  },
+  "week5_evidence": {
+    "selected_config": "R2_H2_C10_O5_L512_B1",
+    "selected_using_dev_only": true,
+    "test_used_for_tuning": false,
+    "error_cases_analysed": 10,
+    "reranker_improvement_and_regression_analysed": true,
+    "latency_token_length_resource_usage_recorded": true
+  },
+  "checksums_and_provenance": "VALID",
+  "commands_after_human_review": [
+    "uv run python scripts/apply_week3_manual_review.py --review-csv data/evaluation/labor_law_eval_v1_human_review_packet.csv",
+    "uv run python scripts/validate_week3_evaluation_dataset.py --require-human-reviewed",
+    "uv run python scripts/prepare_pre_week6_human_review_packets.py",
+    "uv run python scripts/generate_pre_week6_readiness.py --ruff PASS --pyright PASS --pytest PASS --coverage \"PASS (coverage gate)\" --integration PASS --provenance PASS",
+    "uv run pytest tests/integration/test_ingestion_reproducibility.py tests/integration/test_pre_week6_provenance.py"
+  ]
+}

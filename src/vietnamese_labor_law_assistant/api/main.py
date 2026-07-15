@@ -23,10 +23,14 @@ from vietnamese_labor_law_assistant.generation.models import (
     QueryRequest,
     QueryResponse,
 )
-from vietnamese_labor_law_assistant.generation.service import DenseRagService
+from vietnamese_labor_law_assistant.generation.service import RagService
+from vietnamese_labor_law_assistant.retrieval.errors import RetrievalError
+from vietnamese_labor_law_assistant.retrieval.models import SearchRequest
+from vietnamese_labor_law_assistant.retrieval.service import LegalRetriever
 
 from .dependencies import (
     ensure_supported_production_retrieval_mode,
+    get_legal_retriever,
     get_rag_service,
     get_store,
     readiness,
@@ -133,7 +137,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         "/api/v1/query", response_model=QueryResponse, responses={503: {"model": ErrorResponse}}
     )
     def query(
-        payload: QueryRequest, service: Annotated[DenseRagService, Depends(get_rag_service)]
+        payload: QueryRequest, service: Annotated[RagService, Depends(get_rag_service)]
     ) -> QueryResponse:
         if not active_settings.llm_configured:
             raise HTTPException(status_code=503, detail="LLM_NOT_CONFIGURED")
@@ -152,6 +156,72 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=503, detail="QDRANT_UNAVAILABLE") from exc
         except ValidationError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/v1/rag/query", response_model=QueryResponse)
+    def rag_query(
+        payload: QueryRequest, service: Annotated[RagService, Depends(get_rag_service)]
+    ) -> QueryResponse:
+        """Backward-compatible explicit alias for the established RAG endpoint."""
+        if not active_settings.llm_configured:
+            raise HTTPException(status_code=503, detail="LLM_NOT_CONFIGURED")
+        try:
+            return service.query(payload.question, payload.top_k, payload.include_contexts)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail="RETRIEVAL_OR_LLM_UNAVAILABLE") from exc
+
+    @app.post("/api/v1/search")
+    def search(
+        payload: SearchRequest, retriever: Annotated[LegalRetriever, Depends(get_legal_retriever)]
+    ) -> dict[str, Any]:
+        """Direct legal retrieval without a language-model call."""
+        request_id = str(uuid.uuid4())
+        try:
+            response = retriever.search(
+                payload.query,
+                top_k=payload.top_k,
+                mode=payload.mode,
+                candidate_k=payload.candidate_k,
+                filters=payload.filters,
+                include_content=payload.include_content,
+                include_scores=payload.include_scores,
+                request_id=request_id,
+            )
+        except RetrievalError as exc:
+            raise HTTPException(status_code=exc.status_code, detail=exc.code) from exc
+        body = response.model_dump(mode="json")
+        for row in body["results"]:
+            if not payload.include_content:
+                row.pop("content", None)
+            if not payload.include_scores:
+                for field in (
+                    "score",
+                    "dense_score",
+                    "sparse_score",
+                    "rrf_score",
+                    "reranker_score",
+                ):
+                    row.pop(field, None)
+        return body
+
+    @app.get("/api/v1/articles/{article_number}")
+    def article(
+        article_number: int, retriever: Annotated[LegalRetriever, Depends(get_legal_retriever)]
+    ) -> dict[str, Any]:
+        try:
+            return retriever.get_article(article_number).model_dump(mode="json")
+        except RetrievalError as exc:
+            raise HTTPException(status_code=exc.status_code, detail=exc.code) from exc
+
+    @app.get("/api/v1/articles/{article_number}/clauses/{clause_number}")
+    def clause(
+        article_number: int,
+        clause_number: int,
+        retriever: Annotated[LegalRetriever, Depends(get_legal_retriever)],
+    ) -> dict[str, Any]:
+        try:
+            return retriever.get_clause(article_number, clause_number).model_dump(mode="json")
+        except RetrievalError as exc:
+            raise HTTPException(status_code=exc.status_code, detail=exc.code) from exc
 
     @app.get("/api/v1/sources/{chunk_id}")
     def source(chunk_id: str, store: Annotated[Any, Depends(get_store)]) -> dict[str, Any]:

@@ -40,4 +40,4 @@ data/qdrant_local/
 .env
 .env.*
 !.env.example
-coverage.json
+coverage.jsonv

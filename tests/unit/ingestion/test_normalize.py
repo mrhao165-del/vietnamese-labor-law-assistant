@@ -1,8 +1,15 @@
 from vietnamese_labor_law_assistant.ingestion.normalize import (
     is_probable_header_or_footer,
+    join_docx_runs,
     normalize_heading_text,
     normalize_legal_text,
 )
+
+
+def test_docx_run_joining_removes_only_numeric_superscript_footnotes() -> None:
+    assert join_docx_runs([("1.", None), ("4", True), (" Lao dong nu", None)]) == "1. Lao dong nu"
+    assert join_docx_runs([("a)", None), ("2", True), ("Thanh lap", None)]) == "a)Thanh lap"
+    assert join_docx_runs([("x", True), ("2", None)]) == "x2"
 
 
 def test_normalization_preserves_vietnamese_legal_text() -> None:

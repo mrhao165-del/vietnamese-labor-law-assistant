@@ -11,7 +11,11 @@ from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
 from vietnamese_labor_law_assistant.api import main as api_main
-from vietnamese_labor_law_assistant.api.dependencies import get_rag_service, get_store
+from vietnamese_labor_law_assistant.api.dependencies import (
+    ensure_supported_production_retrieval_mode,
+    get_rag_service,
+    get_store,
+)
 from vietnamese_labor_law_assistant.api.main import create_app
 from vietnamese_labor_law_assistant.common.settings import Settings
 from vietnamese_labor_law_assistant.generation.models import AnswerClaim, AnswerDraft
@@ -109,6 +113,17 @@ def main() -> int:
         results["reranker_disabled"] = disabled.status_code
         results["citation"] = len(disabled.json()["citations"])
         results["source_endpoint"] = client.get("/api/v1/sources/one").status_code
+    # Benchmark-only rerank modes must remain unavailable in the production API before Week 6.
+    for mode in ("dense_rerank", "hybrid_underthesea_rerank"):
+        try:
+            ensure_supported_production_retrieval_mode(
+                Settings(retrieval_mode=mode, reranker_enabled=True)
+            )
+        except ValueError:
+            results[f"{mode}_rejected_pre_week6"] = True
+        else:
+            results[f"{mode}_rejected_pre_week6"] = False
+    """
     with client_for("dense_rerank", True, "rerank") as client:
         results["dense_rerank"] = client.post(
             "/api/v1/query", json={"question": "Câu hỏi"}
@@ -117,6 +132,7 @@ def main() -> int:
         results["h2_rerank"] = client.post(
             "/api/v1/query", json={"question": "Câu hỏi"}
         ).status_code
+    """
     with client_for("dense", False, "dense", empty=True) as client:
         response = client.post("/api/v1/query", json={"question": "Ngoài phạm vi"})
         results["out_of_scope"] = response.status_code
@@ -125,14 +141,17 @@ def main() -> int:
         "health": 200,
         "ready": 200,
         "reranker_disabled": 200,
-        "dense_rerank": 200,
-        "h2_rerank": 200,
         "out_of_scope": 200,
         "source_endpoint": 200,
     }
     for name, status in expected.items():
         if results[name] != status:
             raise RuntimeError(f"API regression failed: {name} returned {results[name]}")
+    if (
+        not results["dense_rerank_rejected_pre_week6"]
+        or not results["hybrid_underthesea_rerank_rejected_pre_week6"]
+    ):
+        raise RuntimeError("API regression failed: benchmark-only modes must remain rejected")
     if results["citation"] != 1 or not results["out_of_scope_insufficient_context"]:
         raise RuntimeError("API regression failed: citation or out-of-scope behavior")
     report = {

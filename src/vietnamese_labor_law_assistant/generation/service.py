@@ -9,7 +9,7 @@ from typing import Protocol
 import structlog
 
 from vietnamese_labor_law_assistant.common.settings import Settings
-from vietnamese_labor_law_assistant.retrieval.models import DenseSearchResult
+from vietnamese_labor_law_assistant.retrieval.models import DenseSearchResult, SearchResponse
 
 from .citations import (
     CitationValidationError,
@@ -25,11 +25,11 @@ DISCLAIMER = "Hệ thống chỉ hỗ trợ tra cứu, không thay thế tư v�
 
 
 class Retriever(Protocol):
-    def search(self, query: str, top_k: int) -> DenseSearchResult: ...
+    def search(self, query: str, top_k: int) -> DenseSearchResult | SearchResponse: ...
 
 
-class DenseRagService:
-    """Sequential dense-retrieval, generation, and citation-validation service."""
+class RagService:
+    """Retrieval-neutral generation and citation-validation service."""
 
     def __init__(
         self, retriever: Retriever, generator: LegalAnswerGenerator, settings: Settings
@@ -107,3 +107,7 @@ class DenseRagService:
             if include_contexts
             else None,
         )
+
+
+# Retained for callers created before the Week 6 retrieval-neutral refactor.
+DenseRagService = RagService

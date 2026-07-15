@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 
 from .dense import DenseRetriever
-from .models import DenseSearchResult
+from .models import DenseSearchResult, LegalSearchFilters
 from .rrf import fuse_rrf
 from .sparse import SparseRetriever
 
@@ -21,12 +21,16 @@ class HybridRetriever:
         dense_candidate_k: int = 20,
         sparse_candidate_k: int = 20,
         rrf_k: int = 60,
+        filters: LegalSearchFilters | None = None,
     ) -> DenseSearchResult:
         started = time.perf_counter()
-        dense = self.dense.search(
-            query, min(dense_candidate_k, self.dense.settings.dense_max_top_k)
-        )
-        sparse = self.sparse.search(query, sparse_candidate_k)
+        dense_count = min(dense_candidate_k, self.dense.settings.dense_max_top_k)
+        if filters is None:
+            dense = self.dense.search(query, dense_count)
+            sparse = self.sparse.search(query, sparse_candidate_k)
+        else:
+            dense = self.dense.search(query, dense_count, filters=filters)
+            sparse = self.sparse.search(query, sparse_candidate_k, filters=filters)
         fused = fuse_rrf(dense.results, sparse.results, rrf_k)
         results = []
         for rank, (row, score, dense_rank, sparse_rank) in enumerate(fused[:top_k], 1):

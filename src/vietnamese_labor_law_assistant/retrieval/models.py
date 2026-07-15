@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -93,3 +94,90 @@ class DenseSearchResult(BaseModel):
     qdrant_latency_ms: float = Field(ge=0)
     collection_name: str
     embedding_model: str
+
+
+class RetrievalMode(StrEnum):
+    """Production retrieval modes, including retained dense baseline mode."""
+
+    DENSE = "dense"
+    SPARSE_UNDERTHESEA = "sparse_underthesea"
+    HYBRID_UNDERTHESEA = "hybrid_underthesea"
+    DENSE_RERANK = "dense_rerank"
+    HYBRID_UNDERTHESEA_RERANK = "hybrid_underthesea_rerank"
+
+
+class LegalSearchFilters(BaseModel):
+    """Supported canonical chunk metadata filters; omitted values do not filter."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    document_id: str | None = None
+    chapter_number: str | None = None
+    chapter_title: str | None = None
+    section_number: str | None = None
+    section_title: str | None = None
+    article_number: int | None = Field(default=None, gt=0)
+    clause_number: int | None = Field(default=None, gt=0)
+    point_label: str | None = None
+    article_title: str | None = None
+    source_file: str | None = None
+    effective_date: str | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Stable, null-free representation used by stores, cache diagnostics and logs."""
+        return {key: value for key, value in sorted(self.model_dump(exclude_none=True).items())}
+
+
+class SearchRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(min_length=1, max_length=4000)
+    mode: RetrievalMode | None = None
+    candidate_k: int | None = Field(default=None, ge=1, le=100)
+    top_k: int | None = Field(default=None, ge=1, le=100)
+    filters: LegalSearchFilters | None = None
+    include_content: bool = True
+    include_scores: bool = True
+
+    @field_validator("query")
+    @classmethod
+    def valid_query(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("query must not be blank")
+        return value
+
+
+class SearchResponse(BaseModel):
+    """Unified result contract. Results retain rich provenance for RAG reuse."""
+
+    query: str
+    request_id: str
+    mode: RetrievalMode
+    candidate_k: int
+    top_k: int
+    applied_filters: dict[str, Any]
+    results: list[RetrievedChunk]
+    result_count: int
+    latency_ms: dict[str, float] = Field(default_factory=dict)
+    cache_hit: bool = False
+    cache_size: int = Field(ge=0)
+    status: str = "ok"
+    collection_name: str | None = None
+    embedding_model: str | None = None
+
+
+class ArticleResponse(BaseModel):
+    article_number: int = Field(gt=0)
+    article_title: str | None = None
+    document_id: str
+    document_name: str
+    chapter_number: str | None = None
+    chapter_title: str | None = None
+    section_number: str | None = None
+    section_title: str | None = None
+    source_file: str
+    source_url: str | None = None
+    source_block_start: int = Field(ge=0)
+    source_block_end: int = Field(ge=0)
+    clauses: list[RetrievedChunk]

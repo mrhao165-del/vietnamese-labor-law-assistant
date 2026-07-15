@@ -5,6 +5,29 @@ def _blocks(*values: str) -> list[ParsedBlock]:
     return [ParsedBlock(index, "paragraph", value) for index, value in enumerate(values)]
 
 
+def test_parser_excludes_certification_table_after_last_article() -> None:
+    parsed = LegalDocumentParser().parse_blocks(
+        [
+            ParsedBlock(0, "paragraph", "\u0110i\u1ec1u 220. Hi\u1ec7u l\u1ef1c"),
+            ParsedBlock(1, "paragraph", "1. N\u1ed9i dung lu\u1eadt."),
+            ParsedBlock(2, "paragraph", ""),
+            ParsedBlock(
+                3,
+                "table",
+                (
+                    "V\u0102N PH\u00d2NG QU\u1ed0C H\u1ed8I | "
+                    "X\u00c1C TH\u1ef0C V\u0102N B\u1ea2N H\u1ee2P NH\u1ea4T | "
+                    "CH\u1ee6 NHI\u1ec6M"
+                ),
+            ),
+        ]
+    )
+
+    assert parsed.articles[0].end_index == 1
+    assert parsed.articles[0].clauses[0].blocks[0].text == "1. N\u1ed9i dung lu\u1eadt."
+    assert any(issue.code == "CERTIFICATION_TABLE" for issue in parsed.issues)
+
+
 def test_parser_flushes_articles_and_tracks_points() -> None:
     parsed = LegalDocumentParser().parse_blocks(
         _blocks(

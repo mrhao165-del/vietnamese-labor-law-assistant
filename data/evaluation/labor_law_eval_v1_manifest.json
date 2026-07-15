@@ -1,8 +1,8 @@
 {
   "dataset_version": "labor_law_eval_v1",
-  "updated_at": "2026-07-13T13:35:03.848169+00:00",
-  "dataset_sha256": "56975dfcfc05b8f952e96637c27ceb8d5e48c5fcb3e7ccebb8f67c164bfe14c4",
-  "source_chunks_sha256": "3ce4672b64f0928796693ac8e1f1836acb043d380d9fa4e7e4c9d718835317b7",
+  "updated_at": "2026-07-15T17:08:21.432002+00:00",
+  "dataset_sha256": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+  "source_chunks_sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
   "total_questions": 60,
   "category_counts": {
     "direct": 12,
@@ -29,12 +29,21 @@
   "rereview_count": 11,
   "review_status_counts": {
     "PASS": 60,
-    "NEEDS_REVISION": 0,
-    "REJECTED": 0,
-    "PENDING": 0
+    "CORRECTED_APPLIED": 16
   },
-  "review_provenance": "AI-assisted prereview and rereview records are present; independent human legal confirmation is still required.",
+  "review_provenance": "Repository-validated declared independent human review recorded; reviewer role is not evidence of licensed legal-professional status.",
   "split_status": "FROZEN",
   "generator_script": "scripts/build_week3_evaluation_dataset.py",
-  "official_status": "PROVISIONAL_AI_REVIEW_ONLY"
+  "official_status": "INDEPENDENT_HUMAN_REVIEWED",
+  "independent_review": {
+    "packet_path": "data/evaluation/labor_law_eval_v1_independent_review_packet.csv",
+    "packet_sha256": "52d0182c9c75789b7fecce8b94512ffee1a291e99c2eeb61ffee5055496e3ed5",
+    "validation_path": "evaluation/results/labor_law_eval_v1_independent_review_packet_validation.json",
+    "reviewer_name": "Tran Phu Hao",
+    "reviewer_role": "Independent reviewer - law student",
+    "reviewed_at": "2026-07-16T23:30:00+07:00",
+    "evidence_classification": "declared independent human review",
+    "policy_satisfied": true,
+    "project_author_packet_preserved": true
+  }
 }

@@ -11,17 +11,27 @@ Completed implementation and benchmark work:
 - Week 3 60-question evaluation dataset and dense baselines.
 - Week 4 BM25S + Underthesea + Hybrid RRF benchmark.
 - Week 5 BGE reranker benchmark and DEV-selected configuration.
+- Week 6 production Retrieval Engine: hybrid Underthesea + reranker, direct search, filters,
+  query-embedding cache, and article lookup.
 
 Selected configuration: `R2_H2_C10_O5_L512_B1`.
 
-The current source corpus has a verified DOCX checksum and deterministic chunk checksum. The evaluation records have AI-assisted review evidence, but independent human legal confirmation is still required before the dataset and Week 3–5 reports can be called official. See [the pre-Week-6 readiness report](docs/pre_week6_readiness.md).
+The current source corpus and independently reviewed evaluation evidence are verified in the
+[pre-Week-6 readiness report](docs/pre_week6_readiness.md). Historical Week 3–5 benchmark
+metrics retain their original dataset provenance.
 
 Current limitations:
 
-- Production FastAPI uses `DenseRetriever` only.
-- Hybrid + Reranker production integration is deferred to Week 6; configuring one of those modes causes a clear startup failure rather than a Dense fallback.
+- Production defaults to `hybrid_underthesea_rerank` with the DEV-selected
+  `R2_H2_C10_O5_L512_B1` configuration. Supported modes are `dense`,
+  `sparse_underthesea`, `hybrid_underthesea`, `dense_rerank`, and
+  `hybrid_underthesea_rerank`; no mode silently falls back to dense.
 - MCP, Calculator, Agent, and full claim-level citation verification are not implemented.
 
-For the Dense API, configure `.env`, run `uv run python scripts/index_dense.py`, then start `uv run uvicorn vietnamese_labor_law_assistant.api.main:app --host 127.0.0.1 --port 8000`.
+Configure `.env`, ensure the existing dense and BM25 indexes are present, then start
+`uv run uvicorn vietnamese_labor_law_assistant.api.main:app --host 127.0.0.1 --port 8000`.
+Use `POST /api/v1/search` for direct retrieval and `GET /api/v1/articles/{article_number}` for
+source lookup. The legacy `POST /api/v1/query` remains available; `POST /api/v1/rag/query` is
+its explicit alias. See [the Week 6 Retrieval Engine guide](docs/week6_retrieval_engine.md).
 
 Repository placement and dependency rules are documented in [the repository architecture guide](docs/architecture/repository_structure.md). Contributors and coding agents must also follow [AGENTS.md](AGENTS.md).

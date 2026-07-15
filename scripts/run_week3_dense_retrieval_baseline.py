@@ -70,7 +70,7 @@ def main() -> int:
     )
     overall = retrieval_metrics(questions, predictions)
     report = {
-        "status": "OFFICIAL",
+        "status": "PROVISIONAL_PENDING_INDEPENDENT_HUMAN_LABEL_CONFIRMATION",
         "generated_at": datetime.now(UTC).isoformat(),
         "dataset_version": questions[0].dataset_version,
         "dataset_sha256": calculate_file_sha256(DATASET),

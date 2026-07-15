@@ -1,9 +1,10 @@
 {
-  "status": "OFFICIAL",
+  "status": "HISTORICAL_PROVISIONAL_PRIOR_DATASET",
   "generated_at": "2026-07-13T14:23:21.137559+00:00",
   "dataset_version": "labor_law_eval_v1",
   "dataset_sha256": "56975dfcfc05b8f952e96637c27ceb8d5e48c5fcb3e7ccebb8f67c164bfe14c4",
   "input_chunk_sha256": "3ce4672b64f0928796693ac8e1f1836acb043d380d9fa4e7e4c9d718835317b7",
+  "provenance_note": "Historical benchmark retained against the pre-review dataset checksum; metrics were not recomputed or modified.",
   "pipeline": "L0_DENSE",
   "top_k": 10,
   "cold_start_ms": 10620.104600006016,

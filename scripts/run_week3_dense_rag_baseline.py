@@ -79,7 +79,7 @@ def main() -> int:
     generation = [p.generation_latency_ms for p in predictions.values() if p.generation_latency_ms]
     total = [p.total_latency_ms for p in predictions.values() if p.total_latency_ms]
     report = {
-        "status": "OFFICIAL",
+        "status": "PROVISIONAL_PENDING_INDEPENDENT_HUMAN_LABEL_CONFIRMATION",
         "generated_at": datetime.now(UTC).isoformat(),
         "dataset_sha256": calculate_file_sha256(DATASET),
         "input_chunk_sha256": calculate_file_sha256(

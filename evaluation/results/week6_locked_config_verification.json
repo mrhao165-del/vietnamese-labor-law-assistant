@@ -1,0 +1,62 @@
+{
+  "status": "PASS",
+  "verification_type": "POST_INDEPENDENT_REVIEW_LOCKED_CONFIG_VERIFICATION",
+  "generated_at": "2026-07-15T17:53:39.253819+00:00",
+  "dataset_sha256": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+  "source_chunks_sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
+  "selected_config": {
+    "id": "R2_H2_C10_O5_L512_B1",
+    "source": "h2_underthesea",
+    "candidate_k": 10,
+    "top_k": 5,
+    "reranker_max_length": 512,
+    "reranker_batch_size": 1
+  },
+  "selected_using_dev_only": true,
+  "test_used_for_tuning": false,
+  "test_run_count": 1,
+  "splits": {
+    "dev": {
+      "question_count": 42,
+      "completed": 42,
+      "pending_question_ids": [],
+      "metrics": {
+        "eligible_count": 23,
+        "hit_rate_at_1": 0.9565217391304348,
+        "hit_rate_at_3": 1.0,
+        "hit_rate_at_5": 1.0,
+        "hit_rate_at_10": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "precision_at_5": 0.2,
+        "mrr": 0.9782608695652174,
+        "mean_latency_ms": 4459.4817695650145,
+        "median_latency_ms": 3723.0467000008503,
+        "p95_latency_ms": 9062.629000000015,
+        "error_rate": 0.0
+      }
+    },
+    "test": {
+      "question_count": 18,
+      "completed": 18,
+      "pending_question_ids": [],
+      "metrics": {
+        "eligible_count": 12,
+        "hit_rate_at_1": 1.0,
+        "hit_rate_at_3": 1.0,
+        "hit_rate_at_5": 1.0,
+        "hit_rate_at_10": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "precision_at_5": 0.20000000000000004,
+        "mrr": 1.0,
+        "mean_latency_ms": 4066.134358333329,
+        "median_latency_ms": 3735.9598000002734,
+        "p95_latency_ms": 8514.33100000213,
+        "error_rate": 0.0
+      }
+    }
+  },
+  "historical_week3_to_week5_metrics_modified": false,
+  "checkpoint_directory": "evaluation/results/week6_locked_config_checkpoints"
+}

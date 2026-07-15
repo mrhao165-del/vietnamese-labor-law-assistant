@@ -211,7 +211,7 @@ def test_finalize_writes_official_output_from_complete_test_only(
     final_rows = (runner.RESULTS / "week5_reranker_predictions.jsonl").read_text(encoding="utf-8")
 
     assert result == {"status": "FINALIZED", "configuration": selected["id"]}
-    assert official["status"] == "OFFICIAL"
+    assert official["status"] == "PROVISIONAL_PENDING_INDEPENDENT_HUMAN_LABEL_CONFIRMATION"
     assert "PARTIAL" not in final_rows
     assert "dev-1" not in final_rows
     assert '"question_id": "test-1"' in final_rows

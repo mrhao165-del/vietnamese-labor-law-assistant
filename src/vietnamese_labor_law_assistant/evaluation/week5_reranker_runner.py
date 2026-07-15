@@ -393,7 +393,7 @@ def finalize(**_: Any) -> dict[str, Any]:
     predictions = _load_predictions("test", configuration)
     metrics = retrieval_metrics(test_questions, predictions)
     report = {
-        "status": "OFFICIAL",
+        "status": "PROVISIONAL_PENDING_INDEPENDENT_HUMAN_LABEL_CONFIRMATION",
         "generated_at": datetime.now(UTC).isoformat(),
         "dataset_sha256": calculate_file_sha256(DATASET),
         "input_chunk_sha256": calculate_file_sha256(CORPUS),
@@ -425,7 +425,7 @@ def finalize(**_: Any) -> dict[str, Any]:
             "output_count": configuration["output"],
             "dataset_sha256": report["dataset_sha256"],
             "corpus_sha256": report["input_chunk_sha256"],
-            "benchmark_status": "OFFICIAL",
+            "benchmark_status": "PROVISIONAL_PENDING_INDEPENDENT_HUMAN_LABEL_CONFIRMATION",
             "timestamp": report["generated_at"],
         },
     )

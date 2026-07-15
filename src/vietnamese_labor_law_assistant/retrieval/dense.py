@@ -10,7 +10,7 @@ import structlog
 from vietnamese_labor_law_assistant.common.settings import Settings
 
 from .embeddings import EmbeddingProvider
-from .models import DenseSearchRequest, DenseSearchResult, RetrievedChunk
+from .models import DenseSearchRequest, DenseSearchResult, LegalSearchFilters, RetrievedChunk
 
 
 class DenseRetriever:
@@ -29,6 +29,8 @@ class DenseRetriever:
         article_number: int | None = None,
         clause_number: int | None = None,
         document_id: str | None = None,
+        filters: LegalSearchFilters | None = None,
+        vector: list[float] | None = None,
     ) -> DenseSearchResult:
         """Embed a query, search Qdrant, and map only valid legal payloads."""
         request = DenseSearchRequest(
@@ -42,17 +44,26 @@ class DenseRetriever:
             raise ValueError("top_k exceeds DENSE_MAX_TOP_K")
         started = time.perf_counter()
         self.logger.info("retrieval_started", query_length=len(request.query), top_k=request.top_k)
-        vector = self.embeddings.embed_query(request.query)
+        vector = vector if vector is not None else self.embeddings.embed_query(request.query)
         embedding_ms = (time.perf_counter() - started) * 1000
         self.logger.info("query_embedding_completed", embedding_latency_ms=embedding_ms)
         qdrant_started = time.perf_counter()
-        points = self.store.query_dense(
-            vector,
-            request.top_k,
-            request.article_number,
-            request.clause_number,
-            request.document_id,
+        effective_filters = filters or LegalSearchFilters(
+            article_number=request.article_number,
+            clause_number=request.clause_number,
+            document_id=request.document_id,
         )
+        if filters is None:
+            # Preserve the Week 2 adapter call contract for existing clients and fakes.
+            points = self.store.query_dense(
+                vector,
+                request.top_k,
+                request.article_number,
+                request.clause_number,
+                request.document_id,
+            )
+        else:
+            points = self.store.query_dense(vector, request.top_k, filters=effective_filters)
         qdrant_ms = (time.perf_counter() - qdrant_started) * 1000
         self.logger.info("qdrant_search_completed", qdrant_latency_ms=qdrant_ms, count=len(points))
         results = []
