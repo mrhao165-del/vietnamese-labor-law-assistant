@@ -1,0 +1,68 @@
+{
+  "week": 8,
+  "status": "PASS",
+  "verified_at": "2026-07-16T18:36:34.839015+00:00",
+  "scope": {
+    "notice_period": "employee_unilateral_termination",
+    "contract_duration": "SUPPORTED"
+  },
+  "sdk": {
+    "name": "mcp",
+    "version": "1.28.1"
+  },
+  "dependencies": {
+    "python_dateutil": "2.9.0.post0"
+  },
+  "tools": {
+    "calculate_notice_period": "PASS",
+    "calculate_contract_duration": "PASS"
+  },
+  "legal_rules": {
+    "matrix_created": true,
+    "provenance_validation": "PASS",
+    "supported_rule_count": 12,
+    "external_regulation_rule_count": 1,
+    "missing_legal_basis_count": 0
+  },
+  "determinism": {
+    "notice_period": "PASS",
+    "contract_duration": "PASS"
+  },
+  "date_validation": {
+    "iso_only": "PASS",
+    "leap_year": "PASS",
+    "month_end": "PASS",
+    "end_before_start": "PASS",
+    "maximum_boundary": "PASS"
+  },
+  "transport": {
+    "stdio": "PASS",
+    "streamable_http": "NOT_IN_SCOPE"
+  },
+  "client_protocol_test": "PASS",
+  "production_demo": "PASS",
+  "inspector_test": "PASS",
+  "security_checks": {
+    "fixed_tool_allowlist": true,
+    "no_arbitrary_file_access": true,
+    "no_shell_execution": true,
+    "no_network_dependency": true,
+    "no_llm_dependency": true,
+    "structured_validation": true,
+    "error_sanitization": true
+  },
+  "quality_gates": {
+    "ruff": "PASS",
+    "pyright": "PASS",
+    "pytest": "PASS",
+    "coverage_percent": 84.75,
+    "coverage_threshold": 82.0
+  },
+  "week7_regression": "PASS",
+  "notes": [
+    "Legal rule matrix and provenance validation use only the repository source snapshot.",
+    "The special-occupation branch returns EXTERNAL_REGULATION_REQUIRED because the Government regulation is outside the corpus.",
+    "MCP Inspector CLI 0.22.0 passed on the production stdio server with isolated workspace npm cache and no elevated workaround.",
+    "Production Week 7 retrieval demo and Week 8 calculator demo both passed."
+  ]
+}

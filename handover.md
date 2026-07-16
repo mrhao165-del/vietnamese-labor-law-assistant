@@ -3,7 +3,7 @@
 Ngày cập nhật: 2026-07-16
 
 Phạm vi: mã nguồn production trong `src/vietnamese_labor_law_assistant/`, scripts vận hành, tests, cấu hình, tài liệu và artefact hiện có trong repository.
-Ghi chú trạng thái: dự án đã hoàn tất Week 6 Retrieval Engine và `WEEK7_COMPLETE` MCP Legal Retrieval Server (stdio, Official MCP Python SDK, bốn tool chỉ đọc). Official MCP Inspector CLI, production client demo, protocol test, quality gates và Week 6 regression đều đã PASS. Calculator, LangGraph agent và claim-level citation-verification guardrails vẫn chưa được triển khai; không thêm scaffold/placeholder cho các phần đó. Xem `docs/week7_mcp_legal_retrieval.md`, `evaluation/results/week7_mcp_verification.json` và `evaluation/results/week7_mcp_inspector_verification.json` để biết evidence mới nhất.
+Ghi chú trạng thái: dự án đã hoàn tất Week 6 Retrieval Engine, `WEEK7_COMPLETE` MCP Legal Retrieval Server và `WEEK8_COMPLETE` MCP Legal Calculator Server. Week 8 dùng Python rule engine deterministic cho Điều 20/35, hai tool stdio, provenance validation và MCP Inspector CLI; không dùng LLM để suy luận luật hoặc tính ngày. LangGraph agent và claim-level citation-verification guardrails vẫn chưa được triển khai. Xem `docs/week8_mcp_legal_calculator.md`, `docs/week8_legal_rule_matrix.md` và evidence Week 8 để biết chi tiết.
 
 ## 1. Tổng quan & Công nghệ sử dụng
 

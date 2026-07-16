@@ -15,6 +15,8 @@ Completed implementation and benchmark work:
   query-embedding cache, and article lookup.
 - Week 7 MCP Legal Retrieval Server: Official MCP Python SDK, four read-only stdio tools, a
   reusable protocol client, and verified MCP Inspector CLI coverage.
+- Week 8 MCP Legal Calculator Server: deterministic Article 20/35 rule engine, two stdio tools,
+  source-provenance validation, real protocol client, and verified MCP Inspector CLI coverage.
 
 Selected configuration: `R2_H2_C10_O5_L512_B1`.
 
@@ -28,8 +30,8 @@ Current limitations:
   `R2_H2_C10_O5_L512_B1` configuration. Supported modes are `dense`,
   `sparse_underthesea`, `hybrid_underthesea`, `dense_rerank`, and
   `hybrid_underthesea_rerank`; no mode silently falls back to dense.
-- The Week 7 MCP server currently supports only read-only legal retrieval over stdio. Calculator,
-  LangGraph Agent, and full claim-level citation verification are not implemented.
+- MCP servers currently support read-only retrieval and deterministic calculator tools over stdio.
+  LangGraph Agent and full claim-level citation verification are not implemented.
 
 Configure `.env`, ensure the existing dense and BM25 indexes are present, then start
 `uv run uvicorn vietnamese_labor_law_assistant.api.main:app --host 127.0.0.1 --port 8000`.
@@ -42,5 +44,10 @@ Run the standalone MCP server with
 real stdio client demo with `uv run python scripts/demo_week7_mcp_client.py`. See
 [the Week 7 MCP guide](docs/week7_mcp_legal_retrieval.md) for tool contracts, testing, and
 Inspector commands.
+
+Run the deterministic calculator demo with
+`uv run python scripts/demo_week8_mcp_calculator_client.py`; see
+[the Week 8 calculator guide](docs/week8_mcp_legal_calculator.md). Results are source-grounded
+retrieval support, not automated legal advice.
 
 Repository placement and dependency rules are documented in [the repository architecture guide](docs/architecture/repository_structure.md). Contributors and coding agents must also follow [AGENTS.md](AGENTS.md).

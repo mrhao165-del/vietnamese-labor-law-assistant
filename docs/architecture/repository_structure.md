@@ -16,6 +16,7 @@ The installable code is isolated under `src/`, so imports exercised in tests and
 | `src/vietnamese_labor_law_assistant/retrieval/` | Embedding, Qdrant, BM25S, tokenization, RRF, hybrid retrieval, and reranking. |
 | `src/vietnamese_labor_law_assistant/generation/` | Prompts, LLM adapter, answer contracts, citations, and RAG orchestration. |
 | `src/vietnamese_labor_law_assistant/evaluation/` | Reusable evaluation contracts, datasets, metrics, and runners. |
+| `src/vietnamese_labor_law_assistant/calculator/` | Pure deterministic legal rule registry, calculator models, date arithmetic, and source-provenance validation. |
 | `src/vietnamese_labor_law_assistant/mcp_servers/` | MCP transport/tool adapters that call existing core services only. |
 | `src/vietnamese_labor_law_assistant/mcp_clients/` | Reusable protocol clients for project-owned MCP servers. |
 | `src/vietnamese_labor_law_assistant/agent/` | Future agent logic only, when that roadmap item is implemented. |

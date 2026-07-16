@@ -2,11 +2,11 @@
 
 ## 1. Project status
 
-The project has completed Week 6 Retrieval Engine and Week 7 MCP Legal Retrieval Server: DOCX ingestion, BGE-M3 dense retrieval, BM25S/Underthesea sparse retrieval, RRF hybrid retrieval, BAAI/bge-reranker-v2-m3 reranking, and a read-only stdio MCP adapter over `LegalRetriever`. Week 7 is verified by the official MCP Inspector CLI as well as protocol tests. The selected configuration is **R2_H2_C10_O5_L512_B1**. Calculator, LangGraph agent, and citation-verification guardrails are not implemented; do not add placeholder implementations for them.
+The project has completed Week 6 Retrieval Engine, Week 7 MCP Legal Retrieval Server, and Week 8 MCP Legal Calculator Server. Week 8 is a deterministic Article 20/35 Python rule engine wrapped by two stdio MCP tools; it is not an LLM legal-reasoning system. Week 7 and Week 8 are verified by official MCP Inspector CLI and protocol tests. The selected retrieval configuration remains **R2_H2_C10_O5_L512_B1**. LangGraph agent and citation-verification guardrails are not implemented; do not add placeholder implementations for them.
 
 ## 2. Repository architecture
 
-Production code lives only in `src/vietnamese_labor_law_assistant/`, the primary import package. Its bounded areas are `api`, `common`, `ingestion`, `retrieval`, `generation`, `evaluation`, `agent`, `guardrails`, `mcp_servers`, and `mcp_clients`. `apps/` and `scripts/` are adapters or entrypoints; MCP adapters may only adapt and call core services, never host retrieval business logic.
+Production code lives only in `src/vietnamese_labor_law_assistant/`, the primary import package. Its bounded areas are `api`, `common`, `ingestion`, `retrieval`, `generation`, `evaluation`, `calculator`, `mcp_servers`, and `mcp_clients`. `apps/` and `scripts/` are adapters or entrypoints; MCP adapters may only adapt and call core services, never host business logic.
 
 ## 3. File placement rules
 
@@ -41,6 +41,6 @@ Changes preserve the `src` layout, have no competing copies of a service, pass t
 
 ## 8. Forbidden actions
 
-- Do not implement Calculator, Agent, or Guardrail features merely to fill directory scaffolds; extend MCP only with a real adapter over an existing core capability.
+- Do not implement Agent or Guardrail features merely to fill directory scaffolds; extend MCP only with a real adapter over an existing core capability.
 - Do not add retrieval, chunking, metrics, prompts, or business rules to adapters/entrypoints.
 - Do not use `git reset --hard`, `git clean -fd`, or overwrite unrelated user changes.
