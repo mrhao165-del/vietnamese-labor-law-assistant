@@ -15,6 +15,7 @@ from vietnamese_labor_law_assistant.ingestion.models import LegalChunk
 from .dense import DenseRetriever
 from .errors import (
     ArticleNotFoundError,
+    ClauseNotFoundError,
     DenseBackendUnavailableError,
     EmbeddingError,
     EmptyQueryError,
@@ -332,7 +333,7 @@ class LegalRetriever:
         for chunk in article.clauses:
             if chunk.clause_number == clause_number:
                 return chunk
-        raise ArticleNotFoundError(
+        raise ClauseNotFoundError(
             f"Clause {clause_number} of article {article_number} was not found"
         )
 

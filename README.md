@@ -13,6 +13,8 @@ Completed implementation and benchmark work:
 - Week 5 BGE reranker benchmark and DEV-selected configuration.
 - Week 6 production Retrieval Engine: hybrid Underthesea + reranker, direct search, filters,
   query-embedding cache, and article lookup.
+- Week 7 MCP Legal Retrieval Server: Official MCP Python SDK, four read-only stdio tools, a
+  reusable protocol client, and verified MCP Inspector CLI coverage.
 
 Selected configuration: `R2_H2_C10_O5_L512_B1`.
 
@@ -26,12 +28,19 @@ Current limitations:
   `R2_H2_C10_O5_L512_B1` configuration. Supported modes are `dense`,
   `sparse_underthesea`, `hybrid_underthesea`, `dense_rerank`, and
   `hybrid_underthesea_rerank`; no mode silently falls back to dense.
-- MCP, Calculator, Agent, and full claim-level citation verification are not implemented.
+- The Week 7 MCP server currently supports only read-only legal retrieval over stdio. Calculator,
+  LangGraph Agent, and full claim-level citation verification are not implemented.
 
 Configure `.env`, ensure the existing dense and BM25 indexes are present, then start
 `uv run uvicorn vietnamese_labor_law_assistant.api.main:app --host 127.0.0.1 --port 8000`.
 Use `POST /api/v1/search` for direct retrieval and `GET /api/v1/articles/{article_number}` for
 source lookup. The legacy `POST /api/v1/query` remains available; `POST /api/v1/rag/query` is
 its explicit alias. See [the Week 6 Retrieval Engine guide](docs/week6_retrieval_engine.md).
+
+Run the standalone MCP server with
+`uv run python -m vietnamese_labor_law_assistant.mcp_servers.legal_retrieval.server`, or run the
+real stdio client demo with `uv run python scripts/demo_week7_mcp_client.py`. See
+[the Week 7 MCP guide](docs/week7_mcp_legal_retrieval.md) for tool contracts, testing, and
+Inspector commands.
 
 Repository placement and dependency rules are documented in [the repository architecture guide](docs/architecture/repository_structure.md). Contributors and coding agents must also follow [AGENTS.md](AGENTS.md).

@@ -41,3 +41,4 @@ data/qdrant_local/
 .env.*
 !.env.example
 coverage.jsonv
+.cache/

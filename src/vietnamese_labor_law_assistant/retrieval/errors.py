@@ -35,6 +35,11 @@ class ArticleNotFoundError(RetrievalError):
     status_code = 404
 
 
+class ClauseNotFoundError(RetrievalError):
+    code = "CLAUSE_NOT_FOUND"
+    status_code = 404
+
+
 class DenseBackendUnavailableError(RetrievalError):
     code = "DENSE_BACKEND_UNAVAILABLE"
 

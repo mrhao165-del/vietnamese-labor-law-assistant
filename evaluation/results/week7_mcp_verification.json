@@ -1,0 +1,49 @@
+{
+  "week": 7,
+  "status": "PASS",
+  "verified_at": "2026-07-16T17:11:12.250453+00:00",
+  "sdk": {
+    "name": "mcp",
+    "version": "1.28.1"
+  },
+  "transport": {
+    "stdio": "PASS",
+    "streamable_http": "NOT_IN_SCOPE"
+  },
+  "tools": {
+    "search_labor_law": "PASS",
+    "get_article": "PASS",
+    "get_clause": "PASS",
+    "get_document_metadata": "PASS"
+  },
+  "client_protocol_test": "PASS",
+  "inspector_test": "PASS",
+  "inspector": {
+    "package": "@modelcontextprotocol/inspector",
+    "version": "0.22.0",
+    "mode": "cli"
+  },
+  "security_checks": {
+    "no_arbitrary_file_access": true,
+    "no_shell_execution": true,
+    "tool_allowlist": true,
+    "structured_validation": true,
+    "error_sanitization": true
+  },
+  "quality_gates": {
+    "ruff": "PASS",
+    "pyright": "PASS",
+    "pytest": "PASS",
+    "coverage_percent": 83.58,
+    "coverage_threshold": 82.0
+  },
+  "week6_regression": "PASS",
+  "notes": [
+    "Official MCP Python SDK package mcp 1.28.1 was installed with the stable constraint >=1.28.1,<2.",
+    "Real production stdio client demo passed for tool discovery and all four tool calls.",
+    "Automated official-SDK stdio protocol integration test passed with a dependency-injected fake retriever.",
+    "MCP Inspector CLI 0.22.0 passed against the production stdio server using the isolated workspace npm cache .cache/npm-mcp-inspector; no elevated or administrator workaround was used.",
+    "Inspector verified the exact four-tool allowlist, input/output schemas, all four production tool calls, structured rejection of top_k=0, error sanitization, and a successful post-invalid tools/list call.",
+    "Consolidated Inspector evidence is recorded in evaluation/results/week7_mcp_inspector_verification.json."
+  ]
+}

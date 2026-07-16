@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import logging
+from typing import TextIO
 
 import structlog
 
 from .settings import Settings
 
 
-def configure_logging(settings: Settings) -> None:
+def configure_logging(settings: Settings, stream: TextIO | None = None) -> None:
     """Configure stdlib and structlog processors once at application startup."""
-    logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
+    logging.basicConfig(
+        level=getattr(logging, settings.log_level.upper(), logging.INFO),
+        stream=stream,
+    )
     renderer = (
         structlog.processors.JSONRenderer()
         if settings.log_format == "json"
@@ -27,6 +31,7 @@ def configure_logging(settings: Settings) -> None:
         wrapper_class=structlog.make_filtering_bound_logger(
             getattr(logging, settings.log_level.upper(), logging.INFO)
         ),
+        logger_factory=structlog.PrintLoggerFactory(file=stream),
         cache_logger_on_first_use=True,
     )
 

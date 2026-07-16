@@ -12,6 +12,7 @@ dependencies = [
     "fastapi>=0.139.0",
     "flagembedding>=1.4.0",
     "httpx>=0.28.1",
+    "mcp>=1.28.1,<2",
     "openai>=2.45.0",
     "pydantic>=2",
     "pydantic-settings>=2.14.2",

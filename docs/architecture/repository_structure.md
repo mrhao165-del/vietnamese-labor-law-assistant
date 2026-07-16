@@ -16,10 +16,11 @@ The installable code is isolated under `src/`, so imports exercised in tests and
 | `src/vietnamese_labor_law_assistant/retrieval/` | Embedding, Qdrant, BM25S, tokenization, RRF, hybrid retrieval, and reranking. |
 | `src/vietnamese_labor_law_assistant/generation/` | Prompts, LLM adapter, answer contracts, citations, and RAG orchestration. |
 | `src/vietnamese_labor_law_assistant/evaluation/` | Reusable evaluation contracts, datasets, metrics, and runners. |
+| `src/vietnamese_labor_law_assistant/mcp_servers/` | MCP transport/tool adapters that call existing core services only. |
+| `src/vietnamese_labor_law_assistant/mcp_clients/` | Reusable protocol clients for project-owned MCP servers. |
 | `src/vietnamese_labor_law_assistant/agent/` | Future agent logic only, when that roadmap item is implemented. |
 | `src/vietnamese_labor_law_assistant/guardrails/` | Future citation verification/guardrails only, when implemented. |
 | `apps/` | Independent application entrypoints, principally a future frontend. |
-| `mcp_servers/` | Future MCP transports, tool schemas, and server entrypoints that call core services. |
 | `scripts/` | Thin operational CLIs: parse arguments, invoke the package, write artefacts, return an exit code. |
 | `tests/` | Tests mirroring production areas: `unit`, `integration`, and `end_to_end`. |
 | `data/` | Source data, processed artefacts, and evaluation datasets; never Python code. |
@@ -56,7 +57,7 @@ src/retrieval/hybrid.py                       # breaks the primary package bound
 ## Dependency direction
 
 ```text
-adapters: apps / scripts / mcp_servers
+adapters: apps / scripts / mcp_servers / mcp_clients
                   |
                   v
 api -> generation -> retrieval -> ingestion
@@ -74,7 +75,8 @@ common   evaluation    common
 | `src/vietnamese_labor_law_assistant/**` | Reusable production code | `src` primary package | Keep | Already follows the required package and absolute-import model; no imports need relocation. |
 | `src/vietnamese_labor_law_assistant/__init__.py` | Placeholder console function | Package metadata | Simplify | Removed `main()` and its print side effect. The unused `project.scripts` entry was removed with it. |
 | `apps/api`, `apps/frontend` | Empty scaffold | Future adapters | Remove empty scaffold | FastAPI already lives in `src/.../api`; no duplicate API or references exist. |
-| `mcp_servers/legal_retrieval`, `mcp_servers/legal_calculator` | Empty scaffold | Future MCP adapters | Remove empty scaffold | MCP is not implemented; no transport or core service is present. |
+| `src/.../mcp_servers/legal_retrieval` | Week 7 stdio MCP server and tool schemas | Adapter | Keep | Adapts the shared `LegalRetriever` and fixed metadata provider; it contains no retrieval algorithm. |
+| `src/.../mcp_clients/legal_retrieval.py` | Week 7 stdio protocol client | Adapter | Keep | Starts the MCP server as a subprocess and uses the official MCP client session. |
 | `src/.../agent`, `src/.../guardrails` | `__init__.py`-only scaffold | Future production areas | Remove placeholder files | Roadmap items are unimplemented; empty package files would falsely imply functionality. |
 | `scripts/` | Operational CLIs and benchmarks | Entry points | Keep | Scripts use package imports; no production module is duplicated. |
 | `data/`, `docs/`, `evaluation/results/` | Data, documentation, benchmark artefacts | Non-code storage | Keep protected | No source or Week 3–5 artefacts are moved, deleted, or altered. |
