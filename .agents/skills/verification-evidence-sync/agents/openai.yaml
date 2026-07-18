@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verification Evidence Sync"
+  short_description: "Record observed verification runs"
+  default_prompt: "Use $verification-evidence-sync to record real verification output."

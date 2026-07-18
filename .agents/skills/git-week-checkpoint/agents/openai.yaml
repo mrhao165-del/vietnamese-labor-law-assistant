@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Week Checkpoint"
+  short_description: "Prepare a safe weekly checkpoint"
+  default_prompt: "Use $git-week-checkpoint to inspect this week before committing."

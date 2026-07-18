@@ -14,6 +14,9 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from pydantic import BaseModel, ValidationError
 
+from vietnamese_labor_law_assistant.mcp_clients.huggingface_environment import (
+    select_huggingface_cache_environment,
+)
 from vietnamese_labor_law_assistant.mcp_servers.legal_retrieval.schemas import (
     ArticleData,
     ClauseData,
@@ -50,15 +53,20 @@ class LegalRetrievalMcpClient:
     @asynccontextmanager
     async def session(self) -> AsyncIterator[ClientSession]:
         """Start the server, perform MCP initialization, and always close stdio cleanly."""
-        parameters = StdioServerParameters(
-            command=self.server_command,
-            args=self.server_args,
-            cwd=self.cwd,
-        )
+        parameters = self._server_parameters()
         async with stdio_client(parameters) as (read_stream, write_stream):
             async with ClientSession(read_stream, write_stream) as session:
                 await asyncio.wait_for(session.initialize(), timeout=self.timeout_seconds)
                 yield session
+
+    def _server_parameters(self) -> StdioServerParameters:
+        """Build stdio parameters with only safe Hugging Face cache overrides."""
+        return StdioServerParameters(
+            command=self.server_command,
+            args=self.server_args,
+            cwd=self.cwd,
+            env=select_huggingface_cache_environment(),
+        )
 
     async def list_tools(self, session: ClientSession) -> list[str]:
         result = await asyncio.wait_for(session.list_tools(), timeout=self.timeout_seconds)

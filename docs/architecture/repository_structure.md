@@ -19,7 +19,7 @@ The installable code is isolated under `src/`, so imports exercised in tests and
 | `src/vietnamese_labor_law_assistant/calculator/` | Pure deterministic legal rule registry, calculator models, date arithmetic, and source-provenance validation. |
 | `src/vietnamese_labor_law_assistant/mcp_servers/` | MCP transport/tool adapters that call existing core services only. |
 | `src/vietnamese_labor_law_assistant/mcp_clients/` | Reusable protocol clients for project-owned MCP servers. |
-| `src/vietnamese_labor_law_assistant/agent/` | Future agent logic only, when that roadmap item is implemented. |
+| `src/vietnamese_labor_law_assistant/agent/` | Finite LangGraph orchestration, policies, typed state, safe errors, traces, and MCP client gateways. |
 | `src/vietnamese_labor_law_assistant/guardrails/` | Future citation verification/guardrails only, when implemented. |
 | `apps/` | Independent application entrypoints, principally a future frontend. |
 | `scripts/` | Thin operational CLIs: parse arguments, invoke the package, write artefacts, return an exit code. |
@@ -28,7 +28,7 @@ The installable code is isolated under `src/`, so imports exercised in tests and
 | `evaluation/results/` | Benchmark outputs only; never production logic. |
 | `docs/` | Human documentation only; never Python code. |
 
-Empty roadmap directories are intentionally not versioned. Create an adapter directory only with its first real entrypoint, not with a placeholder Python file.
+Empty roadmap directories are intentionally not versioned. The Week 9 `agent/` directory exists because it contains the production LangGraph implementation; it imports only MCP clients, generation protocols, and common settings/logging, never retrieval or calculator core services.
 
 ## Adding a module
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Legal Provenance Validator"
+  short_description: "Validate canonical legal basis"
+  default_prompt: "Use $legal-provenance-validator to validate this Article, Clause, Point, and chunk."

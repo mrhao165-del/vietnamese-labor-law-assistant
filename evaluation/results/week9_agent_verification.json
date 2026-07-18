@@ -1,0 +1,10 @@
+{
+  "week": 9,
+  "status": "PASS",
+  "verification": "offline_contract_benchmark",
+  "case_count": 40,
+  "metrics_file": "evaluation/results/week9_agent_metrics.json",
+  "limitations": [
+    "Uses a dataset-driven fake router and fake MCP envelopes; it is not a live LLM benchmark."
+  ]
+}

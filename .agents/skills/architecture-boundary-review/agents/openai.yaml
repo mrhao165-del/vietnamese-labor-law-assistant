@@ -1,0 +1,4 @@
+interface:
+  display_name: "Architecture Boundary Review"
+  short_description: "Review module boundary placement"
+  default_prompt: "Use $architecture-boundary-review to review this change for boundary violations."

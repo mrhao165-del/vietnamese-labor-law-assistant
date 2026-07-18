@@ -82,6 +82,13 @@ Integration test khởi chạy một subprocess server fixture với Official MC
 thực hiện initialize, `tools/list`, gọi bốn tool và kiểm tra invalid `top_k`. Fixture chỉ thay
 dependency `LegalRetriever` bằng fake; schemas và tool adapter vẫn là production code.
 
+## Hugging Face cache propagation
+
+When starting the retrieval server over stdio, the client forwards only a static allowlist of
+non-secret cache settings: `HF_HOME`, `HF_HUB_CACHE`, legacy `HUGGINGFACE_HUB_CACHE`, and
+`HF_HUB_OFFLINE`. The client never copies the full environment or passes tokens, API keys, or credentials.
+
+
 ## MCP Inspector
 
 Inspector chính thức đã được xác minh ở CLI non-interactive với version `0.22.0`, Node

@@ -60,6 +60,13 @@ class Settings(BaseSettings):
     llm_provider: Literal["openai", "gemini_openai_compatible"] = "openai"
     llm_timeout_seconds: float = Field(default=60, gt=0)
     llm_max_retries: int = Field(default=2, ge=0, le=10)
+    agent_max_input_length: int = Field(default=4000, ge=1, le=16000)
+    agent_max_tool_calls: int = Field(default=3, ge=1, le=10)
+    agent_tool_timeout_seconds: float = Field(default=30, gt=0, le=120)
+    agent_workflow_timeout_seconds: float = Field(default=90, gt=0, le=300)
+    agent_max_transport_retries: int = Field(default=1, ge=0, le=3)
+    agent_max_retrieval_top_k: int = Field(default=5, ge=1, le=10)
+    agent_tool_output_max_chars: int = Field(default=12000, ge=256, le=100000)
     api_host: str = "127.0.0.1"
     api_port: int = Field(default=8000, ge=1, le=65535)
 

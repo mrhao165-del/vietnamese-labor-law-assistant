@@ -1,0 +1,4 @@
+interface:
+  display_name: "Protected Artifact Guard"
+  short_description: "Inspect protected diff risks"
+  default_prompt: "Use $protected-artifact-guard to inspect this diff for protected changes."

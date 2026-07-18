@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Quality Gate"
+  short_description: "Run canonical project checks"
+  default_prompt: "Use $project-quality-gate to run the repository quality gates."

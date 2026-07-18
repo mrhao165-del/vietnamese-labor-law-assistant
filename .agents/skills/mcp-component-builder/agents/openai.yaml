@@ -1,0 +1,4 @@
+interface:
+  display_name: "MCP Component Builder"
+  short_description: "Build a safe stdio MCP adapter"
+  default_prompt: "Use $mcp-component-builder to design a safe stdio MCP component."

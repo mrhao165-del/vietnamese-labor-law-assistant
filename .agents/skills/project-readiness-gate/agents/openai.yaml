@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Readiness Gate"
+  short_description: "Assess next-week readiness"
+  default_prompt: "Use $project-readiness-gate to assess whether this week is ready to close."

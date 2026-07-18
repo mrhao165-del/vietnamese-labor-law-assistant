@@ -17,6 +17,9 @@ Completed implementation and benchmark work:
   reusable protocol client, and verified MCP Inspector CLI coverage.
 - Week 8 MCP Legal Calculator Server: deterministic Article 20/35 rule engine, two stdio tools,
   source-provenance validation, real protocol client, and verified MCP Inspector CLI coverage.
+- Week 9 LangGraph Orchestrator Agent implementation: finite four-route workflow, typed state,
+  OpenAI-SDK structured routing/generation, bounded MCP calls, sanitized trace, offline contract
+  benchmark, and stdio MCP integration tests. Completion remains pending the canonical runtime gate.
 
 Selected configuration: `R2_H2_C10_O5_L512_B1`.
 
@@ -31,7 +34,7 @@ Current limitations:
   `sparse_underthesea`, `hybrid_underthesea`, `dense_rerank`, and
   `hybrid_underthesea_rerank`; no mode silently falls back to dense.
 - MCP servers currently support read-only retrieval and deterministic calculator tools over stdio.
-  LangGraph Agent and full claim-level citation verification are not implemented.
+  Week 9 does not implement Week 10 claim-level citation verification or a live-LLM benchmark.
 
 Configure `.env`, ensure the existing dense and BM25 indexes are present, then start
 `uv run uvicorn vietnamese_labor_law_assistant.api.main:app --host 127.0.0.1 --port 8000`.
@@ -42,6 +45,13 @@ its explicit alias. See [the Week 6 Retrieval Engine guide](docs/week6_retrieval
 Run the standalone MCP server with
 `uv run python -m vietnamese_labor_law_assistant.mcp_servers.legal_retrieval.server`, or run the
 real stdio client demo with `uv run python scripts/demo_week7_mcp_client.py`. See
+
+## Week 9 verification status
+
+`WEEK9_COMPLETE`: canonical quality gate, real Week 7 MCP runtime, Week 6?8 regressions, and
+Week 9's targeted tests/evaluation/verification passed on 2026-07-18. This completion statement
+supersedes the earlier pending-runtime wording. Claim-level citation verification remains Week 10 work.
+
 [the Week 7 MCP guide](docs/week7_mcp_legal_retrieval.md) for tool contracts, testing, and
 Inspector commands.
 
@@ -49,5 +59,9 @@ Run the deterministic calculator demo with
 `uv run python scripts/demo_week8_mcp_calculator_client.py`; see
 [the Week 8 calculator guide](docs/week8_mcp_legal_calculator.md). Results are source-grounded
 retrieval support, not automated legal advice.
+
+See [the Week 9 LangGraph guide](docs/week9_langgraph_agent.md). Run its deterministic contract
+benchmark with `uv run python scripts/run_week9_agent_evaluation.py`, then validate the evidence
+with `uv run python scripts/verify_week9_agent.py`.
 
 Repository placement and dependency rules are documented in [the repository architecture guide](docs/architecture/repository_structure.md). Contributors and coding agents must also follow [AGENTS.md](AGENTS.md).

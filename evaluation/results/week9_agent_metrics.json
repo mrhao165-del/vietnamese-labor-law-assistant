@@ -1,0 +1,27 @@
+{
+  "week": 9,
+  "status": "PASS",
+  "mode": "OFFLINE_CONTRACT_BENCHMARK",
+  "generated_at": "2026-07-18T12:08:38.896983+00:00",
+  "dataset": "data/evaluation/week9_agent_eval_v1.jsonl",
+  "case_count": 40,
+  "review_status": "PROJECT_AUTHOR_REVIEWED",
+  "limitations": [
+    "Uses a dataset-driven fake router and fake MCP envelopes; it is not a live LLM benchmark."
+  ],
+  "metrics": {
+    "intent_accuracy": 1.0,
+    "tool_selection_accuracy": 1.0,
+    "tool_sequence_accuracy": 1.0,
+    "parameter_exact_match": 0.975,
+    "parameter_field_accuracy": 0.975,
+    "tool_call_success_rate": 0.9,
+    "out_of_scope_accuracy": 1.0,
+    "clarification_accuracy": 1.0,
+    "workflow_success_rate": 0.9,
+    "error_handling_success_rate": 0.95,
+    "average_tool_calls": 0.925,
+    "mean_latency_ms": 3.4673300001486496,
+    "p95_latency_ms": 4.316899998229928
+  }
+}
