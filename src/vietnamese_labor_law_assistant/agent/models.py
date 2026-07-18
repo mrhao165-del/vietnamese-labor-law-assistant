@@ -109,6 +109,7 @@ class AgentResult(BaseModel):
     errors: list[dict[str, Any]] = Field(default_factory=list)
     tool_trace: list[ToolTrace] = Field(default_factory=list)
     workflow_verification: dict[str, Any]
+    verification: dict[str, Any] | None = None
     latency_ms: float = Field(ge=0)
 
 
@@ -131,6 +132,7 @@ class AgentState(TypedDict, total=False):
     final_answer: str
     citations: list[dict[str, Any]]
     workflow_verification: dict[str, Any]
+    verification: dict[str, Any] | None
     errors: list[dict[str, Any]]
     started_at: str
     completed_at: str | None

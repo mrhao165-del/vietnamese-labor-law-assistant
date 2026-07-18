@@ -1,0 +1,101 @@
+{
+  "week": 10,
+  "status": "PASS",
+  "mode": "OFFLINE_DETERMINISTIC",
+  "generated_at": "2026-07-18T18:01:24.586620+00:00",
+  "commit_sha": "969c588c9e457c040664ffbe77e901bf031c7e30",
+  "case_count": 40,
+  "dataset_sha256": "35162d6f6cc21665908e208989d324e2cb6ea7ff21a9c5ecad799c678b6f3407",
+  "canonical_source_sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
+  "thresholds": {
+    "lower": 0.35,
+    "high": 0.75
+  },
+  "judge_mode": "disabled_with_failure_fixtures",
+  "protected_artifact_status": "CANONICAL_SOURCE_UNCHANGED",
+  "category_coverage": {
+    "calculator_numeric_contradiction": 1,
+    "calculator_only_supported": 1,
+    "citation_not_in_context": 3,
+    "duplicate_citation": 1,
+    "empty_context": 1,
+    "external_regulation_required": 1,
+    "judge_invalid_output": 1,
+    "judge_timeout": 1,
+    "keyword_overlap_wrong_meaning": 1,
+    "legal_reference_match_but_semantic_unsupported": 1,
+    "malformed_citation": 1,
+    "missing_citation": 2,
+    "mixed_claim_status": 1,
+    "nonexistent_chunk": 5,
+    "numeric_contradiction": 1,
+    "out_of_scope_refusal": 1,
+    "partial_compound_claim": 7,
+    "retrieval_and_calculator_supported": 1,
+    "unicode_spacing_variant": 1,
+    "valid_full_support": 6,
+    "wrong_clause": 1,
+    "wrong_point": 1
+  },
+  "missing_categories": [],
+  "route_distribution": {
+    "CALCULATOR_ONLY": 1,
+    "DIRECT_GUARDRAIL": 36,
+    "OUT_OF_SCOPE": 1,
+    "RETRIEVAL_AND_CALCULATOR": 1,
+    "RETRIEVAL_ONLY": 1
+  },
+  "status_distribution": {
+    "INSUFFICIENT_CONTEXT": 8,
+    "PARTIALLY_SUPPORTED": 7,
+    "SUPPORTED": 10,
+    "UNSUPPORTED": 15
+  },
+  "judge_behavior_distribution": {
+    "INVALID_OUTPUT": 1,
+    "NOT_USED": 38,
+    "TIMEOUT": 1
+  },
+  "provenance_validation": {
+    "checked": 34,
+    "passed": 34,
+    "failed": 0
+  },
+  "metrics": {
+    "citation_existence_accuracy": 1,
+    "retrieved_membership_accuracy": 1,
+    "claim_status_accuracy": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "SUPPORTED": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "PARTIALLY_SUPPORTED": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "UNSUPPORTED": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "INSUFFICIENT_CONTEXT": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "unsupported_detection_recall": 1.0,
+    "insufficient_context_detection_recall": 1.0,
+    "out_of_scope_refusal_accuracy": 1.0,
+    "false_supported_rate": 0.0,
+    "citation_support_rate": 0.25,
+    "mean_verification_latency_ms": 0.02860500012502598,
+    "p95_verification_latency_ms": 0.04140000055485871,
+    "error_timeout_count": 0,
+    "required_reason_misses": 0
+  }
+}

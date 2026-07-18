@@ -9,6 +9,11 @@ from typing import Protocol
 import structlog
 
 from vietnamese_labor_law_assistant.common.settings import Settings
+from vietnamese_labor_law_assistant.guardrails.citation_parser import extract_legal_citations
+from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
+from vietnamese_labor_law_assistant.guardrails.policy import guarded_answer
+from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
+from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
 from vietnamese_labor_law_assistant.retrieval.models import DenseSearchResult, SearchResponse
 
 from .citations import (
@@ -86,6 +91,41 @@ class RagService:
             answer = "Không thể xác minh trích dẫn của câu trả lời."
             citations = []
             warning = "CITATION_VALIDATION_FAILED"
+        verification: dict[str, object] | None = None
+        if self.settings.guardrail_enabled and all(
+            item.chunk_id.startswith("ll_") for item in search.results
+        ):
+            guardrail = CitationGuardrailService(
+                CanonicalSourceRegistry(self.settings.guardrail_canonical_source_path),
+                lower_threshold=self.settings.guardrail_semantic_lower_threshold,
+                high_threshold=self.settings.guardrail_semantic_high_threshold,
+            )
+            claims = [
+                AtomicClaim(
+                    claim_id=f"CLM-{index:03d}",
+                    text=claim.text,
+                    cited_context_ids=[context_map[item].chunk_id for item in claim.context_ids],
+                    legal_references=extract_legal_citations(claim.text),
+                )
+                for index, claim in enumerate(draft.claims, 1)
+            ]
+            evidence = [
+                EvidenceContext(
+                    chunk_id=item.chunk_id,
+                    content=item.content,
+                    article_number=item.article_number,
+                    clause_number=item.clause_number,
+                    point_label=item.point_label,
+                )
+                for item in search.results
+            ]
+            result = guardrail.verify(claims, evidence)
+            answer, policy_warnings = guarded_answer(answer, result)
+            verification = result.model_dump(mode="json")
+            if policy_warnings:
+                warning = "; ".join(policy_warnings)
+            if result.status.value in {"UNSUPPORTED", "INSUFFICIENT_CONTEXT"}:
+                citations = []
         self.logger.info(
             "citation_validation_completed",
             request_id=request_id,
@@ -106,6 +146,7 @@ class RagService:
             contexts=[item.model_dump(mode="json") for item in search.results]
             if include_contexts
             else None,
+            verification=verification,
         )
 
 

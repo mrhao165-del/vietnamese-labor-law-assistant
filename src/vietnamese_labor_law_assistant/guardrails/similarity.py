@@ -1,0 +1,22 @@
+"""Injectable semantic scoring without model loading or sklearn dependency."""
+
+from __future__ import annotations
+
+import math
+import re
+from typing import Protocol
+
+
+class SemanticScorer(Protocol):
+    def score(self, claim: str, evidence: str) -> float: ...
+
+
+class TokenCosineScorer:
+    """Deterministic fallback scorer for ambiguous lexical overlap."""
+
+    def score(self, claim: str, evidence: str) -> float:
+        left = set(re.findall(r"[\wà-ỹđ]+", claim.casefold()))
+        right = set(re.findall(r"[\wà-ỹđ]+", evidence.casefold()))
+        if not left or not right:
+            return 0.0
+        return len(left & right) / math.sqrt(len(left) * len(right))

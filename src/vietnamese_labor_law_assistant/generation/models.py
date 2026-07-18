@@ -48,6 +48,7 @@ class QueryResponse(BaseModel):
     generation: dict[str, Any]
     total_latency_ms: float = Field(ge=0)
     contexts: list[dict[str, Any]] | None = None
+    verification: dict[str, Any] | None = None
 
 
 class QueryRequest(BaseModel):

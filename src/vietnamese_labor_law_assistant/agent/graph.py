@@ -23,6 +23,7 @@ def build_agent_graph(service: AgentService) -> StateGraph[AgentState]:
     graph.add_node("build_refusal", service.build_refusal)
     graph.add_node("generate_answer", service.generate_answer)
     graph.add_node("verify_workflow_output", service.verify_workflow_output)
+    graph.add_node("apply_claim_guardrail", service.apply_claim_guardrail)
     graph.add_node("finalize", service.finalize)
     graph.add_edge(START, "validate_input")
     graph.add_edge("validate_input", "classify_intent")
@@ -43,7 +44,8 @@ def build_agent_graph(service: AgentService) -> StateGraph[AgentState]:
     graph.add_edge("combined_retrieval", "generate_answer")
     graph.add_edge("build_refusal", "verify_workflow_output")
     graph.add_edge("generate_answer", "verify_workflow_output")
-    graph.add_edge("verify_workflow_output", "finalize")
+    graph.add_edge("verify_workflow_output", "apply_claim_guardrail")
+    graph.add_edge("apply_claim_guardrail", "finalize")
     graph.add_edge("finalize", END)
     return graph
 

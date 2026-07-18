@@ -12,6 +12,11 @@ from typing import Any
 import structlog
 
 from vietnamese_labor_law_assistant.common.settings import Settings, get_settings
+from vietnamese_labor_law_assistant.guardrails.citation_parser import extract_legal_citations
+from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
+from vietnamese_labor_law_assistant.guardrails.policy import guarded_answer
+from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
+from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
 from vietnamese_labor_law_assistant.mcp_clients.legal_calculator import LegalCalculatorMcpClient
 from vietnamese_labor_law_assistant.mcp_clients.legal_retrieval import LegalRetrievalMcpClient
 
@@ -47,12 +52,14 @@ class AgentService:
         retrieval_gateway: ToolGateway,
         calculator_gateway: ToolGateway,
         policy: AgentPolicy,
+        guardrail_service: CitationGuardrailService | None = None,
     ) -> None:
         self.router = router
         self.answer_generator = answer_generator
         self.retrieval_gateway = retrieval_gateway
         self.calculator_gateway = calculator_gateway
         self.policy = policy
+        self.guardrail_service = guardrail_service
         self.logger = structlog.get_logger(__name__)
         self.graph = build_agent_graph(self).compile()
 
@@ -78,6 +85,11 @@ class AgentService:
                 LegalCalculatorMcpClient(timeout_seconds=policy.tool_timeout_seconds)
             ),
             policy=policy,
+            guardrail_service=CitationGuardrailService(
+                CanonicalSourceRegistry(settings.guardrail_canonical_source_path),
+                lower_threshold=settings.guardrail_semantic_lower_threshold,
+                high_threshold=settings.guardrail_semantic_high_threshold,
+            ),
         )
 
     async def run(self, question: str, *, include_trace: bool = False) -> AgentResult:
@@ -125,6 +137,7 @@ class AgentService:
             workflow_verification=completed.get(
                 "workflow_verification", {"status": "FAIL", "reason": "MISSING"}
             ),
+            verification=completed.get("verification"),
             latency_ms=latency_ms,
         )
 
@@ -405,6 +418,87 @@ class AgentService:
                 **self._terminal_error(exc),
                 "workflow_verification": {"status": "FAIL", "reason": exc.code},
             }
+
+    async def apply_claim_guardrail(self, state: AgentState) -> dict[str, Any]:
+        """Verify generated claims from MCP-produced evidence without another tool call."""
+        if state.get("route_status") == WorkflowStatus.OUTPUT_INVALID.value:
+            return {}
+        settings = get_settings()
+        if not settings.guardrail_enabled or self.guardrail_service is None:
+            return {"verification": {"status": "DISABLED"}}
+        if state.get("intent") == AgentIntent.OUT_OF_SCOPE.value:
+            result = self.guardrail_service.verify([], [], out_of_scope_refusal=True)
+            return {"verification": result.model_dump(mode="json")}
+        evidence = self._guardrail_evidence(state)
+        if not evidence:
+            return {
+                "final_answer": "INSUFFICIENT_VERIFIED_EVIDENCE",
+                "citations": [],
+                "verification": {"status": "INSUFFICIENT_CONTEXT", "reason": "NO_EVIDENCE"},
+            }
+        cited_ids = [
+            item["chunk_id"]
+            for item in state.get("citations", [])
+            if isinstance(item.get("chunk_id"), str)
+        ]
+        if not cited_ids:
+            cited_ids = [item.chunk_id for item in evidence if item.source_kind == "calculator"]
+        claim = AtomicClaim(
+            claim_id="AGENT-CLM-001",
+            text=str(state.get("final_answer") or ""),
+            cited_context_ids=cited_ids,
+            legal_references=extract_legal_citations(str(state.get("final_answer") or "")),
+        )
+        try:
+            result = self.guardrail_service.verify([claim], evidence)
+            answer, warnings = guarded_answer(str(state.get("final_answer") or ""), result)
+            update: dict[str, Any] = {
+                "verification": result.model_dump(mode="json"),
+                "final_answer": answer,
+            }
+            if warnings:
+                update["guardrail_warnings"] = warnings
+            if result.status.value in {"UNSUPPORTED", "INSUFFICIENT_CONTEXT"}:
+                update["citations"] = []
+            return update
+        except Exception:
+            return {
+                "final_answer": "INSUFFICIENT_VERIFIED_EVIDENCE",
+                "citations": [],
+                "verification": {"status": "INSUFFICIENT_CONTEXT", "reason": "GUARDRAIL_FAILURE"},
+            }
+
+    def _guardrail_evidence(self, state: AgentState) -> list[EvidenceContext]:
+        rows: list[EvidenceContext] = []
+        for response in (state.get("retrieval_result") or {}).get("responses", []):
+            data = response.get("data", {})
+            for item in data.get("results", []) + data.get("clauses", []) + [data]:
+                if isinstance(item, dict) and item.get("chunk_id") and item.get("content"):
+                    rows.append(
+                        EvidenceContext(
+                            chunk_id=item["chunk_id"],
+                            content=item["content"],
+                            article_number=item["article_number"],
+                            clause_number=item.get("clause_number"),
+                            point_label=item.get("point_label"),
+                        )
+                    )
+        registry = CanonicalSourceRegistry(get_settings().guardrail_canonical_source_path)
+        for response in (state.get("calculator_result") or {}).get("responses", []):
+            for basis in response.get("data", {}).get("legal_basis", []):
+                chunk = registry.get(basis.get("source_chunk_id", ""))
+                if chunk:
+                    rows.append(
+                        EvidenceContext(
+                            chunk_id=chunk.chunk_id,
+                            content=chunk.content,
+                            article_number=chunk.article_number,
+                            clause_number=chunk.clause_number,
+                            point_label=chunk.point_label,
+                            source_kind="calculator",
+                        )
+                    )
+        return list({item.chunk_id: item for item in rows}.values())
 
     async def finalize(self, state: AgentState) -> dict[str, Any]:
         return {"completed_at": self._now()}

@@ -19,7 +19,10 @@ Completed implementation and benchmark work:
   source-provenance validation, real protocol client, and verified MCP Inspector CLI coverage.
 - Week 9 LangGraph Orchestrator Agent implementation: finite four-route workflow, typed state,
   OpenAI-SDK structured routing/generation, bounded MCP calls, sanitized trace, offline contract
-  benchmark, and stdio MCP integration tests. Completion remains pending the canonical runtime gate.
+  benchmark, and stdio MCP integration tests.
+- Week 10 claim-level citation guardrail: typed atomic claims, canonical citation membership,
+  deterministic/semantic grounding, calculator provenance evidence, an optional structured judge,
+  and fail-closed RAG and Agent output policy.
 
 Selected configuration: `R2_H2_C10_O5_L512_B1`.
 
@@ -34,7 +37,9 @@ Current limitations:
   `sparse_underthesea`, `hybrid_underthesea`, `dense_rerank`, and
   `hybrid_underthesea_rerank`; no mode silently falls back to dense.
 - MCP servers currently support read-only retrieval and deterministic calculator tools over stdio.
-  Week 9 does not implement Week 10 claim-level citation verification or a live-LLM benchmark.
+- The optional live OpenAI judge is disabled for CI and the deterministic benchmark. Calculator
+  evidence remains limited to the existing Article 20/35 rules. Frontend and container deployment
+  remain Week 11 work.
 
 Configure `.env`, ensure the existing dense and BM25 indexes are present, then start
 `uv run uvicorn vietnamese_labor_law_assistant.api.main:app --host 127.0.0.1 --port 8000`.
@@ -50,7 +55,7 @@ real stdio client demo with `uv run python scripts/demo_week7_mcp_client.py`. Se
 
 `WEEK9_COMPLETE`: canonical quality gate, real Week 7 MCP runtime, Week 6?8 regressions, and
 Week 9's targeted tests/evaluation/verification passed on 2026-07-18. This completion statement
-supersedes the earlier pending-runtime wording. Claim-level citation verification remains Week 10 work.
+supersedes the earlier pending-runtime wording; Week 10 verification is documented below.
 
 [the Week 7 MCP guide](docs/week7_mcp_legal_retrieval.md) for tool contracts, testing, and
 Inspector commands.
@@ -63,5 +68,27 @@ retrieval support, not automated legal advice.
 See [the Week 9 LangGraph guide](docs/week9_langgraph_agent.md). Run its deterministic contract
 benchmark with `uv run python scripts/run_week9_agent_evaluation.py`, then validate the evidence
 with `uv run python scripts/verify_week9_agent.py`.
+
+## Week 10 verification status
+
+`WEEK10_COMPLETE`: every in-scope RAG/Agent answer passes the final three-layer guardrail before
+release. Claim results use `SUPPORTED`, `PARTIALLY_SUPPORTED`, `UNSUPPORTED`, or
+`INSUFFICIENT_CONTEXT`; unsupported or insufficient answers fail closed instead of returning the
+original generated assertion. Calculator-only routes reuse canonical rule provenance and do not
+make a compensating retrieval call. The optional structured OpenAI judge handles only ambiguous
+support and cannot override citation existence, membership, legal-reference, or numeric failures.
+
+The deterministic Week 10 dataset contains 40 cases covering all 22 required categories, all four
+Agent routes, and all four statuses. Final metrics are 1.0 for citation existence, retrieved
+membership, claim-status accuracy, macro F1, unsupported recall, insufficient-context recall, and
+out-of-scope refusal accuracy; false-supported rate is 0.0. Run:
+
+```powershell
+uv run python scripts/run_week10_guardrail_evaluation.py
+uv run python scripts/verify_week10_guardrail.py
+```
+
+See [the Week 10 guardrail guide](docs/week10_citation_guardrail.md) and
+[ADR 010](docs/architecture/adr_010_claim_level_citation_guardrail.md).
 
 Repository placement and dependency rules are documented in [the repository architecture guide](docs/architecture/repository_structure.md). Contributors and coding agents must also follow [AGENTS.md](AGENTS.md).

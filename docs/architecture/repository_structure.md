@@ -20,7 +20,7 @@ The installable code is isolated under `src/`, so imports exercised in tests and
 | `src/vietnamese_labor_law_assistant/mcp_servers/` | MCP transport/tool adapters that call existing core services only. |
 | `src/vietnamese_labor_law_assistant/mcp_clients/` | Reusable protocol clients for project-owned MCP servers. |
 | `src/vietnamese_labor_law_assistant/agent/` | Finite LangGraph orchestration, policies, typed state, safe errors, traces, and MCP client gateways. |
-| `src/vietnamese_labor_law_assistant/guardrails/` | Future citation verification/guardrails only, when implemented. |
+| `src/vietnamese_labor_law_assistant/guardrails/` | Week 10 typed citations, canonical source registry, grounding, optional structured judge, aggregation, and fail-closed policy. |
 | `apps/` | Independent application entrypoints, principally a future frontend. |
 | `scripts/` | Thin operational CLIs: parse arguments, invoke the package, write artefacts, return an exit code. |
 | `tests/` | Tests mirroring production areas: `unit`, `integration`, and `end_to_end`. |
@@ -83,3 +83,32 @@ common   evaluation    common
 | `data/`, `docs/`, `evaluation/results/` | Data, documentation, benchmark artefacts | Non-code storage | Keep protected | No source or Week 3–5 artefacts are moved, deleted, or altered. |
 
 No files were moved or renamed: the audit found no competing implementation and the repository's Git index contains no tracked source files, so `git mv` was not applicable.
+
+## Week 10 structure and boundaries
+
+```text
+src/vietnamese_labor_law_assistant/
+|-- guardrails/
+|   |-- citation_parser.py     # Vietnamese Article/Clause/Point syntax
+|   |-- source_registry.py     # lazy, read-only canonical snapshot membership
+|   |-- similarity.py          # injectable deterministic semantic scoring
+|   |-- judge.py               # optional bounded OpenAI structured adapter
+|   |-- service.py             # three-layer claim verification
+|   `-- policy.py              # fail-closed answer projection
+`-- evaluation/
+    `-- week10_guardrails.py   # typed dataset loader, matrix/provenance checks and metrics
+
+tests/unit/guardrails/                         # mirrored guardrail behavior
+tests/unit/evaluation/test_week10_guardrails.py # evaluator/verifier invariants
+tests/integration/test_week10_guardrail_*.py    # RAG and four Agent routes
+tests/end_to_end/                               # offline question-to-guarded-answer fixtures
+data/evaluation/week10_guardrail_cases.jsonl   # Week 10-only 22-category dataset
+evaluation/results/week10_guardrail_*           # reproducible predictions/metrics/manifest/report
+scripts/run_week10_guardrail_evaluation.py      # thin runner
+scripts/verify_week10_guardrail.py              # thin evidence verifier
+```
+
+The Agent continues to orchestrate only MCP gateways; it never imports Qdrant or calculator core.
+Calculator MCP provenance is adapted into guardrail evidence without an extra retrieval call. The
+canonical registry owns its configured path and is lazy/read-only. Evaluation rules stay in the
+production evaluation module; scripts only select paths, invoke that logic, and write/report results.

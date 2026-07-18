@@ -60,6 +60,15 @@ class Settings(BaseSettings):
     llm_provider: Literal["openai", "gemini_openai_compatible"] = "openai"
     llm_timeout_seconds: float = Field(default=60, gt=0)
     llm_max_retries: int = Field(default=2, ge=0, le=10)
+    guardrail_enabled: bool = True
+    guardrail_canonical_source_path: Path = Path("data/processed/labor_law_clauses.jsonl")
+    guardrail_semantic_lower_threshold: float = Field(default=0.35, ge=0, le=1)
+    guardrail_semantic_high_threshold: float = Field(default=0.75, ge=0, le=1)
+    guardrail_llm_judge_enabled: bool = False
+    guardrail_judge_timeout_seconds: float = Field(default=10, gt=0, le=120)
+    guardrail_max_claims: int = Field(default=12, ge=1, le=50)
+    guardrail_max_citations_per_claim: int = Field(default=10, ge=1, le=20)
+    guardrail_fail_closed: bool = True
     agent_max_input_length: int = Field(default=4000, ge=1, le=16000)
     agent_max_tool_calls: int = Field(default=3, ge=1, le=10)
     agent_tool_timeout_seconds: float = Field(default=30, gt=0, le=120)
@@ -81,6 +90,8 @@ class Settings(BaseSettings):
             raise ValueError("DENSE_TOP_K must not exceed DENSE_MAX_TOP_K")
         if self.reranker_output_k > self.reranker_candidate_k:
             raise ValueError("RERANKER_OUTPUT_K must not exceed RERANKER_CANDIDATE_K")
+        if self.guardrail_semantic_lower_threshold >= self.guardrail_semantic_high_threshold:
+            raise ValueError("GUARDRAIL_SEMANTIC_LOWER_THRESHOLD must be lower than high threshold")
         if self.reranker_device == "cpu" and self.reranker_use_fp16:
             raise ValueError("RERANKER_USE_FP16 cannot be enabled on CPU")
         if self.openai_base_url:
