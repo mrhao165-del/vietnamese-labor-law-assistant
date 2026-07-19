@@ -12,7 +12,11 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from vietnamese_labor_law_assistant.agent.enums import AgentIntent, ToolName
-from vietnamese_labor_law_assistant.agent.models import AgentAnswerDraft, RouterOutput
+from vietnamese_labor_law_assistant.agent.models import (
+    AgentAnswerDraft,
+    AgentAtomicClaim,
+    RouterOutput,
+)
 from vietnamese_labor_law_assistant.agent.policies import AgentPolicy
 from vietnamese_labor_law_assistant.agent.service import AgentService
 
@@ -243,7 +247,15 @@ class _CaseGenerator:
                 row["chunk_id"] for row in rows if isinstance(row, dict) and "chunk_id" in row
             )
         return AgentAnswerDraft(
-            answer="Kết quả workflow đã xác minh.", citation_chunk_ids=chunk_ids[:1]
+            answer="Kết quả workflow đã xác minh.",
+            citation_chunk_ids=chunk_ids[:1],
+            claims=[
+                AgentAtomicClaim(
+                    claim_id="AGENT-CLM-001",
+                    text="Kết quả workflow đã xác minh.",
+                    citation_chunk_ids=chunk_ids[:1],
+                )
+            ],
         )
 
 

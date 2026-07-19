@@ -13,6 +13,12 @@ then claim grounding with legal-reference/numeric checks, semantic scoring, and 
 OpenAI structured judge. Aggregate statuses fail closed. Calculator rule provenance is adapted into
 canonical evidence, and combined evidence is deduplicated by stable chunk ID.
 
+Generation emits a bounded list of atomic claims as a Pydantic contract. The guardrail calls the
+syntax parser directly. Production semantic scoring reuses the BGE-M3 retrieval embedding protocol;
+token cosine is retained only for deterministic fixtures. The judge runs only in the ambiguous band
+after hard checks pass, and its typed failures become fail-closed results. Partial output is rebuilt
+from per-claim outcomes rather than returning the original mixed answer.
+
 The canonical registry owns its configured snapshot path, loads lazily, rejects malformed or
 duplicate records, and exposes read-only lookup. Existence and membership never use an LLM: a model
 cannot establish repository state and must not override hard validation failures. The judge receives

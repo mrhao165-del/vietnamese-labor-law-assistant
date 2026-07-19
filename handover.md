@@ -263,15 +263,30 @@ judge runs only after deterministic/membership checks and fails closed on missin
 timeout, transport failure, or invalid output; it cannot override hard failures.
 
 The Week 10 dataset has 40 stable cases covering the complete 22-category matrix, all four Agent
-routes, and all four verification statuses. Provenance validation passed 34/34. Citation existence,
+routes, and all four verification statuses. Provenance validation passed 37/37. Citation existence,
 retrieved membership, claim-status accuracy, macro F1, unsupported/insufficient recall, and
-out-of-scope accuracy are 1.0; false-supported rate is 0.0. Full regression: 196 tests passed with
-84.98% coverage.
+out-of-scope accuracy are 1.0; false-supported rate is 0.0. The completion pass additionally:
+
+- synchronized 21 Week 1 CSV-backed reviews without changing the DOCX or canonical chunks;
+- produced current non-provisional Week 2 dense, Week 4 four-pipeline, and Week 5 ten-config
+  benchmark evidence on frozen DEV (plus one locked Week 5 TEST run);
+- made structured RAG/Agent generation emit bounded atomic claims;
+- moved parser and optional judge execution into the guardrail service;
+- selected BGE-M3 through the retrieval embedding abstraction for production semantic grounding;
+- made partial output reconstruct safe claim text and made the evaluator execute fake failure
+  components rather than manufacture actual reason codes from metadata.
+
+Final regression for this completion pass: 223 tests passed, coverage 85.06%, Ruff format/lint,
+Pyright, `uv lock --check`, Week 3 review validation, Week 6 DEV/TEST, MCP protocol tests, Week 9,
+and all current Week 1/2/4/5/10 verifiers passed.
 
 ```powershell
 uv run python scripts/run_week10_guardrail_evaluation.py
 uv run python scripts/verify_week10_guardrail.py
 uv run pytest --cov=vietnamese_labor_law_assistant
+uv run python scripts/verify_week2_current_dense_baseline.py
+uv run python scripts/verify_week4_current_retrieval.py
+uv run python scripts/verify_week5_current_reranker.py
 ```
 
 Do not edit frozen Week 1-9 datasets/results/evidence or the locked retrieval configuration. Week 11

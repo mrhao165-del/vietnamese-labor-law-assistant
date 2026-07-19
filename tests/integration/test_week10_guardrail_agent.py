@@ -8,7 +8,11 @@ from typing import Any
 import pytest
 
 from vietnamese_labor_law_assistant.agent.enums import AgentIntent, ToolName
-from vietnamese_labor_law_assistant.agent.models import AgentAnswerDraft, RouterOutput
+from vietnamese_labor_law_assistant.agent.models import (
+    AgentAnswerDraft,
+    AgentAtomicClaim,
+    RouterOutput,
+)
 from vietnamese_labor_law_assistant.agent.policies import AgentPolicy
 from vietnamese_labor_law_assistant.agent.service import AgentService
 from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
@@ -30,8 +34,10 @@ class Router:
 
 
 class Generator:
-    def __init__(self, answer: str, ids: list[str]) -> None:
-        self.answer, self.ids = answer, ids
+    def __init__(
+        self, answer: str, ids: list[str], claims: list[AgentAtomicClaim] | None = None
+    ) -> None:
+        self.answer, self.ids, self.claims = answer, ids, claims
 
     async def generate(
         self,
@@ -39,7 +45,22 @@ class Generator:
         retrieval_result: dict[str, Any] | None,
         calculator_result: dict[str, Any] | None,
     ) -> AgentAnswerDraft:
-        return AgentAnswerDraft(answer=self.answer, citation_chunk_ids=self.ids)
+        ids = list(self.ids)
+        if not ids and calculator_result:
+            for response in calculator_result.get("responses", []):
+                ids.extend(
+                    item["source_chunk_id"]
+                    for item in response.get("data", {}).get("legal_basis", [])
+                    if item.get("source_chunk_id")
+                )
+        return AgentAnswerDraft(
+            answer=self.answer,
+            citation_chunk_ids=ids,
+            claims=self.claims
+            or [
+                AgentAtomicClaim(claim_id="AGENT-CLM-001", text=self.answer, citation_chunk_ids=ids)
+            ],
+        )
 
 
 class Gateway:
@@ -57,11 +78,16 @@ class Gateway:
 
 
 def make_service(
-    route: RouterOutput, answer: str, ids: list[str], retrieval: Gateway, calculator: Gateway
+    route: RouterOutput,
+    answer: str,
+    ids: list[str],
+    retrieval: Gateway,
+    calculator: Gateway,
+    claims: list[AgentAtomicClaim] | None = None,
 ) -> AgentService:
     return AgentService(
         Router(route),
-        Generator(answer, ids),
+        Generator(answer, ids, claims),
         retrieval,
         calculator,
         AgentPolicy(),
@@ -92,12 +118,17 @@ async def test_canonical_retrieval_and_calculator_routes_are_supported() -> None
         requested_operation="x",
         planned_tools=[ToolName.SEARCH_LABOR_LAW],
     )
-    result = await make_service(route, TEXT, [CHUNK], retrieval, calculator).run(
+    claims = [
+        AgentAtomicClaim(claim_id="AGENT-CLM-001", text=TEXT, citation_chunk_ids=[CHUNK]),
+        AgentAtomicClaim(claim_id="AGENT-CLM-002", text=TEXT, citation_chunk_ids=[CHUNK]),
+    ]
+    result = await make_service(route, TEXT, [CHUNK], retrieval, calculator, claims).run(
         "x", include_trace=True
     )
     assert (
         result.verification
         and result.verification["status"] == "SUPPORTED"
+        and len(result.verification["claims"]) == 2
         and len(result.tool_trace) == 1
     )
     route = RouterOutput(

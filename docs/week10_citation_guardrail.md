@@ -8,10 +8,13 @@ released. It does not change the locked retrieval configuration or calculator ru
 1. Syntax parses and normalizes Vietnamese `Điều`, `Khoản`, and `Điểm` citations.
 2. Existence/membership resolves server-owned chunk IDs against the lazy, read-only canonical
    snapshot and the evidence retrieved for the current request.
-3. Grounding applies legal-reference and numeric consistency, exact/deterministic support, an
-   injectable semantic scorer, and only then an optional structured LLM judge for ambiguity.
+3. Grounding applies legal-reference and numeric consistency, exact/deterministic support, the
+   retrieval `EmbeddingProvider` through `BgeM3SemanticScorer`, and only then an optional structured
+   LLM judge for ambiguity.
 
-An atomic claim has a stable ID, text, cited context IDs, parsed legal references, status, reason
+Both structured generators return independently verifiable claims; neither RAG nor Agent constructs
+one fallback claim from an entire answer. An atomic claim has a stable ID, text, cited context IDs,
+parsed legal references, status, reason
 codes, evidence IDs, and a bounded diagnostic score. Status is one of `SUPPORTED`,
 `PARTIALLY_SUPPORTED`, `UNSUPPORTED`, or `INSUFFICIENT_CONTEXT`.
 
@@ -35,7 +38,9 @@ produce `INSUFFICIENT_CONTEXT` with `OUT_OF_SCOPE_REFUSAL`.
 Tests create temporary canonical snapshots or inject the read-only registry; production validation
 is never relaxed for fake IDs. The judge cannot override a nonexistent/not-retrieved citation, legal
 reference mismatch, or numeric contradiction. Missing credentials, timeout, transport errors, and
-invalid structured output fail closed. Live judge execution is optional and disabled offline.
+invalid structured output fail closed. The production service invokes the parser and judge itself;
+the evaluator does not derive predicted reasons from metadata. Live judge execution is optional and
+disabled offline.
 
 ## Dataset and verification
 
@@ -61,5 +66,5 @@ uv run python scripts/verify_week10_guardrail.py
 
 Final deterministic metrics: citation existence 1.0, retrieved membership 1.0, claim-status accuracy
 1.0, macro F1 1.0, unsupported and insufficient-context recall 1.0, out-of-scope refusal accuracy
-1.0, and false-supported rate 0.0. The calculator remains limited to Articles 20/35; frontend,
+1.0, and false-supported rate 0.0. Provenance validation passes 37/37. The calculator remains limited to Articles 20/35; frontend,
 containers, and a live-LLM benchmark are outside Week 10.

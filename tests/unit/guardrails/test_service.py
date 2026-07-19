@@ -1,9 +1,15 @@
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
 from vietnamese_labor_law_assistant.guardrails.citation_parser import parse_legal_citation
 from vietnamese_labor_law_assistant.guardrails.enums import ReasonCode, VerificationStatus
+from vietnamese_labor_law_assistant.guardrails.judge import (
+    JudgeDecision,
+    JudgeInvalidOutputError,
+    JudgeUnavailableError,
+)
 from vietnamese_labor_law_assistant.guardrails.models import (
     AtomicClaim,
     EvidenceContext,
@@ -11,6 +17,7 @@ from vietnamese_labor_law_assistant.guardrails.models import (
 )
 from vietnamese_labor_law_assistant.guardrails.policy import guarded_answer
 from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
+from vietnamese_labor_law_assistant.guardrails.similarity import BgeM3SemanticScorer
 from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
 
 SOURCE = Path("data/processed/labor_law_clauses.jsonl")
@@ -108,3 +115,115 @@ def test_out_of_scope_is_safe_refusal() -> None:
     result = service().verify([], [], out_of_scope_refusal=True)
     assert result.status is VerificationStatus.INSUFFICIENT_CONTEXT
     assert ReasonCode.OUT_OF_SCOPE_REFUSAL.value in result.warnings
+
+
+class AmbiguousScorer:
+    def score(self, claim: str, evidence: str) -> float:
+        del claim, evidence
+        return 0.5
+
+
+class FakeJudge:
+    def __init__(self, outcome: VerificationStatus | Exception) -> None:
+        self.outcome, self.calls = outcome, 0
+
+    def judge(self, claim: AtomicClaim, evidence: list[EvidenceContext]) -> JudgeDecision:
+        del claim, evidence
+        self.calls += 1
+        if isinstance(self.outcome, Exception):
+            raise self.outcome
+        return JudgeDecision(status=self.outcome, reason="fixture")
+
+
+@pytest.mark.parametrize(
+    ("outcome", "status", "reason"),
+    [
+        (VerificationStatus.SUPPORTED, VerificationStatus.SUPPORTED, None),
+        (
+            VerificationStatus.PARTIALLY_SUPPORTED,
+            VerificationStatus.PARTIALLY_SUPPORTED,
+            ReasonCode.PARTIAL_EVIDENCE,
+        ),
+        (
+            VerificationStatus.UNSUPPORTED,
+            VerificationStatus.UNSUPPORTED,
+            ReasonCode.LOW_SEMANTIC_SUPPORT,
+        ),
+        (
+            JudgeUnavailableError("x"),
+            VerificationStatus.INSUFFICIENT_CONTEXT,
+            ReasonCode.JUDGE_UNAVAILABLE,
+        ),
+        (
+            JudgeInvalidOutputError("x"),
+            VerificationStatus.INSUFFICIENT_CONTEXT,
+            ReasonCode.JUDGE_INVALID_OUTPUT,
+        ),
+    ],
+)
+def test_ambiguous_claim_executes_structured_judge_fail_closed(
+    outcome: VerificationStatus | Exception,
+    status: VerificationStatus,
+    reason: ReasonCode | None,
+) -> None:
+    judge = FakeJudge(outcome)
+    result = CitationGuardrailService(
+        CanonicalSourceRegistry(SOURCE), AmbiguousScorer(), judge=judge
+    ).verify(
+        [AtomicClaim(claim_id="judge", text="người lao động báo trước", cited_context_ids=[CHUNK])],
+        [evidence()],
+    )
+    assert result.status is status and judge.calls == 1
+    if reason:
+        assert reason in result.claims[0].reason_codes
+
+
+def test_parser_and_hard_failure_prevent_judge_override() -> None:
+    judge = FakeJudge(VerificationStatus.SUPPORTED)
+    guardrail = CitationGuardrailService(
+        CanonicalSourceRegistry(SOURCE), AmbiguousScorer(), judge=judge
+    )
+    malformed = guardrail.verify(
+        [AtomicClaim(claim_id="bad", text="Khoản một Điều 35", cited_context_ids=[CHUNK])],
+        [evidence()],
+    )
+    missing = guardrail.verify(
+        [AtomicClaim(claim_id="missing", text="x", cited_context_ids=["ll_missing"])], []
+    )
+    assert malformed.claims[0].reason_codes == [ReasonCode.MALFORMED_CITATION]
+    assert missing.claims[0].reason_codes == [ReasonCode.CITATION_NOT_FOUND]
+    assert judge.calls == 0
+
+
+def test_partial_policy_reconstructs_claims_without_original_answer() -> None:
+    claims = [
+        AtomicClaim(claim_id="one", text="supported", cited_context_ids=[CHUNK]),
+        AtomicClaim(claim_id="two", text="uncertain", cited_context_ids=[CHUNK]),
+    ]
+    result = CitationGuardrailService(CanonicalSourceRegistry(SOURCE), AmbiguousScorer()).verify(
+        claims, [evidence()]
+    )
+    answer, _ = guarded_answer("original unsupported wording", result, claims)
+    assert "original unsupported wording" not in answer
+    assert "Chưa được xác minh đầy đủ" in answer
+
+
+class Embeddings:
+    @property
+    def dimension(self) -> int:
+        return 2
+
+    def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
+        del texts
+        return [[1.0, 0.0], [1.0, 0.0]]
+
+    def embed_query(self, text: str) -> list[float]:
+        del text
+        return [1.0, 0.0]
+
+    def ensure_available(self) -> None:
+        return None
+
+
+def test_bge_semantic_scorer_reuses_embedding_protocol() -> None:
+    assert BgeM3SemanticScorer(Embeddings()).score("claim", "evidence") == 1.0

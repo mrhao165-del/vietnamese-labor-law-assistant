@@ -5,7 +5,9 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 
+from .citation_parser import parse_citations
 from .enums import ReasonCode, VerificationStatus
+from .judge import JudgeInvalidOutputError, JudgeUnavailableError, StructuredJudge
 from .models import (
     AtomicClaim,
     ClaimVerification,
@@ -27,11 +29,13 @@ class CitationGuardrailService:
         registry: CanonicalSourceRegistry,
         scorer: SemanticScorer | None = None,
         *,
+        judge: StructuredJudge | None = None,
         lower_threshold: float = 0.35,
         high_threshold: float = 0.75,
     ) -> None:
         self.registry = registry
         self.scorer = scorer or TokenCosineScorer()
+        self.judge = judge
         self.lower_threshold = lower_threshold
         self.high_threshold = high_threshold
 
@@ -48,6 +52,11 @@ class CitationGuardrailService:
                 claims=[],
                 warnings=[ReasonCode.OUT_OF_SCOPE_REFUSAL.value],
             )
+        if not claims:
+            return VerificationResult(
+                status=VerificationStatus.INSUFFICIENT_CONTEXT,
+                warnings=[ReasonCode.MISSING_CITATION.value],
+            )
         results = [self._verify_claim(claim, contexts) for claim in claims]
         statuses = {item.status for item in results}
         if VerificationStatus.UNSUPPORTED in statuses:
@@ -63,6 +72,16 @@ class CitationGuardrailService:
     def _verify_claim(
         self, claim: AtomicClaim, contexts: Sequence[EvidenceContext]
     ) -> ClaimVerification:
+        parsed = parse_citations(claim.text)
+        duplicate_citation = parsed.duplicate_count > 0 or len(claim.cited_context_ids) != len(
+            set(claim.cited_context_ids)
+        )
+        if parsed.malformed:
+            return ClaimVerification(
+                claim_id=claim.claim_id,
+                status=VerificationStatus.UNSUPPORTED,
+                reason_codes=[ReasonCode.MALFORMED_CITATION],
+            )
         if not claim.cited_context_ids:
             return ClaimVerification(
                 claim_id=claim.claim_id,
@@ -86,9 +105,13 @@ class CitationGuardrailService:
                     reason_codes=[ReasonCode.CITATION_NOT_IN_RETRIEVED_CONTEXT],
                 )
             evidence.append(evidence_by_id[chunk_id])
-        if any(
-            not self._reference_matches(reference, evidence) for reference in claim.legal_references
-        ):
+        references = list(
+            {
+                (item.article, item.clause, item.point): item
+                for item in [*claim.legal_references, *parsed.references]
+            }.values()
+        )
+        if any(not self._reference_matches(reference, evidence) for reference in references):
             return ClaimVerification(
                 claim_id=claim.claim_id,
                 status=VerificationStatus.UNSUPPORTED,
@@ -97,6 +120,10 @@ class CitationGuardrailService:
             )
         claim_numbers = _numbers(claim.text)
         evidence_numbers = set().union(*(_numbers(item.content) for item in evidence))
+        evidence_numbers.update(str(item.article_number) for item in evidence)
+        evidence_numbers.update(
+            str(item.clause_number) for item in evidence if item.clause_number is not None
+        )
         if claim_numbers - evidence_numbers:
             return ClaimVerification(
                 claim_id=claim.claim_id,
@@ -109,14 +136,49 @@ class CitationGuardrailService:
             return ClaimVerification(
                 claim_id=claim.claim_id,
                 status=VerificationStatus.SUPPORTED,
+                reason_codes=[ReasonCode.DUPLICATE_CITATION] if duplicate_citation else [],
+                evidence_ids=[item.chunk_id for item in evidence],
+                score=score,
+            )
+        if score >= self.lower_threshold and self.judge is not None:
+            try:
+                decision = self.judge.judge(claim, evidence)
+            except JudgeInvalidOutputError:
+                return ClaimVerification(
+                    claim_id=claim.claim_id,
+                    status=VerificationStatus.INSUFFICIENT_CONTEXT,
+                    reason_codes=[ReasonCode.JUDGE_INVALID_OUTPUT],
+                    evidence_ids=[item.chunk_id for item in evidence],
+                    score=score,
+                )
+            except (JudgeUnavailableError, TimeoutError, RuntimeError):
+                return ClaimVerification(
+                    claim_id=claim.claim_id,
+                    status=VerificationStatus.INSUFFICIENT_CONTEXT,
+                    reason_codes=[ReasonCode.JUDGE_UNAVAILABLE],
+                    evidence_ids=[item.chunk_id for item in evidence],
+                    score=score,
+                )
+            judge_reasons: list[ReasonCode] = []
+            if decision.status is VerificationStatus.PARTIALLY_SUPPORTED:
+                judge_reasons = [ReasonCode.PARTIAL_EVIDENCE]
+            elif decision.status is VerificationStatus.UNSUPPORTED:
+                judge_reasons = [ReasonCode.LOW_SEMANTIC_SUPPORT]
+            return ClaimVerification(
+                claim_id=claim.claim_id,
+                status=decision.status,
+                reason_codes=judge_reasons,
                 evidence_ids=[item.chunk_id for item in evidence],
                 score=score,
             )
         if score >= self.lower_threshold:
+            reasons = [ReasonCode.PARTIAL_EVIDENCE]
+            if duplicate_citation:
+                reasons.append(ReasonCode.DUPLICATE_CITATION)
             return ClaimVerification(
                 claim_id=claim.claim_id,
                 status=VerificationStatus.PARTIALLY_SUPPORTED,
-                reason_codes=[ReasonCode.PARTIAL_EVIDENCE],
+                reason_codes=reasons,
                 evidence_ids=[item.chunk_id for item in evidence],
                 score=score,
             )

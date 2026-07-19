@@ -12,13 +12,15 @@ from typing import Any
 import structlog
 
 from vietnamese_labor_law_assistant.common.settings import Settings, get_settings
-from vietnamese_labor_law_assistant.guardrails.citation_parser import extract_legal_citations
+from vietnamese_labor_law_assistant.guardrails.judge import OpenAIStructuredClaimJudge
 from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
 from vietnamese_labor_law_assistant.guardrails.policy import guarded_answer
 from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
+from vietnamese_labor_law_assistant.guardrails.similarity import BgeM3SemanticScorer
 from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
 from vietnamese_labor_law_assistant.mcp_clients.legal_calculator import LegalCalculatorMcpClient
 from vietnamese_labor_law_assistant.mcp_clients.legal_retrieval import LegalRetrievalMcpClient
+from vietnamese_labor_law_assistant.retrieval.embeddings import BgeM3EmbeddingProvider
 
 from .enums import AgentIntent, ToolName, WorkflowStatus
 from .errors import (
@@ -87,6 +89,10 @@ class AgentService:
             policy=policy,
             guardrail_service=CitationGuardrailService(
                 CanonicalSourceRegistry(settings.guardrail_canonical_source_path),
+                BgeM3SemanticScorer(BgeM3EmbeddingProvider(settings)),
+                judge=OpenAIStructuredClaimJudge(settings)
+                if settings.guardrail_llm_judge_enabled
+                else None,
                 lower_threshold=settings.guardrail_semantic_lower_threshold,
                 high_threshold=settings.guardrail_semantic_high_threshold,
             ),
@@ -369,7 +375,19 @@ class AgentService:
                 state.get("calculator_result"),
             )
             known_ids = self._retrieved_chunk_ids(state.get("retrieval_result"))
-            if any(chunk_id not in known_ids for chunk_id in draft.citation_chunk_ids):
+            known_ids.update(item.chunk_id for item in self._guardrail_evidence(state))
+            calculator_ids = {
+                item.chunk_id
+                for item in self._guardrail_evidence(state)
+                if item.source_kind == "calculator"
+            }
+            allowed_ids = known_ids | calculator_ids
+            claim_ids = {
+                chunk_id for claim in draft.claims for chunk_id in claim.citation_chunk_ids
+            }
+            if any(
+                chunk_id not in allowed_ids for chunk_id in draft.citation_chunk_ids
+            ) or not claim_ids.issubset(allowed_ids):
                 raise WorkflowVerificationError("unknown citation")
             return {
                 "answer_draft": draft.model_dump(mode="json"),
@@ -392,6 +410,7 @@ class AgentService:
             if state.get("intent") == AgentIntent.OUT_OF_SCOPE.value and traces:
                 raise WorkflowVerificationError("out-of-scope called a tool")
             known_ids = self._retrieved_chunk_ids(state.get("retrieval_result"))
+            known_ids.update(item.chunk_id for item in self._guardrail_evidence(state))
             if any(
                 citation.get("chunk_id") not in known_ids for citation in state.get("citations", [])
             ):
@@ -436,22 +455,29 @@ class AgentService:
                 "citations": [],
                 "verification": {"status": "INSUFFICIENT_CONTEXT", "reason": "NO_EVIDENCE"},
             }
-        cited_ids = [
-            item["chunk_id"]
-            for item in state.get("citations", [])
-            if isinstance(item.get("chunk_id"), str)
+        draft = state.get("answer_draft") or {}
+        raw_claims = draft.get("claims") if isinstance(draft, dict) else None
+        if not isinstance(raw_claims, list) or not raw_claims:
+            return {
+                "final_answer": "INSUFFICIENT_VERIFIED_EVIDENCE",
+                "citations": [],
+                "verification": {
+                    "status": "INSUFFICIENT_CONTEXT",
+                    "reason": "INVALID_CLAIM_CONTRACT",
+                },
+            }
+        claims = [
+            AtomicClaim(
+                claim_id=str(item["claim_id"]),
+                text=str(item["text"]),
+                cited_context_ids=list(item.get("citation_chunk_ids", [])),
+            )
+            for item in raw_claims
+            if isinstance(item, dict)
         ]
-        if not cited_ids:
-            cited_ids = [item.chunk_id for item in evidence if item.source_kind == "calculator"]
-        claim = AtomicClaim(
-            claim_id="AGENT-CLM-001",
-            text=str(state.get("final_answer") or ""),
-            cited_context_ids=cited_ids,
-            legal_references=extract_legal_citations(str(state.get("final_answer") or "")),
-        )
         try:
-            result = self.guardrail_service.verify([claim], evidence)
-            answer, warnings = guarded_answer(str(state.get("final_answer") or ""), result)
+            result = self.guardrail_service.verify(claims, evidence)
+            answer, warnings = guarded_answer(str(state.get("final_answer") or ""), result, claims)
             update: dict[str, Any] = {
                 "verification": result.model_dump(mode="json"),
                 "final_answer": answer,

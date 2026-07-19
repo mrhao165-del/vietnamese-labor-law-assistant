@@ -203,4 +203,21 @@ class ValidationReport(BaseModel):
     non_monotonic_articles: list[int]
     issues: list[ValidationIssue]
     manual_review_articles: list[int]
+    manual_review_count: int = Field(default=0, ge=0)
+    manual_review_evidence_sha256: str | None = None
     status: Literal["PASS", "REVIEW", "FAIL"]
+
+    @field_validator("manual_review_evidence_sha256")
+    @classmethod
+    def valid_manual_review_hash(cls, value: str | None) -> str | None:
+        if value is not None and not SHA256_RE.fullmatch(value.lower()):
+            raise ValueError("manual_review_evidence_sha256 must be a SHA-256 digest")
+        return value.lower() if value is not None else None
+
+    @model_validator(mode="after")
+    def consistent_manual_review_summary(self) -> ValidationReport:
+        if self.manual_review_count != len(self.manual_review_articles):
+            raise ValueError("manual_review_count must match manual_review_articles")
+        if self.manual_review_count and self.manual_review_evidence_sha256 is None:
+            raise ValueError("completed manual review requires evidence checksum")
+        return self

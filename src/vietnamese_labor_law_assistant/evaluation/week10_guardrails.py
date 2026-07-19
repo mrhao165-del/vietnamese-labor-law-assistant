@@ -13,6 +13,11 @@ from typing import Any, cast
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from vietnamese_labor_law_assistant.guardrails.enums import ReasonCode, VerificationStatus
+from vietnamese_labor_law_assistant.guardrails.judge import (
+    JudgeDecision,
+    JudgeInvalidOutputError,
+    JudgeUnavailableError,
+)
 from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
 from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
 from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
@@ -207,18 +212,13 @@ def run_week10_cases(
     rows: list[dict[str, object]] = []
     for case in cases:
         started = time.perf_counter()
-        result = service.verify(
+        case_service = _service_for_judge_behavior(case, service)
+        result = case_service.verify(
             case.all_claims, case.contexts, out_of_scope_refusal=case.out_of_scope_refusal
         )
         reasons = [code.value for claim in result.claims for code in claim.reason_codes]
         if not result.claims:
             reasons.extend(result.warnings)
-        if case.category is Week10Category.MALFORMED_CITATION:
-            reasons.append(ReasonCode.MALFORMED_CITATION.value)
-        if case.judge_behavior in {JudgeBehavior.TIMEOUT, JudgeBehavior.UNAVAILABLE}:
-            reasons.append(ReasonCode.JUDGE_UNAVAILABLE.value)
-        if case.judge_behavior is JudgeBehavior.INVALID_OUTPUT:
-            reasons.append(ReasonCode.JUDGE_INVALID_OUTPUT.value)
         rows.append(
             {
                 "case_id": case.case_id,
@@ -239,6 +239,46 @@ def run_week10_cases(
             }
         )
     return rows
+
+
+class _AmbiguousFixtureScorer:
+    def score(self, claim: str, evidence: str) -> float:
+        del claim, evidence
+        return 0.5
+
+
+class _JudgeFixture:
+    def __init__(self, behavior: JudgeBehavior) -> None:
+        self.behavior = behavior
+
+    def judge(self, claim: AtomicClaim, evidence: list[EvidenceContext]) -> JudgeDecision:
+        del claim, evidence
+        if self.behavior is JudgeBehavior.INVALID_OUTPUT:
+            raise JudgeInvalidOutputError(ReasonCode.JUDGE_INVALID_OUTPUT.value)
+        if self.behavior in {
+            JudgeBehavior.TIMEOUT,
+            JudgeBehavior.TRANSPORT_ERROR,
+            JudgeBehavior.UNAVAILABLE,
+        }:
+            raise JudgeUnavailableError(ReasonCode.JUDGE_UNAVAILABLE.value)
+        return JudgeDecision(
+            status=VerificationStatus(self.behavior.value),
+            reason="deterministic fixture decision",
+        )
+
+
+def _service_for_judge_behavior(
+    case: Week10Case, service: CitationGuardrailService
+) -> CitationGuardrailService:
+    if case.judge_behavior is JudgeBehavior.NOT_USED:
+        return service
+    return CitationGuardrailService(
+        service.registry,
+        _AmbiguousFixtureScorer(),
+        judge=_JudgeFixture(case.judge_behavior),
+        lower_threshold=service.lower_threshold,
+        high_threshold=service.high_threshold,
+    )
 
 
 def week10_metrics(cases: list[Week10Case], rows: list[dict[str, object]]) -> dict[str, object]:

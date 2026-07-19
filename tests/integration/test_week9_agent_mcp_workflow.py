@@ -12,7 +12,11 @@ from vietnamese_labor_law_assistant.agent.mcp_gateways import (
     CalculatorMcpGateway,
     RetrievalMcpGateway,
 )
-from vietnamese_labor_law_assistant.agent.models import AgentAnswerDraft, RouterOutput
+from vietnamese_labor_law_assistant.agent.models import (
+    AgentAnswerDraft,
+    AgentAtomicClaim,
+    RouterOutput,
+)
 from vietnamese_labor_law_assistant.agent.policies import AgentPolicy
 from vietnamese_labor_law_assistant.agent.service import AgentService
 from vietnamese_labor_law_assistant.mcp_clients.legal_calculator import LegalCalculatorMcpClient
@@ -40,7 +44,15 @@ class FixedGenerator:
             rows = response["data"].get("results") or response["data"].get("clauses") or []
             chunk_id = rows[0]["chunk_id"] if rows else ""
         return AgentAnswerDraft(
-            answer="Kết quả từ MCP đã xác minh.", citation_chunk_ids=[chunk_id] if chunk_id else []
+            answer="Kết quả từ MCP đã xác minh.",
+            citation_chunk_ids=[chunk_id] if chunk_id else [],
+            claims=[
+                AgentAtomicClaim(
+                    claim_id="AGENT-CLM-001",
+                    text="Kết quả từ MCP đã xác minh.",
+                    citation_chunk_ids=[chunk_id] if chunk_id else [],
+                )
+            ],
         )
 
 

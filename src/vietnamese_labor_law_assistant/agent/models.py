@@ -67,6 +67,13 @@ class RouterOutput(BaseModel):
         return self
 
 
+class AgentAtomicClaim(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    claim_id: str = Field(pattern=r"^AGENT-CLM-[A-Za-z0-9_-]+$", max_length=80)
+    text: str = Field(min_length=1, max_length=1200)
+    citation_chunk_ids: list[str] = Field(default_factory=list, max_length=10)
+
+
 class AgentAnswerDraft(BaseModel):
     """Structured LLM output restricted to references already produced by retrieval."""
 
@@ -74,7 +81,20 @@ class AgentAnswerDraft(BaseModel):
 
     answer: str = Field(min_length=1, max_length=6000)
     citation_chunk_ids: list[str] = Field(default_factory=list, max_length=10)
+    claims: list[AgentAtomicClaim] = Field(min_length=1, max_length=12)
     warning: str | None = Field(default=None, max_length=500)
+
+    @model_validator(mode="after")
+    def validate_claims(self) -> AgentAnswerDraft:
+        identifiers = [claim.claim_id for claim in self.claims]
+        if len(identifiers) != len(set(identifiers)):
+            raise ValueError("claim IDs must be unique")
+        if any(
+            len(item.citation_chunk_ids) != len(set(item.citation_chunk_ids))
+            for item in self.claims
+        ):
+            raise ValueError("claim citation IDs must be unique")
+        return self
 
 
 class ToolTrace(BaseModel):

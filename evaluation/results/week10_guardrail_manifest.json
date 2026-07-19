@@ -1,10 +1,10 @@
 {
-  "commit_sha": "969c588c9e457c040664ffbe77e901bf031c7e30",
-  "dataset_sha256": "35162d6f6cc21665908e208989d324e2cb6ea7ff21a9c5ecad799c678b6f3407",
+  "commit_sha": "997a8f4c1131c1854abf076d0f0437edcbb0b263",
+  "dataset_sha256": "e45b8c7b98670a4f9dd17635dd983794a013b901cca18c1b7fa6c9c42d4e534a",
   "canonical_source_sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
   "case_count": 40,
   "judge_mode": "disabled_with_failure_fixtures",
-  "generated_at": "2026-07-18T18:01:24.586620+00:00",
+  "generated_at": "2026-07-18T20:51:03.443898+00:00",
   "thresholds": {
     "lower": 0.35,
     "high": 0.75
@@ -43,10 +43,10 @@
     "RETRIEVAL_ONLY": 1
   },
   "status_distribution": {
-    "INSUFFICIENT_CONTEXT": 8,
+    "INSUFFICIENT_CONTEXT": 7,
     "PARTIALLY_SUPPORTED": 7,
     "SUPPORTED": 10,
-    "UNSUPPORTED": 15
+    "UNSUPPORTED": 16
   },
   "judge_behavior_distribution": {
     "INVALID_OUTPUT": 1,
@@ -54,8 +54,8 @@
     "TIMEOUT": 1
   },
   "provenance_validation": {
-    "checked": 34,
-    "passed": 34,
+    "checked": 37,
+    "passed": 37,
     "failed": 0
   }
 }

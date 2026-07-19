@@ -91,7 +91,7 @@ src/vietnamese_labor_law_assistant/
 |-- guardrails/
 |   |-- citation_parser.py     # Vietnamese Article/Clause/Point syntax
 |   |-- source_registry.py     # lazy, read-only canonical snapshot membership
-|   |-- similarity.py          # injectable deterministic semantic scoring
+|   |-- similarity.py          # injectable BGE-M3 scorer plus offline fixture scorer
 |   |-- judge.py               # optional bounded OpenAI structured adapter
 |   |-- service.py             # three-layer claim verification
 |   `-- policy.py              # fail-closed answer projection
@@ -106,9 +106,17 @@ data/evaluation/week10_guardrail_cases.jsonl   # Week 10-only 22-category datase
 evaluation/results/week10_guardrail_*           # reproducible predictions/metrics/manifest/report
 scripts/run_week10_guardrail_evaluation.py      # thin runner
 scripts/verify_week10_guardrail.py              # thin evidence verifier
+scripts/sync_week1_manual_review.py              # typed CSV-to-report synchronization adapter
+scripts/run_week2_current_dense_baseline.py      # current non-synthetic dense runner
+scripts/run_week4_current_retrieval_benchmark.py # current four-pipeline comparison runner
+scripts/run_week5_current_reranker_benchmark.py  # current resumable config runner
+evaluation/results/week{2,4,5}_current_*          # current aligned evidence
 ```
 
 The Agent continues to orchestrate only MCP gateways; it never imports Qdrant or calculator core.
 Calculator MCP provenance is adapted into guardrail evidence without an extra retrieval call. The
 canonical registry owns its configured path and is lazy/read-only. Evaluation rules stay in the
 production evaluation module; scripts only select paths, invoke that logic, and write/report results.
+Structured generation owns claim decomposition. Guardrail service owns parser, membership,
+grounding, optional judge invocation, aggregation, and output policy. Evaluation can inject
+deterministic components but cannot synthesize actual reason codes from expected metadata.

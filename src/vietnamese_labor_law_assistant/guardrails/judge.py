@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeoutError
 from typing import Any, Protocol
 
 from openai import OpenAI
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from vietnamese_labor_law_assistant.common.settings import Settings
 
@@ -20,17 +21,25 @@ class JudgeDecision(BaseModel):
     reason: str = Field(min_length=1, max_length=160)
 
 
+class JudgeUnavailableError(RuntimeError):
+    pass
+
+
+class JudgeInvalidOutputError(ValueError):
+    pass
+
+
 class StructuredJudge(Protocol):
-    async def judge(self, claim: AtomicClaim, evidence: list[EvidenceContext]) -> JudgeDecision: ...
+    def judge(self, claim: AtomicClaim, evidence: list[EvidenceContext]) -> JudgeDecision: ...
 
 
 class OpenAIStructuredClaimJudge:
     def __init__(self, settings: Settings, client: OpenAI | Any | None = None) -> None:
         self.settings, self._client = settings, client
 
-    async def judge(self, claim: AtomicClaim, evidence: list[EvidenceContext]) -> JudgeDecision:
+    def judge(self, claim: AtomicClaim, evidence: list[EvidenceContext]) -> JudgeDecision:
         if not self.settings.guardrail_llm_judge_enabled or not self.settings.llm_configured:
-            raise RuntimeError(ReasonCode.JUDGE_UNAVAILABLE.value)
+            raise JudgeUnavailableError(ReasonCode.JUDGE_UNAVAILABLE.value)
         material = {
             "claim": claim.model_dump(mode="json"),
             "evidence": [
@@ -48,24 +57,32 @@ class OpenAIStructuredClaimJudge:
                 timeout=self.settings.guardrail_judge_timeout_seconds,
                 max_retries=0,
             )
-            completion = client.beta.chat.completions.parse(
-                model=self.settings.llm_model or "",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "Judge only supplied evidence. Return structured status; "
-                            "never validate a citation."
-                        ),
-                    },
-                    {"role": "user", "content": str(material)[:12000]},
-                ],
-                response_format=JudgeDecision,
-            )
-            if not completion.choices or completion.choices[0].message.parsed is None:
-                raise ValueError(ReasonCode.JUDGE_INVALID_OUTPUT.value)
-            return JudgeDecision.model_validate(completion.choices[0].message.parsed)
+            try:
+                completion = client.beta.chat.completions.parse(
+                    model=self.settings.llm_model or "",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "Judge only supplied evidence; never validate a citation.",
+                        },
+                        {"role": "user", "content": str(material)[:12000]},
+                    ],
+                    response_format=JudgeDecision,
+                )
+                if not completion.choices or completion.choices[0].message.parsed is None:
+                    raise JudgeInvalidOutputError(ReasonCode.JUDGE_INVALID_OUTPUT.value)
+                return JudgeDecision.model_validate(completion.choices[0].message.parsed)
+            except (JudgeInvalidOutputError, ValidationError) as exc:
+                raise JudgeInvalidOutputError(ReasonCode.JUDGE_INVALID_OUTPUT.value) from exc
+            except Exception as exc:
+                raise JudgeUnavailableError(ReasonCode.JUDGE_UNAVAILABLE.value) from exc
 
-        return await asyncio.wait_for(
-            asyncio.to_thread(run), timeout=self.settings.guardrail_judge_timeout_seconds
-        )
+        executor = ThreadPoolExecutor(max_workers=1)
+        future = executor.submit(run)
+        try:
+            return future.result(timeout=self.settings.guardrail_judge_timeout_seconds)
+        except FutureTimeoutError as exc:
+            future.cancel()
+            raise JudgeUnavailableError(ReasonCode.JUDGE_UNAVAILABLE.value) from exc
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)

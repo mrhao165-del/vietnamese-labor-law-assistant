@@ -30,6 +30,16 @@ The current source corpus and independently reviewed evaluation evidence are ver
 [pre-Week-6 readiness report](docs/pre_week6_readiness.md). Historical Week 3–5 benchmark
 metrics retain their original dataset provenance.
 
+Current aligned evidence supersedes historical/provisional artefacts for readiness decisions:
+
+- Week 1 synchronizes 21 reviewed articles from the typed CSV loader while the source and
+  682-chunk canonical snapshot remain unchanged.
+- Week 2 has a non-synthetic 42-question frozen-DEV BGE-M3/Qdrant baseline.
+- Week 4 compares Dense, whitespace BM25S, Underthesea BM25S, and custom-RRF Hybrid on identical
+  current checksums and question IDs.
+- Week 5 benchmarks ten current DEV configurations, preserves `R2_H2_C10_O5_L512_B1`, and runs
+  TEST once for that selection. Historical artefacts remain marked historical.
+
 Current limitations:
 
 - Production defaults to `hybrid_underthesea_rerank` with the DEV-selected
@@ -77,6 +87,10 @@ release. Claim results use `SUPPORTED`, `PARTIALLY_SUPPORTED`, `UNSUPPORTED`, or
 original generated assertion. Calculator-only routes reuse canonical rule provenance and do not
 make a compensating retrieval call. The optional structured OpenAI judge handles only ambiguous
 support and cannot override citation existence, membership, legal-reference, or numeric failures.
+RAG and Agent generators emit bounded atomic-claim lists. The service directly invokes the citation
+parser, uses BGE-M3 through the retrieval embedding abstraction in production, and invokes the
+optional judge only in the ambiguous score band. Partial answers are rebuilt from safe claim
+outcomes rather than returning the original mixed text.
 
 The deterministic Week 10 dataset contains 40 cases covering all 22 required categories, all four
 Agent routes, and all four statuses. Final metrics are 1.0 for citation existence, retrieved

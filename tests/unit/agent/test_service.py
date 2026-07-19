@@ -6,7 +6,11 @@ from typing import Any
 import pytest
 
 from vietnamese_labor_law_assistant.agent.enums import AgentIntent, ToolName, WorkflowStatus
-from vietnamese_labor_law_assistant.agent.models import AgentAnswerDraft, RouterOutput
+from vietnamese_labor_law_assistant.agent.models import (
+    AgentAnswerDraft,
+    AgentAtomicClaim,
+    RouterOutput,
+)
 from vietnamese_labor_law_assistant.agent.policies import AgentPolicy
 from vietnamese_labor_law_assistant.agent.service import AgentService
 
@@ -23,7 +27,15 @@ class FakeRouter:
 
 class FakeGenerator:
     def __init__(self, draft: AgentAnswerDraft | Exception | None = None) -> None:
-        self.draft = draft or AgentAnswerDraft(answer="Trả lời", citation_chunk_ids=["chunk-1"])
+        self.draft = draft or AgentAnswerDraft(
+            answer="Trả lời",
+            citation_chunk_ids=["chunk-1"],
+            claims=[
+                AgentAtomicClaim(
+                    claim_id="AGENT-CLM-001", text="Trả lời", citation_chunk_ids=["chunk-1"]
+                )
+            ],
+        )
 
     async def generate(
         self,
@@ -129,7 +141,12 @@ async def test_calculator_route_uses_only_calculator_gateway() -> None:
     result = await service(
         calculator_output(),
         calculator=calculator,
-        generator=FakeGenerator(AgentAnswerDraft(answer="45 ngày")),
+        generator=FakeGenerator(
+            AgentAnswerDraft(
+                answer="45 ngày",
+                claims=[AgentAtomicClaim(claim_id="AGENT-CLM-001", text="45 ngày")],
+            )
+        ),
     ).run("Báo trước", include_trace=True)
     assert result.status is WorkflowStatus.WORKFLOW_VALID
     assert [call[0] for call in calculator.calls] == [ToolName.CALCULATE_NOTICE_PERIOD.value]
@@ -254,7 +271,17 @@ async def test_invalid_generated_citation_is_rejected() -> None:
     result = await service(
         retrieval_output(),
         retrieval=retrieval,
-        generator=FakeGenerator(AgentAnswerDraft(answer="x", citation_chunk_ids=["invented"])),
+        generator=FakeGenerator(
+            AgentAnswerDraft(
+                answer="x",
+                citation_chunk_ids=["invented"],
+                claims=[
+                    AgentAtomicClaim(
+                        claim_id="AGENT-CLM-001", text="x", citation_chunk_ids=["invented"]
+                    )
+                ],
+            )
+        ),
     ).run("Điều 35")
     assert result.status is WorkflowStatus.OUTPUT_INVALID
 

@@ -59,7 +59,18 @@ uv run python scripts/create_week2_smoke_dataset.py
 uv run python scripts/run_week2_dense_smoke.py
 ```
 
-The index manifest and tokenizer report are written to `data/processed`. A repeat `uv run python scripts/index_dense.py` is an idempotence check: point count and sampled deterministic UUIDs must not change. The smoke evaluation is synthetic from source article titles, not human validated and not the Week 3 evaluation dataset.
+The index manifest and tokenizer report are written to `data/processed`. The original title-based
+smoke evaluation is retained as historical evidence only. The current non-synthetic DEV baseline is:
+
+```powershell
+uv run python scripts/run_week2_current_dense_baseline.py
+uv run python scripts/verify_week2_current_dense_baseline.py
+```
+
+It evaluates 42 frozen DEV questions (23 retrieval-eligible) against current corpus and dataset
+checksums. BAAI/bge-m3, its tokenizer, Qdrant cosine vectors (1024 dimensions), and CPU produced
+Hit@1 0.869565, Recall@5 1.0, MRR 0.921739, mean latency 620.181 ms and P95 263.689 ms. The
+artefact explicitly records `synthetic=false`.
 
 ## API
 

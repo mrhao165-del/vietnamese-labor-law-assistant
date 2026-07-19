@@ -539,6 +539,7 @@ def _run_checkpoint(
 
 
 def _question_processor(configuration: dict[str, Any]) -> Callable[[Any], dict[str, Any]]:
+    """Build the real BGE-M3 retrieval plus BGE reranker processor for one config."""
     settings = _benchmark_settings(configuration)
     dense = DenseRetriever(BgeM3EmbeddingProvider(settings), QdrantStore(settings), settings)
     retriever: DenseRetriever | HybridRetriever = dense
@@ -579,6 +580,10 @@ def _question_processor(configuration: dict[str, Any]) -> Callable[[Any], dict[s
             ).model_dump()
 
     return process
+
+
+# Public reuse point for the current-corpus runner; historical tests keep the private seam.
+build_question_processor = _question_processor
 
 
 def _benchmark_settings(configuration: dict[str, Any]) -> Settings:

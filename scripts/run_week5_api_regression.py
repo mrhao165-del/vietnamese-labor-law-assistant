@@ -72,7 +72,11 @@ class Retriever:
 class Generator:
     def generate(self, question: str, contexts: Sequence[RetrievedChunk]) -> AnswerDraft:
         return AnswerDraft(
-            claims=[AnswerClaim(text="Trả lời có trích dẫn.", context_ids=["CTX-001"])]
+            claims=[
+                AnswerClaim(
+                    claim_id="CLM-001", text="Trả lời có trích dẫn.", context_ids=["CTX-001"]
+                )
+            ]
         )
 
 

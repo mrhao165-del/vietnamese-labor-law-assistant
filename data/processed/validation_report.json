@@ -1,7 +1,7 @@
 {
   "source_file": "data/raw/labor_law.docx",
   "source_sha256": "1386441b1f513defdd55186d7e65b8432dcac87c2e0d78676de25facb9c5e6ff",
-  "generated_at": "2026-07-15T15:19:52.425240Z",
+  "generated_at": "2026-07-15T21:25:57+07:00",
   "article_count": 220,
   "clause_count": 645,
   "point_count": 284,
@@ -135,6 +135,30 @@
       "raw_text": null
     }
   ],
-  "manual_review_articles": [],
+  "manual_review_articles": [
+    1,
+    13,
+    24,
+    36,
+    47,
+    59,
+    70,
+    82,
+    93,
+    105,
+    116,
+    128,
+    139,
+    151,
+    162,
+    174,
+    185,
+    197,
+    208,
+    219,
+    220
+  ],
+  "manual_review_count": 21,
+  "manual_review_evidence_sha256": "38f67a585eb3845079b4ce7d19cac5049588536edfdc9cd152dfd8072534ab88",
   "status": "PASS"
 }

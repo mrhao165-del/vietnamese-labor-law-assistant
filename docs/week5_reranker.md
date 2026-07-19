@@ -10,4 +10,15 @@
 - `FINAL_RERANKER_MAX_LENGTH=512`
 - `FINAL_RERANKER_BATCH_SIZE=1`
 
-Reranking is not made the application default by this benchmark. Production FastAPI supports only `RETRIEVAL_MODE=dense`; benchmark-only hybrid/reranker modes fail fast until Week 6 wires them into the production path. The stored Week 5 test checkpoint matches the canonical dataset and chunk checksums, but its official designation remains provisional pending independent human legal review of the evaluation labels.
+Historical provisional checkpoints remain immutable. The current atomic/resumable benchmark is:
+
+```powershell
+uv run python scripts/run_week5_current_reranker_benchmark.py
+uv run python scripts/verify_week5_current_reranker.py
+```
+
+Ten DEV configurations cover Dense/Hybrid candidates 10/20/30, output 5/8, max length 512/768,
+batch 1, and CPU fallback. DEV alone selects `R2_H2_C10_O5_L512_B1`; TEST is run once. Locked
+DEV Hit@1/Recall@5/MRR is 0.956522/1.0/0.978261 with mean/P95 3706.07/4999.47 ms. TEST is
+1.0/1.0/1.0 with mean/P95 3633.57/4532.19 ms. Per-question output and ten diagnostic rows are
+stored in the current report.

@@ -9,7 +9,11 @@ from pydantic import SecretStr
 
 from vietnamese_labor_law_assistant.common.settings import Settings
 from vietnamese_labor_law_assistant.guardrails.enums import VerificationStatus
-from vietnamese_labor_law_assistant.guardrails.judge import OpenAIStructuredClaimJudge
+from vietnamese_labor_law_assistant.guardrails.judge import (
+    JudgeInvalidOutputError,
+    JudgeUnavailableError,
+    OpenAIStructuredClaimJudge,
+)
 from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
 
 
@@ -50,25 +54,23 @@ def evidence() -> list[EvidenceContext]:
     return [EvidenceContext(chunk_id="ll_x", content="x", article_number=1)]
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("status", list(VerificationStatus))
-async def test_judge_parses_closed_status(status: VerificationStatus) -> None:
+def test_judge_parses_closed_status(status: VerificationStatus) -> None:
     judge = OpenAIStructuredClaimJudge(settings(), Client({"status": status, "reason": "ok"}))
-    assert (await judge.judge(claim(), evidence())).status is status
+    assert judge.judge(claim(), evidence()).status is status
 
 
-@pytest.mark.asyncio
-async def test_judge_unavailable_invalid_transport_and_timeout_fail_closed() -> None:
-    with pytest.raises(RuntimeError):
-        await OpenAIStructuredClaimJudge(Settings(), Client()).judge(claim(), evidence())
-    with pytest.raises(ValueError):
-        await OpenAIStructuredClaimJudge(settings(), Client()).judge(claim(), evidence())
-    with pytest.raises(RuntimeError):
-        await OpenAIStructuredClaimJudge(settings(), Client(error=RuntimeError("transport"))).judge(
+def test_judge_unavailable_invalid_transport_and_timeout_fail_closed() -> None:
+    with pytest.raises(JudgeUnavailableError):
+        OpenAIStructuredClaimJudge(Settings(), Client()).judge(claim(), evidence())
+    with pytest.raises(JudgeInvalidOutputError):
+        OpenAIStructuredClaimJudge(settings(), Client()).judge(claim(), evidence())
+    with pytest.raises(JudgeUnavailableError):
+        OpenAIStructuredClaimJudge(settings(), Client(error=RuntimeError("transport"))).judge(
             claim(), evidence()
         )
-    with pytest.raises(TimeoutError):
-        await OpenAIStructuredClaimJudge(
+    with pytest.raises(JudgeUnavailableError):
+        OpenAIStructuredClaimJudge(
             settings(guardrail_judge_timeout_seconds=0.001),
             Client({"status": "SUPPORTED", "reason": "ok"}, delay=0.02),
         ).judge(claim(), evidence())

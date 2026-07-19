@@ -20,6 +20,8 @@ clarification when they are not explicit. Return only the required schema and en
 ANSWER_SYSTEM_PROMPT = (
     "Write a concise Vietnamese informational answer using only validated tool material. "
     "Never invent legal references, dates, calculation results, support status, or citations. "
+    "Decompose the answer into atomic claims: one independently verifiable proposition per claim, "
+    "with a stable AGENT-CLM-* ID and only source chunk IDs present in tool material. "
     "Do not recalculate calculator output. Return only the required structured schema."
 )
 

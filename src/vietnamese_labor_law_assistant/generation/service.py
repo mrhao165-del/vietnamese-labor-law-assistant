@@ -9,11 +9,12 @@ from typing import Protocol
 import structlog
 
 from vietnamese_labor_law_assistant.common.settings import Settings
-from vietnamese_labor_law_assistant.guardrails.citation_parser import extract_legal_citations
 from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
 from vietnamese_labor_law_assistant.guardrails.policy import guarded_answer
 from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
+from vietnamese_labor_law_assistant.guardrails.similarity import BgeM3SemanticScorer
 from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
+from vietnamese_labor_law_assistant.retrieval.embeddings import BgeM3EmbeddingProvider
 from vietnamese_labor_law_assistant.retrieval.models import DenseSearchResult, SearchResponse
 
 from .citations import (
@@ -37,11 +38,16 @@ class RagService:
     """Retrieval-neutral generation and citation-validation service."""
 
     def __init__(
-        self, retriever: Retriever, generator: LegalAnswerGenerator, settings: Settings
+        self,
+        retriever: Retriever,
+        generator: LegalAnswerGenerator,
+        settings: Settings,
+        guardrail_service: CitationGuardrailService | None = None,
     ) -> None:
         self.retriever = retriever
         self.generator = generator
         self.settings = settings
+        self.guardrail_service = guardrail_service
         self.logger = structlog.get_logger(__name__)
 
     def query(self, question: str, top_k: int = 5, include_contexts: bool = False) -> QueryResponse:
@@ -95,19 +101,20 @@ class RagService:
         if self.settings.guardrail_enabled and all(
             item.chunk_id.startswith("ll_") for item in search.results
         ):
-            guardrail = CitationGuardrailService(
+            guardrail = self.guardrail_service or CitationGuardrailService(
                 CanonicalSourceRegistry(self.settings.guardrail_canonical_source_path),
+                BgeM3SemanticScorer(BgeM3EmbeddingProvider(self.settings)),
                 lower_threshold=self.settings.guardrail_semantic_lower_threshold,
                 high_threshold=self.settings.guardrail_semantic_high_threshold,
             )
             claims = [
                 AtomicClaim(
-                    claim_id=f"CLM-{index:03d}",
+                    claim_id=claim.claim_id,
                     text=claim.text,
                     cited_context_ids=[context_map[item].chunk_id for item in claim.context_ids],
-                    legal_references=extract_legal_citations(claim.text),
+                    legal_references=claim.legal_references,
                 )
-                for index, claim in enumerate(draft.claims, 1)
+                for claim in draft.claims
             ]
             evidence = [
                 EvidenceContext(
@@ -120,7 +127,7 @@ class RagService:
                 for item in search.results
             ]
             result = guardrail.verify(claims, evidence)
-            answer, policy_warnings = guarded_answer(answer, result)
+            answer, policy_warnings = guarded_answer(answer, result, claims)
             verification = result.model_dump(mode="json")
             if policy_warnings:
                 warning = "; ".join(policy_warnings)

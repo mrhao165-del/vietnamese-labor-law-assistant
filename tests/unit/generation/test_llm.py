@@ -72,7 +72,9 @@ def _context() -> RetrievedChunk:
 
 
 def test_gemini_compatible_chat_parse_uses_configured_model() -> None:
-    draft = AnswerDraft(claims=[AnswerClaim(text="Được", context_ids=["CTX-001"])])
+    draft = AnswerDraft(
+        claims=[AnswerClaim(claim_id="CLM-001", text="Được", context_ids=["CTX-001"])]
+    )
     client = FakeClient(draft)
     result = OpenAICompatibleLegalAnswerGenerator(_settings(), client=client).generate(
         "Câu hỏi", [_context()]

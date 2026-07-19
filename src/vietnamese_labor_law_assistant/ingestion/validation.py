@@ -233,6 +233,8 @@ def validate_ingestion(
         duplicate_article_numbers=duplicate_articles,
         non_monotonic_articles=non_monotonic,
         issues=issues,
-        manual_review_articles=sorted(set(review)),
+        manual_review_articles=[],
+        manual_review_count=0,
+        manual_review_evidence_sha256=None,
         status=status,
     )

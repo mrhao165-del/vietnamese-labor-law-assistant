@@ -29,10 +29,15 @@ def _chunk() -> RetrievedChunk:
 
 def test_citation_validation_and_display() -> None:
     context = {"CTX-001": _chunk()}
-    draft = AnswerDraft(claims=[AnswerClaim(text="Nội dung", context_ids=["CTX-001", "CTX-001"])])
+    draft = AnswerDraft(
+        claims=[AnswerClaim(claim_id="CLM-001", text="Nội dung", context_ids=["CTX-001"])]
+    )
     assert validate_answer_draft(draft, context).claims[0].context_ids == ["CTX-001"]
     assert display_label(_chunk()) == "Điều 35, Khoản 1, Điểm a"
     with pytest.raises(CitationValidationError):
         validate_answer_draft(
-            AnswerDraft(claims=[AnswerClaim(text="x", context_ids=["CTX-999"])]), context
+            AnswerDraft(
+                claims=[AnswerClaim(claim_id="CLM-001", text="x", context_ids=["CTX-999"])]
+            ),
+            context,
         )

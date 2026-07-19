@@ -4,19 +4,41 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from vietnamese_labor_law_assistant.guardrails.models import LegalReference
 
 
 class AnswerClaim(BaseModel):
-    text: str = Field(min_length=1)
-    context_ids: list[str] = Field(default_factory=list)
+    model_config = ConfigDict(extra="forbid")
+    claim_id: str = Field(pattern=r"^CLM-[A-Za-z0-9_-]+$", max_length=80)
+    text: str = Field(min_length=1, max_length=1200)
+    context_ids: list[str] = Field(default_factory=list, max_length=10)
+    legal_references: list[LegalReference] = Field(default_factory=list, max_length=10)
+
+    @field_validator("context_ids")
+    @classmethod
+    def unique_context_ids(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("claim context IDs must be unique")
+        return value
 
 
 class AnswerDraft(BaseModel):
-    claims: list[AnswerClaim] = Field(default_factory=list)
+    model_config = ConfigDict(extra="forbid")
+    claims: list[AnswerClaim] = Field(default_factory=list, max_length=12)
     insufficient_context: bool = False
     insufficiency_reason: str | None = None
     general_warning: str | None = None
+
+    @model_validator(mode="after")
+    def validate_claim_contract(self) -> AnswerDraft:
+        if not self.insufficient_context and not self.claims:
+            raise ValueError("an in-scope answer requires atomic claims")
+        identifiers = [claim.claim_id for claim in self.claims]
+        if len(identifiers) != len(set(identifiers)):
+            raise ValueError("claim IDs must be unique")
+        return self
 
 
 class CitationResponse(BaseModel):

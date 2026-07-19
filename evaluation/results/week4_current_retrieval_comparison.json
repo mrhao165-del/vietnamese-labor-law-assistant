@@ -1,0 +1,100 @@
+{
+  "status": "PASS",
+  "benchmark": "WEEK4_CURRENT_CANONICAL_RETRIEVAL_COMPARISON",
+  "generated_at": "2026-07-18T19:20:34.611090Z",
+  "commit_sha": "997a8f4c1131c1854abf076d0f0437edcbb0b263",
+  "corpus_sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
+  "dataset_sha256": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+  "dataset_split": "dev",
+  "question_count": 42,
+  "rrf_k": 60,
+  "fusion": "PROJECT_CONTROLLED_RECIPROCAL_RANK_FUSION",
+  "direct_score_addition": false,
+  "predictions_sha256": "004fe1a085e5284fbeedc616c18c54031fc4800524789f60564c720a2f489260",
+  "pipelines": [
+    {
+      "pipeline_id": "L0_DENSE",
+      "tokenizer": "BAAI/bge-m3",
+      "candidate_k": 5,
+      "output_k": 5,
+      "metrics": {
+        "eligible_count": 23,
+        "hit_rate_at_1": 0.8695652173913043,
+        "hit_rate_at_3": 0.9565217391304348,
+        "hit_rate_at_5": 1.0,
+        "hit_rate_at_10": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "precision_at_5": 0.2,
+        "mrr": 0.9217391304347826,
+        "mean_latency_ms": 318.46548260838733,
+        "median_latency_ms": 240.49120000017865,
+        "p95_latency_ms": 277.0898999988276,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "pipeline_id": "L1_BM25_WHITESPACE",
+      "tokenizer": "whitespace",
+      "candidate_k": 5,
+      "output_k": 5,
+      "metrics": {
+        "eligible_count": 23,
+        "hit_rate_at_1": 0.391304347826087,
+        "hit_rate_at_3": 0.8260869565217391,
+        "hit_rate_at_5": 1.0,
+        "hit_rate_at_10": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "precision_at_5": 0.2,
+        "mrr": 0.644927536231884,
+        "mean_latency_ms": 0.28200869572806964,
+        "median_latency_ms": 0.23970000074768905,
+        "p95_latency_ms": 0.3298999999969965,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "pipeline_id": "L2_BM25_UNDERTHESEA",
+      "tokenizer": "underthesea-9.5.0",
+      "candidate_k": 5,
+      "output_k": 5,
+      "metrics": {
+        "eligible_count": 23,
+        "hit_rate_at_1": 0.6521739130434783,
+        "hit_rate_at_3": 0.9565217391304348,
+        "hit_rate_at_5": 1.0,
+        "hit_rate_at_10": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "precision_at_5": 0.2,
+        "mrr": 0.8007246376811594,
+        "mean_latency_ms": 12.664304347708821,
+        "median_latency_ms": 1.2055000006512273,
+        "p95_latency_ms": 3.0001000013726298,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "pipeline_id": "H2_DENSE_UNDERTHESEA_RRF",
+      "tokenizer": "underthesea-9.5.0",
+      "candidate_k": 20,
+      "output_k": 5,
+      "metrics": {
+        "eligible_count": 23,
+        "hit_rate_at_1": 0.782608695652174,
+        "hit_rate_at_3": 1.0,
+        "hit_rate_at_5": 1.0,
+        "hit_rate_at_10": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "precision_at_5": 0.2,
+        "mrr": 0.8840579710144927,
+        "mean_latency_ms": 250.89869130407232,
+        "median_latency_ms": 244.89560000074562,
+        "p95_latency_ms": 290.7371000001149,
+        "error_rate": 0.0
+      }
+    }
+  ]
+}

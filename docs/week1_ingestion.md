@@ -32,4 +32,14 @@ uv run pytest
 uv run pre-commit run --all-files
 ```
 
-Week 1 is complete only when source parsing, JSONL validation, repeatable output, automated checks, and the pending human review are all available. The CSV must not be treated as a completed legal review until a reviewer fills it in.
+Week 1 completion evidence is synchronized from the reviewed CSV by the typed loader, never by
+hard-coding article numbers into JSON:
+
+```powershell
+uv run python scripts/sync_week1_manual_review.py
+uv run pytest tests/unit/ingestion/test_manual_review.py tests/integration/test_week1_manual_review_report.py
+```
+
+The current report records 21 unique completed reviews, 220 articles, 682 chunks, zero empty chunks,
+zero duplicate IDs, and preserved Article 219. Synchronization changes only the validation report;
+the DOCX and canonical clause snapshot checksums remain unchanged.

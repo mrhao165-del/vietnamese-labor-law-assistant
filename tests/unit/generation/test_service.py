@@ -32,7 +32,9 @@ class FakeRetriever:
 
 class FakeGenerator:
     def generate(self, question: str, contexts):
-        return AnswerDraft(claims=[AnswerClaim(text="Trả lời", context_ids=["CTX-001"])])
+        return AnswerDraft(
+            claims=[AnswerClaim(claim_id="CLM-001", text="Trả lời", context_ids=["CTX-001"])]
+        )
 
 
 def test_service_formats_cited_answer() -> None:

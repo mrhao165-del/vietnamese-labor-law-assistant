@@ -1,37 +1,73 @@
-"""Unicode-tolerant parser for explicit Vietnamese legal references."""
+"""Typed, Unicode-tolerant parser for Vietnamese legal references."""
 
 from __future__ import annotations
 
 import re
 import unicodedata
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from .models import LegalReference
 
-_ARTICLE = re.compile(r"\bđiều\s*(\d+)\b", re.IGNORECASE)
-_CLAUSE = re.compile(r"\bkhoản\s*(\d+)\b", re.IGNORECASE)
-_POINT = re.compile(r"\bđiểm\s*([a-zđ])\b", re.IGNORECASE)
+_REFERENCE = re.compile(
+    r"(?:(?:điểm)\s*(?P<point>[a-zđ])\s*)?"
+    r"(?:(?:khoản)\s*(?P<clause>\d+)\s*)?"
+    r"(?:điều)\s*(?P<article>\d+)",
+    re.IGNORECASE,
+)
+_MALFORMED = re.compile(
+    r"\b(?:điều|khoản)\s+(?:một|hai|ba|bốn|năm|sáu|bảy|tám|chín|[?_-])\b"
+    r"|\bđiểm\s+(?:\d+|[?_-])\b",
+    re.IGNORECASE,
+)
+
+
+class CitationParseResult(BaseModel):
+    """Parser diagnostic consumed directly by the verification service."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    references: list[LegalReference] = Field(default_factory=list)
+    malformed: bool = False
+    duplicate_count: int = Field(default=0, ge=0)
 
 
 def normalize_citation_text(value: str) -> str:
     return " ".join(unicodedata.normalize("NFC", value).casefold().split())
 
 
-def parse_legal_citation(value: str) -> LegalReference | None:
-    """Parse only components that are explicitly present; no component is inferred."""
+def parse_citations(value: str) -> CitationParseResult:
     normalized = normalize_citation_text(value)
-    article = _ARTICLE.search(normalized)
-    if article is None:
-        return None
-    clause = _CLAUSE.search(normalized)
-    point = _POINT.search(normalized)
-    return LegalReference(
-        article=int(article.group(1)),
-        clause=int(clause.group(1)) if clause else None,
-        point=point.group(1).lower() if point else None,
+    references: list[LegalReference] = []
+    seen: set[tuple[int, int | None, str | None]] = set()
+    duplicates = 0
+    spans: list[tuple[int, int]] = []
+    for match in _REFERENCE.finditer(normalized):
+        spans.append(match.span())
+        reference = LegalReference(
+            article=int(match.group("article")),
+            clause=int(match.group("clause")) if match.group("clause") else None,
+            point=match.group("point").lower() if match.group("point") else None,
+        )
+        key = (reference.article, reference.clause, reference.point)
+        if key in seen:
+            duplicates += 1
+        else:
+            seen.add(key)
+            references.append(reference)
+    remainder = normalized
+    for start, end in reversed(spans):
+        remainder = remainder[:start] + (" " * (end - start)) + remainder[end:]
+    return CitationParseResult(
+        references=references,
+        malformed=bool(_MALFORMED.search(remainder)),
+        duplicate_count=duplicates,
     )
 
 
+def parse_legal_citation(value: str) -> LegalReference | None:
+    parsed = parse_citations(value)
+    return parsed.references[0] if parsed.references else None
+
+
 def extract_legal_citations(value: str) -> list[LegalReference]:
-    """Return unique explicit references in order of first appearance."""
-    parsed = parse_legal_citation(value)
-    return [] if parsed is None else [parsed]
+    return parse_citations(value).references

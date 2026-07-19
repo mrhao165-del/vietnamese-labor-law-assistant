@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "benchmark": "WEEK2_CURRENT_CANONICAL_DENSE_BASELINE",
+  "synthetic": false,
+  "generated_at": "2026-07-18T19:17:28.540320Z",
+  "commit_sha": "997a8f4c1131c1854abf076d0f0437edcbb0b263",
+  "corpus_sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
+  "dataset_sha256": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+  "dataset_split": "dev",
+  "pipeline_id": "L0_DENSE_CURRENT",
+  "top_k": 5,
+  "question_count": 42,
+  "prediction_count": 42,
+  "model": "BAAI/bge-m3",
+  "tokenizer": "BAAI/bge-m3",
+  "collection": "labor_law_chunks",
+  "vector_dimension": 1024,
+  "distance": "Cosine",
+  "device": "cpu",
+  "command": "uv run python scripts/run_week2_current_dense_baseline.py",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "Windows-10-10.0.19045-SP0"
+  },
+  "metrics": {
+    "eligible_count": 23,
+    "hit_rate_at_1": 0.8695652173913043,
+    "hit_rate_at_3": 0.9565217391304348,
+    "hit_rate_at_5": 1.0,
+    "hit_rate_at_10": 1.0,
+    "recall_at_5": 1.0,
+    "recall_at_10": 1.0,
+    "precision_at_5": 0.2,
+    "mrr": 0.9217391304347826,
+    "mean_latency_ms": 620.1813521738982,
+    "median_latency_ms": 237.5534000002517,
+    "p95_latency_ms": 263.6893999988388,
+    "error_rate": 0.0
+  }
+}
