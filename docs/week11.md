@@ -43,6 +43,11 @@ to `docker compose --env-file`; both `api` and `qdrant-index-bootstrap` then rec
 file. The setting changes only Compose service environment-file selection and does not include a
 secret in Git or Docker's build context.
 
+CPU services set `HF_HUB_DISABLE_XET=1`. The BGE-M3 model and `/hf-cache/hub` runtime cache policy
+are unchanged; this selects the ordinary Hugging Face HTTP downloader so a cold clone bootstrap
+does not use the high-memory Xet path. A first startup may consequently take longer while it fills
+the clone-local cache.
+
 In scope:
 
 - Browser chat, conversations, citation display, verification display, sanitized tool trace, and

@@ -25,6 +25,8 @@ không lower threshold, không fake citation.
 Compose mặc định đọc `.env` cạnh source. Khi clone smoke không được copy secret vào clone, đặt
 `APP_ENV_FILE` thành absolute external env path và dùng cùng path với `docker compose --env-file`.
 Đây chỉ là chọn service env file; Docker build context vẫn exclude `.env`, cache và runtime artifacts.
+Docker CPU services đặt `HF_HUB_DISABLE_XET=1`: vẫn dùng BGE-M3 và mounted runtime cache, nhưng
+tránh Xet downloader tiêu thụ bộ nhớ lớn khi clone first-startup cache trống.
 
 ## 1. Tổng quan & Công nghệ sử dụng
 

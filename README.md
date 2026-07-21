@@ -29,6 +29,10 @@ environment file without copying a secret into the clone: set `APP_ENV_FILE` to 
 and pass the same path to `docker compose --env-file`. This is an environment-file selection only;
 the Docker build context still excludes `.env` and cache/runtime artifacts.
 
+The CPU Docker services set `HF_HUB_DISABLE_XET=1`. This preserves the BGE-M3 model and mounted
+runtime cache strategy but avoids the high-memory Xet downloader on a first clone startup; the
+ordinary Hugging Face HTTP downloader may make that first bootstrap slower.
+
 ## Status
 
 `WEEK11_COMPLETE`: Week 11 tests and Docker runtime smoke passed. The supported browser runtime is
