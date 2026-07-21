@@ -35,6 +35,14 @@ and 43 passed three consecutive attempts. Positive article queries used `RETRIEV
 `get_article`, returned canonical citation(s), and had no 504 or internal sentinel. Article 999
 remains a negative no-evidence/fail-closed control.
 
+### Clone environment-file selection
+
+Compose defaults to `.env` in the source directory for normal local use. A real local clone must
+not copy that file. Set `APP_ENV_FILE` to an absolute external env-file path and pass that same path
+to `docker compose --env-file`; both `api` and `qdrant-index-bootstrap` then receive the external
+file. The setting changes only Compose service environment-file selection and does not include a
+secret in Git or Docker's build context.
+
 In scope:
 
 - Browser chat, conversations, citation display, verification display, sanitized tool trace, and

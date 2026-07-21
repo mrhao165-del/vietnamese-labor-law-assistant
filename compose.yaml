@@ -6,7 +6,7 @@ services:
   qdrant-index-bootstrap:
     build: .
     env_file:
-      - .env
+      - ${APP_ENV_FILE:-.env}
     command:
       ["/app/.venv/bin/python", "scripts/index_dense.py", "--qdrant-mode", "remote", "--device", "cpu", "--skip-if-indexed", "--validation-report-path", "/tmp/embedding_validation_report.json", "--manifest-path", "/tmp/dense_index_manifest.json"]
     environment:
@@ -26,7 +26,7 @@ services:
   api:
     build: .
     env_file:
-      - .env
+      - ${APP_ENV_FILE:-.env}
     environment:
       APP_DB_PATH: /runtime/app.sqlite3
       QDRANT_MODE: remote

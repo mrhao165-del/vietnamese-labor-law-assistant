@@ -22,6 +22,10 @@ Operational fixture có group `broad_article_lookup` cho Điều 20, 34, 35, 36,
 bounded source text từ cùng MCP result và bắt buộc pass guardrail lần hai: không hard-code article,
 không lower threshold, không fake citation.
 
+Compose mặc định đọc `.env` cạnh source. Khi clone smoke không được copy secret vào clone, đặt
+`APP_ENV_FILE` thành absolute external env path và dùng cùng path với `docker compose --env-file`.
+Đây chỉ là chọn service env file; Docker build context vẫn exclude `.env`, cache và runtime artifacts.
+
 ## 1. Tổng quan & Công nghệ sử dụng
 
 ### Mục đích chính

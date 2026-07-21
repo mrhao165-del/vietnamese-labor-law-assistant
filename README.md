@@ -24,6 +24,11 @@ The operational live suite now passes **27/27** requests: the seven original sce
 Articles 34, 35, and 43 each passed three consecutive HTTP runs with canonical citations. Article
 999 remains a fail-closed negative control, not positive coverage.
 
+For a local clone smoke, Compose defaults to the clone's `.env` but accepts an external service
+environment file without copying a secret into the clone: set `APP_ENV_FILE` to its absolute path
+and pass the same path to `docker compose --env-file`. This is an environment-file selection only;
+the Docker build context still excludes `.env` and cache/runtime artifacts.
+
 ## Status
 
 `WEEK11_COMPLETE`: Week 11 tests and Docker runtime smoke passed. The supported browser runtime is
