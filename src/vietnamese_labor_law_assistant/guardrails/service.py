@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Sequence
 
 import structlog
 
-from .citation_parser import parse_citations
+from .citation_parser import extract_numeric_tokens, parse_citations
 from .enums import ReasonCode, VerificationStatus
 from .judge import JudgeInvalidOutputError, JudgeUnavailableError, StructuredJudge
 from .models import (
@@ -19,10 +18,6 @@ from .models import (
 )
 from .similarity import BatchSemanticScorer, SemanticScorer, TokenCosineScorer
 from .source_registry import CanonicalSourceRegistry
-
-
-def _numbers(value: str) -> set[str]:
-    return set(re.findall(r"\d+", value))
 
 
 class CitationGuardrailService:
@@ -102,6 +97,12 @@ class CitationGuardrailService:
         contexts: Sequence[EvidenceContext],
         semantic_scores: dict[tuple[str, str], float] | None = None,
     ) -> ClaimVerification:
+        # Every claim still rejects malformed legal syntax. Offline/evaluator
+        # claims additionally use the historical inline-reference parser.
+        # Agent-generated claims instead carry stable
+        # canonical chunk IDs. Their prose may faithfully repeat a cross-reference
+        # contained in the cited source (for example, “theo Điều 44”), which is not
+        # an assertion that the target article itself was retrieved.
         parsed = parse_citations(claim.text)
         duplicate_citation = parsed.duplicate_count > 0 or len(claim.cited_context_ids) != len(
             set(claim.cited_context_ids)
@@ -138,7 +139,10 @@ class CitationGuardrailService:
         references = list(
             {
                 (item.article, item.clause, item.point): item
-                for item in [*claim.legal_references, *parsed.references]
+                for item in [
+                    *claim.legal_references,
+                    *(parsed.references if claim.parse_inline_references else []),
+                ]
             }.values()
         )
         if any(not self._reference_matches(reference, evidence) for reference in references):
@@ -148,8 +152,8 @@ class CitationGuardrailService:
                 reason_codes=[ReasonCode.LEGAL_REFERENCE_MISMATCH],
                 evidence_ids=[item.chunk_id for item in evidence],
             )
-        claim_numbers = _numbers(claim.text)
-        evidence_numbers = set().union(*(_numbers(item.content) for item in evidence))
+        claim_numbers = extract_numeric_tokens(claim.text)
+        evidence_numbers = set().union(*(extract_numeric_tokens(item.content) for item in evidence))
         evidence_numbers.update(str(item.article_number) for item in evidence)
         evidence_numbers.update(
             str(item.clause_number) for item in evidence if item.clause_number is not None

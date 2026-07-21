@@ -35,6 +35,11 @@ def normalize_citation_text(value: str) -> str:
     return " ".join(unicodedata.normalize("NFC", value).casefold().split())
 
 
+def extract_numeric_tokens(value: str) -> set[str]:
+    """Return literal numeric tokens used by deterministic grounding checks."""
+    return set(re.findall(r"\d+", value))
+
+
 def parse_citations(value: str) -> CitationParseResult:
     normalized = normalize_citation_text(value)
     references: list[LegalReference] = []

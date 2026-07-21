@@ -3,6 +3,27 @@
 Source-grounded assistance for the Vietnamese Labour Code. Week 11 adds a browser product around
 the existing retrieval, MCP, Agent, and Week 10 guardrail work.
 
+## Broad article lookup follow-up (2026-07-21)
+
+The original operational smoke suite proved Article 35 only. A follow-up audit now calls the
+production `get_article` path for every article in the canonical processed corpus: **220/220** are
+retrievable, with zero missing canonical chunks, wrong-article chunks, or unknown chunk IDs. This
+rules out missing corpus records, Qdrant index coverage, and article-specific MCP mappings.
+
+The manual Article 34/43 failures were in Agent evidence projection. Article 34 returned 13 valid
+contexts but exceeded the scorer's existing 10-context bound; cited contexts are now retained first
+and the existing bound is applied deterministically. Article 43 source prose contains legal
+cross-references; structured Agent citation IDs remain mandatory, but those source-internal
+references are no longer incorrectly treated as new direct citations. Numeric claims can only gain
+an already-retrieved canonical context containing the literal number, and the guardrail still checks
+the claim. A generic bounded source-projection fallback makes a second guardrail pass; it has no
+article-number branch, does not change `top_k` or thresholds, and cannot manufacture evidence.
+
+The operational live suite now passes **27/27** requests: the seven original scenario groups
+(11 requests) plus generic retrieval for Articles 20, 34, 35, 36, 43, 97, 105, 113, 138, and 169.
+Articles 34, 35, and 43 each passed three consecutive HTTP runs with canonical citations. Article
+999 remains a fail-closed negative control, not positive coverage.
+
 ## Status
 
 `WEEK11_COMPLETE`: Week 11 tests and Docker runtime smoke passed. The supported browser runtime is

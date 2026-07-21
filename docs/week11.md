@@ -7,6 +7,34 @@ It adds a React/Vite/TypeScript frontend, FastAPI chat/history endpoints, local 
 and a Docker Compose runtime. It does not change the frozen corpus, benchmark evidence, or selected
 retrieval configuration `R2_H2_C10_O5_L512_B1`.
 
+## Follow-up: broad article lookup verification (2026-07-21)
+
+Manual browser evidence showed that Article 35-centric smoke was insufficient. Diagnostic requests
+were all HTTP 200 and planned `RETRIEVAL_ONLY`/`get_article`: Article 34 returned 13 canonical
+chunks but failed because the Agent passed more than the scorer's configured 10-context bound;
+Article 35 returned two supported chunks; Article 43 returned three chunks but source-internal
+cross-references were mistaken for mandatory direct citations. The source and direct production MCP
+path were correct.
+
+The new retrieval coverage audit calls `LegalRetriever.get_article` for every number in
+`data/processed/labor_law_articles.jsonl`: 220 canonical articles, 220 retrievable, zero missing
+articles, zero wrong-article chunks, and zero unknown chunk IDs. The direct MCP calls for
+34/35/43 returned 13/2/3 matching canonical chunks with integer `article_number` inputs.
+
+The fix retains cited evidence before applying the existing context bound; preserves explicit
+structured citations without requiring source-prose cross-references; and permits numeric citation
+completion only from already-retrieved canonical chunks. A generic bounded `get_article`
+source-projection fallback is available only after a first fail-closed result and only if a second
+guardrail pass supports it. It contains no article-specific branch, no changed benchmark expectation,
+no changed retrieval configuration, and no threshold reduction.
+
+`uv run python scripts/run_week11_live_smoke.py --base-url http://localhost:8080
+--include-broad-article-lookup` passed 27/27 HTTP requests: seven original operational scenario
+groups (11 requests) plus Articles 20, 34, 35, 36, 43, 97, 105, 113, 138, and 169. Articles 34, 35,
+and 43 passed three consecutive attempts. Positive article queries used `RETRIEVAL_ONLY`, called
+`get_article`, returned canonical citation(s), and had no 504 or internal sentinel. Article 999
+remains a negative no-evidence/fail-closed control.
+
 In scope:
 
 - Browser chat, conversations, citation display, verification display, sanitized tool trace, and

@@ -4,6 +4,24 @@ Updated: 2026-07-21
 
 Repository: `vietnamese-labor-law-assistant`
 
+## Bổ sung bàn giao — broad article lookup (2026-07-21)
+
+Smoke cũ chỉ chứng minh Điều 35. Audit read-only qua production `get_article` đã kiểm tra toàn bộ
+220 Điều trong canonical corpus: 220/220 truy xuất được, không có chunk thiếu, chunk thuộc Điều
+sai, hoặc chunk ID ngoài canonical registry. Vì vậy không rebuild Qdrant, không đổi locked
+retrieval configuration, và không sửa canonical source.
+
+Root cause ở Agent evidence projection. Điều 34 có 13 chunks hợp lệ trong khi semantic scorer có
+bound 10 contexts; Agent hiện ưu tiên contexts được claim cite rồi áp bound hiện hữu. Điều 43 chứa
+tham chiếu chéo trong chính nội dung nguồn; structured citation IDs vẫn bắt buộc, nhưng Agent claims
+không còn xem tham chiếu chéo đó là citation trực tiếp mới. Với claim số học, chỉ chunk canonical đã
+retrieval và chứa literal number mới có thể bổ sung citation; final guardrail vẫn quyết định.
+
+Operational fixture có group `broad_article_lookup` cho Điều 20, 34, 35, 36, 43, 97, 105, 113, 138,
+169. Live run 27/27 PASS; Điều 34/35/43 mỗi điều PASS 3 lần liên tiếp. Generic fallback chỉ project
+bounded source text từ cùng MCP result và bắt buộc pass guardrail lần hai: không hard-code article,
+không lower threshold, không fake citation.
+
 ## 1. Tổng quan & Công nghệ sử dụng
 
 ### Mục đích chính

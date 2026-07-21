@@ -31,6 +31,7 @@ class AtomicClaim(BaseModel):
     text: str = Field(min_length=1, max_length=1200)
     cited_context_ids: list[str] = Field(default_factory=list, max_length=10)
     legal_references: list[LegalReference] = Field(default_factory=list, max_length=10)
+    parse_inline_references: bool = True
 
 
 class ClaimVerification(BaseModel):

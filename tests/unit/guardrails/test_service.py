@@ -146,6 +146,32 @@ def test_clause_chunk_point_labels_preserve_canonical_point_provenance() -> None
     assert mismatch.claims[0].reason_codes == [ReasonCode.LEGAL_REFERENCE_MISMATCH]
 
 
+def test_agent_claim_can_repeat_a_cited_source_cross_reference() -> None:
+    text = "Người sử dụng lao động phải xây dựng phương án sử dụng lao động theo Điều 44."
+    context = EvidenceContext(
+        chunk_id=CHUNK,
+        content=text,
+        article_number=43,
+        clause_number=1,
+    )
+    inline = service().verify(
+        [AtomicClaim(claim_id="inline", text=text, cited_context_ids=[CHUNK])], [context]
+    )
+    agent = service().verify(
+        [
+            AtomicClaim(
+                claim_id="agent",
+                text=text,
+                cited_context_ids=[CHUNK],
+                parse_inline_references=False,
+            )
+        ],
+        [context],
+    )
+    assert inline.claims[0].reason_codes == [ReasonCode.LEGAL_REFERENCE_MISMATCH]
+    assert agent.status is VerificationStatus.SUPPORTED
+
+
 class AmbiguousScorer:
     def score(self, claim: str, evidence: str) -> float:
         del claim, evidence

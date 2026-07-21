@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "classification": "operational_smoke_fixture_not_frozen_benchmark",
   "provenance": "Derived from the current canonical legal source, encoded calculator rules, Week 9 route contracts, and Week 10 fail-closed behavior. It does not alter Week 9 or Week 10 acceptance labels.",
   "cases": [
@@ -84,5 +84,131 @@
       "minimum_citations": 0,
       "maximum_citations": 0
     }
-  ]
+  ],
+  "broad_article_lookup": {
+    "classification": "operational_broad_article_lookup_not_frozen_benchmark",
+    "provenance": "Each article number exists in data/processed/labor_law_articles.jsonl and is exercised through the public HTTP Agent path. This is regression coverage for generic get_article routing, not a Week 9 or Week 10 acceptance dataset.",
+    "cases": [
+      {
+        "fixture_id": "week11-article-20",
+        "source": "canonical:article-20",
+        "question": "Điều 20 quy định gì?",
+        "runs": 1,
+        "expected_route": "RETRIEVAL_ONLY",
+        "expected_final_statuses": ["WORKFLOW_VALID"],
+        "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+        "expected_tools": ["get_article"],
+        "expected_article_number": 20,
+        "minimum_citations": 1
+      },
+      {
+        "fixture_id": "week11-article-34",
+        "source": "canonical:article-34",
+        "question": "Điều 34 quy định gì?",
+        "runs": 3,
+        "expected_route": "RETRIEVAL_ONLY",
+        "expected_final_statuses": ["WORKFLOW_VALID"],
+        "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+        "expected_tools": ["get_article"],
+        "expected_article_number": 34,
+        "minimum_citations": 1
+      },
+      {
+        "fixture_id": "week11-article-35",
+        "source": "canonical:article-35",
+        "question": "Điều 35 quy định gì?",
+        "runs": 3,
+        "expected_route": "RETRIEVAL_ONLY",
+        "expected_final_statuses": ["WORKFLOW_VALID"],
+        "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+        "expected_tools": ["get_article"],
+        "expected_article_number": 35,
+        "minimum_citations": 1
+      },
+      {
+        "fixture_id": "week11-article-36",
+        "source": "canonical:article-36",
+        "question": "Điều 36 quy định gì?",
+        "runs": 1,
+        "expected_route": "RETRIEVAL_ONLY",
+        "expected_final_statuses": ["WORKFLOW_VALID"],
+        "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+        "expected_tools": ["get_article"],
+        "expected_article_number": 36,
+        "minimum_citations": 1
+      },
+      {
+        "fixture_id": "week11-article-43",
+        "source": "canonical:article-43",
+        "question": "Điều 43 quy định gì?",
+        "runs": 3,
+        "expected_route": "RETRIEVAL_ONLY",
+        "expected_final_statuses": ["WORKFLOW_VALID"],
+        "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+        "expected_tools": ["get_article"],
+        "expected_article_number": 43,
+        "minimum_citations": 1
+      },
+      {
+        "fixture_id": "week11-article-97",
+        "source": "canonical:article-97",
+        "question": "Điều 97 quy định gì?",
+        "runs": 1,
+        "expected_route": "RETRIEVAL_ONLY",
+        "expected_final_statuses": ["WORKFLOW_VALID"],
+        "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+        "expected_tools": ["get_article"],
+        "expected_article_number": 97,
+        "minimum_citations": 1
+      },
+      {
+        "fixture_id": "week11-article-105",
+        "source": "canonical:article-105",
+        "question": "Điều 105 quy định gì?",
+        "runs": 1,
+        "expected_route": "RETRIEVAL_ONLY",
+        "expected_final_statuses": ["WORKFLOW_VALID"],
+        "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+        "expected_tools": ["get_article"],
+        "expected_article_number": 105,
+        "minimum_citations": 1
+      },
+      {
+        "fixture_id": "week11-article-113",
+        "source": "canonical:article-113",
+        "question": "Điều 113 quy định gì?",
+        "runs": 1,
+        "expected_route": "RETRIEVAL_ONLY",
+        "expected_final_statuses": ["WORKFLOW_VALID"],
+        "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+        "expected_tools": ["get_article"],
+        "expected_article_number": 113,
+        "minimum_citations": 1
+      },
+      {
+        "fixture_id": "week11-article-138",
+        "source": "canonical:article-138",
+        "question": "Điều 138 quy định gì?",
+        "runs": 1,
+        "expected_route": "RETRIEVAL_ONLY",
+        "expected_final_statuses": ["WORKFLOW_VALID"],
+        "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+        "expected_tools": ["get_article"],
+        "expected_article_number": 138,
+        "minimum_citations": 1
+      },
+      {
+        "fixture_id": "week11-article-169",
+        "source": "canonical:article-169",
+        "question": "Điều 169 quy định gì?",
+        "runs": 1,
+        "expected_route": "RETRIEVAL_ONLY",
+        "expected_final_statuses": ["WORKFLOW_VALID"],
+        "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+        "expected_tools": ["get_article"],
+        "expected_article_number": 169,
+        "minimum_citations": 1
+      }
+    ]
+  }
 }

@@ -77,9 +77,22 @@ def _evaluate(
             marker.casefold() in public_text for marker in FORBIDDEN_PUBLIC_MARKERS
         ),
     }
+    expected_article = fixture.get("expected_article_number")
+    if isinstance(expected_article, int):
+        article_traces = [
+            item for item in body.get("tool_trace", []) if item.get("tool_name") == "get_article"
+        ]
+        checks["get_article_argument"] = (
+            len(article_traces) == 1
+            and article_traces[0].get("parameters", {}).get("article_number") == expected_article
+        )
+        checks["article_citations"] = bool(citations) and all(
+            citation.get("article_number") == expected_article for citation in citations
+        )
     return {
         "fixture_id": fixture["fixture_id"],
         "source": fixture["source"],
+        "request_id": body.get("request_id"),
         "http_status": status,
         "workflow_status": body.get("final_status"),
         "route": body.get("route"),
@@ -101,12 +114,20 @@ def main() -> int:
     parser.add_argument("--fixtures", type=Path, default=DEFAULT_FIXTURES)
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
     parser.add_argument("--timeout", type=float, default=180.0)
+    parser.add_argument(
+        "--include-broad-article-lookup",
+        action="store_true",
+        help="Also run the operational multi-article regression group.",
+    )
     args = parser.parse_args()
 
     payload = json.loads(args.fixtures.read_text(encoding="utf-8"))
     registry = CanonicalSourceRegistry(args.source)
     rows: list[dict[str, Any]] = []
-    for fixture in payload["cases"]:
+    fixtures = list(payload["cases"])
+    if args.include_broad_article_lookup:
+        fixtures.extend(payload.get("broad_article_lookup", {}).get("cases", []))
+    for fixture in fixtures:
         for run_index in range(1, fixture["runs"] + 1):
             started = time.perf_counter()
             status, body = _post_chat(

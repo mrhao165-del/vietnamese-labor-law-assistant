@@ -349,6 +349,165 @@ async def test_claim_guardrail_runs_sync_scoring_off_the_event_loop() -> None:
     assert guardrail.thread_id is not None and guardrail.thread_id != threading.get_ident()
 
 
+def test_guardrail_evidence_bounds_contexts_without_dropping_cited_chunks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workflow = service(retrieval_output())
+    monkeypatch.setattr(
+        "vietnamese_labor_law_assistant.agent.service.get_settings",
+        lambda: Settings(guardrail_semantic_max_contexts=2),
+    )
+    rows = [
+        {"chunk_id": f"chunk-{index}", "content": f"Nội dung {index}", "article_number": 34}
+        for index in range(1, 4)
+    ]
+    retained = workflow._guardrail_evidence(
+        {
+            "retrieval_result": {"responses": [{"data": {"clauses": rows}}]},
+            "answer_draft": {
+                "claims": [
+                    {
+                        "claim_id": "AGENT-CLM-001",
+                        "text": "Nội dung",
+                        "citation_chunk_ids": ["chunk-3", "chunk-1"],
+                    }
+                ]
+            },
+        }
+    )
+    assert [item.chunk_id for item in retained] == ["chunk-3", "chunk-1"]
+
+
+def test_numeric_citation_enrichment_only_uses_retrieved_canonical_contexts() -> None:
+    workflow = service(retrieval_output())
+    draft = AgentAnswerDraft(
+        answer="Người lao động tự ý bỏ việc từ 05 ngày.",
+        citation_chunk_ids=["consequence"],
+        claims=[
+            AgentAtomicClaim(
+                claim_id="AGENT-CLM-001",
+                text="Người lao động tự ý bỏ việc từ 05 ngày.",
+                citation_chunk_ids=["consequence"],
+            )
+        ],
+    )
+    enriched = workflow._enrich_numeric_claim_citations(
+        draft,
+        [
+            EvidenceContext(
+                chunk_id="consequence",
+                content="Không phải báo trước.",
+                article_number=36,
+                clause_number=3,
+            ),
+            EvidenceContext(
+                chunk_id="numeric-source",
+                content="Tự ý bỏ việc từ 05 ngày làm việc liên tục.",
+                article_number=36,
+                clause_number=1,
+            ),
+        ],
+    )
+    assert enriched.claims[0].citation_chunk_ids == ["consequence", "numeric-source"]
+    assert enriched.citation_chunk_ids == ["consequence", "numeric-source"]
+
+
+def test_numeric_citation_enrichment_does_not_invent_unretrieved_contexts() -> None:
+    workflow = service(retrieval_output())
+    draft = AgentAnswerDraft(
+        answer="Báo trước 99 ngày.",
+        citation_chunk_ids=["known"],
+        claims=[
+            AgentAtomicClaim(
+                claim_id="AGENT-CLM-001", text="Báo trước 99 ngày.", citation_chunk_ids=["known"]
+            )
+        ],
+    )
+    enriched = workflow._enrich_numeric_claim_citations(
+        draft,
+        [EvidenceContext(chunk_id="known", content="Báo trước 45 ngày.", article_number=35)],
+    )
+    assert enriched == draft
+
+
+def test_article_lookup_fallback_projects_only_bounded_verbatim_mcp_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workflow = service(retrieval_output())
+    monkeypatch.setattr(
+        "vietnamese_labor_law_assistant.agent.service.get_settings",
+        lambda: Settings(guardrail_semantic_max_contexts=2),
+    )
+    rows = [
+        {"chunk_id": "first", "content": "Khoản thứ nhất.", "article_number": 34},
+        {"chunk_id": "second", "content": "Khoản thứ hai.", "article_number": 34},
+        {"chunk_id": "third", "content": "Khoản thứ ba.", "article_number": 34},
+    ]
+    fallback = workflow._article_lookup_fallback(
+        {
+            "intent": AgentIntent.RETRIEVAL_ONLY.value,
+            "planned_tools": [ToolName.GET_ARTICLE.value],
+            "retrieval_result": {"responses": [{"data": {"clauses": rows}}]},
+        }
+    )
+    assert fallback is not None
+    assert fallback.answer == "Khoản thứ nhất.\n\nKhoản thứ hai."
+    assert fallback.citation_chunk_ids == ["first", "second"]
+    assert [claim.text for claim in fallback.claims] == ["Khoản thứ nhất.", "Khoản thứ hai."]
+
+
+@pytest.mark.asyncio
+async def test_article_lookup_fallback_is_verified_before_becoming_public() -> None:
+    class SequencedGuardrail:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def verify(self, claims: Any, evidence: Any) -> VerificationResult:
+            del evidence
+            self.calls += 1
+            status = (
+                VerificationStatus.UNSUPPORTED if self.calls == 1 else VerificationStatus.SUPPORTED
+            )
+            return VerificationResult(status=status)
+
+    workflow = service(retrieval_output())
+    guardrail = SequencedGuardrail()
+    workflow.guardrail_service = guardrail  # type: ignore[assignment]
+    workflow._guardrail_evidence = lambda _: [  # type: ignore[method-assign]
+        EvidenceContext(chunk_id="source", content="Nguồn chính xác.", article_number=34)
+    ]
+    workflow._article_lookup_fallback = lambda _: AgentAnswerDraft(  # type: ignore[method-assign]
+        answer="Nguồn chính xác.",
+        citation_chunk_ids=["source"],
+        claims=[
+            AgentAtomicClaim(
+                claim_id="AGENT-CLM-SOURCE-01",
+                text="Nguồn chính xác.",
+                citation_chunk_ids=["source"],
+            )
+        ],
+    )
+    result = await workflow.apply_claim_guardrail(
+        {
+            "intent": AgentIntent.RETRIEVAL_ONLY.value,
+            "planned_tools": [ToolName.GET_ARTICLE.value],
+            "answer_draft": {
+                "claims": [
+                    {
+                        "claim_id": "AGENT-CLM-001",
+                        "text": "Không được hỗ trợ.",
+                        "citation_chunk_ids": ["source"],
+                    }
+                ]
+            },
+            "final_answer": "Không được hỗ trợ.",
+        }
+    )
+    assert guardrail.calls == 2
+    assert result["final_answer"] == "Nguồn chính xác."
+    assert result["citations"] == [{"chunk_id": "source"}]
+
+
 @pytest.mark.asyncio
 async def test_claim_guardrail_timeout_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
     class SlowGuardrail:

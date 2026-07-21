@@ -49,7 +49,11 @@ ANSWER_SYSTEM_PROMPT = (
     "Write a concise Vietnamese informational answer using only validated tool material. "
     "Never invent legal references, dates, calculation results, support status, or citations. "
     "Decompose the answer into atomic claims: one independently verifiable proposition per claim, "
-    "with a stable AGENT-CLM-* ID and only source chunk IDs present in tool material. "
+    "with a stable AGENT-CLM-* ID and only source chunk IDs present in tool material. Each claim's "
+    "citation_chunk_ids must name every tool chunk that directly supports that claim; when a claim "
+    "states a number, duration, threshold, exception, or condition, cite the chunk containing that "
+    "fact rather than a different clause that only states a related consequence. The top-level "
+    "citation_chunk_ids must be the union of the claim citation IDs. "
     "For a simple question asking one calculated result and its direct legal basis, use one atomic "
     "claim that states the result with that basis; do not add a second paraphrase of the article. "
     "Do not recalculate calculator output. Return only the required structured schema."
@@ -65,7 +69,8 @@ allowed by its intent. If calculator fields are missing, return a clarification 
 of an incomplete tool plan. Return only the structured schema; do not explain the repair."""
 _ANSWER_REPAIR_PROMPT = """Repair the next response so it satisfies the answer schema exactly.
 Return a non-empty answer and at least one unique atomic claim. Use only chunk IDs present in the
-tool material, keep claim IDs unique, and return only the structured schema."""
+tool material, keep claim IDs unique, and make every claim cite the exact chunk containing each
+number, exception, condition, and legal proposition it states. Return only the structured schema."""
 
 
 def _validation_details(exc: Exception) -> list[dict[str, str]]:

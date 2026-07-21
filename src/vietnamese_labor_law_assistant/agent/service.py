@@ -12,6 +12,7 @@ from typing import Any
 import structlog
 
 from vietnamese_labor_law_assistant.common.settings import Settings, get_settings
+from vietnamese_labor_law_assistant.guardrails.citation_parser import extract_numeric_tokens
 from vietnamese_labor_law_assistant.guardrails.judge import OpenAIStructuredClaimJudge
 from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
 from vietnamese_labor_law_assistant.guardrails.policy import guarded_answer
@@ -34,7 +35,14 @@ from .errors import (
 )
 from .graph import RouteName, build_agent_graph
 from .mcp_gateways import CalculatorMcpGateway, RetrievalMcpGateway
-from .models import AgentResult, AgentState, RouterOutput, ToolTrace
+from .models import (
+    AgentAnswerDraft,
+    AgentAtomicClaim,
+    AgentResult,
+    AgentState,
+    RouterOutput,
+    ToolTrace,
+)
 from .policies import AgentPolicy
 from .protocols import AgentAnswerGenerator, IntentRouter, ToolGateway
 from .routing import OpenAIStructuredAgentAnswerGenerator, OpenAIStructuredIntentRouter
@@ -377,6 +385,7 @@ class AgentService:
                 state.get("retrieval_result"),
                 state.get("calculator_result"),
             )
+            draft = self._enrich_numeric_claim_citations(draft, self._guardrail_evidence(state))
             known_ids = self._retrieved_chunk_ids(state.get("retrieval_result"))
             known_ids.update(item.chunk_id for item in self._guardrail_evidence(state))
             calculator_ids = {
@@ -451,13 +460,6 @@ class AgentService:
         if state.get("intent") == AgentIntent.OUT_OF_SCOPE.value:
             result = self.guardrail_service.verify([], [], out_of_scope_refusal=True)
             return {"verification": result.model_dump(mode="json")}
-        evidence = self._guardrail_evidence(state)
-        if not evidence:
-            return {
-                "final_answer": "INSUFFICIENT_VERIFIED_EVIDENCE",
-                "citations": [],
-                "verification": {"status": "INSUFFICIENT_CONTEXT", "reason": "NO_EVIDENCE"},
-            }
         draft = state.get("answer_draft") or {}
         raw_claims = draft.get("claims") if isinstance(draft, dict) else None
         if not isinstance(raw_claims, list) or not raw_claims:
@@ -469,11 +471,19 @@ class AgentService:
                     "reason": "INVALID_CLAIM_CONTRACT",
                 },
             }
+        evidence = self._guardrail_evidence(state)
+        if not evidence:
+            return {
+                "final_answer": "INSUFFICIENT_VERIFIED_EVIDENCE",
+                "citations": [],
+                "verification": {"status": "INSUFFICIENT_CONTEXT", "reason": "NO_EVIDENCE"},
+            }
         claims = [
             AtomicClaim(
                 claim_id=str(item["claim_id"]),
                 text=str(item["text"]),
                 cited_context_ids=list(item.get("citation_chunk_ids", [])),
+                parse_inline_references=False,
             )
             for item in raw_claims
             if isinstance(item, dict)
@@ -485,6 +495,46 @@ class AgentService:
                 asyncio.to_thread(self.guardrail_service.verify, claims, evidence),
                 timeout=settings.guardrail_semantic_timeout_seconds,
             )
+            fallback = self._article_lookup_fallback(state)
+            fallback_used = False
+            fallback_citation_ids: list[str] | None = None
+            if (
+                result.status.value in {"UNSUPPORTED", "INSUFFICIENT_CONTEXT"}
+                and fallback is not None
+            ):
+                fallback_state: AgentState = {
+                    **state,
+                    "answer_draft": fallback.model_dump(mode="json"),
+                    "final_answer": fallback.answer,
+                }
+                fallback_evidence = self._guardrail_evidence(fallback_state)
+                fallback_claims = [
+                    AtomicClaim(
+                        claim_id=claim.claim_id,
+                        text=claim.text,
+                        cited_context_ids=claim.citation_chunk_ids,
+                        parse_inline_references=False,
+                    )
+                    for claim in fallback.claims
+                ]
+                fallback_result = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        self.guardrail_service.verify, fallback_claims, fallback_evidence
+                    ),
+                    timeout=settings.guardrail_semantic_timeout_seconds,
+                )
+                if fallback_result.status.value in {"SUPPORTED", "PARTIALLY_SUPPORTED"}:
+                    self.logger.info(
+                        "article_lookup_guardrail_fallback_used",
+                        claim_count=len(fallback_claims),
+                        evidence_count=len(fallback_evidence),
+                        status=fallback_result.status.value,
+                    )
+                    result = fallback_result
+                    claims = fallback_claims
+                    state = fallback_state
+                    fallback_used = True
+                    fallback_citation_ids = fallback.citation_chunk_ids
             answer, warnings = guarded_answer(str(state.get("final_answer") or ""), result, claims)
             update: dict[str, Any] = {
                 "verification": result.model_dump(mode="json"),
@@ -494,6 +544,16 @@ class AgentService:
                 update["guardrail_warnings"] = warnings
             if result.status.value in {"UNSUPPORTED", "INSUFFICIENT_CONTEXT"}:
                 update["citations"] = []
+            elif (
+                fallback_used
+                and fallback_citation_ids is not None
+                and result.status.value
+                in {
+                    "SUPPORTED",
+                    "PARTIALLY_SUPPORTED",
+                }
+            ):
+                update["citations"] = [{"chunk_id": chunk_id} for chunk_id in fallback_citation_ids]
             return update
         except TimeoutError:
             self.logger.warning(
@@ -557,15 +617,137 @@ class AgentService:
                     )
                     calculator_ids.append(chunk.chunk_id)
         merged = list({item.chunk_id: item for item in rows}.values())
+        draft = state.get("answer_draft") or {}
+        raw_claims = draft.get("claims") or [] if isinstance(draft, dict) else []
+        cited_ids = list(
+            dict.fromkeys(
+                str(chunk_id)
+                for claim in raw_claims
+                if isinstance(claim, dict)
+                for chunk_id in claim.get("citation_chunk_ids", [])
+                if isinstance(chunk_id, str)
+            )
+        )
+        if not raw_claims:
+            return merged
+        by_chunk_id = {item.chunk_id: item for item in merged}
+        prioritized = [by_chunk_id[chunk_id] for chunk_id in cited_ids if chunk_id in by_chunk_id]
+        cited_id_set = set(cited_ids)
+        remaining = [item for item in merged if item.chunk_id not in cited_id_set]
+        max_contexts = get_settings().guardrail_semantic_max_contexts
+        retained = [*prioritized, *remaining][:max_contexts]
+        retained_ids = {item.chunk_id for item in retained}
+        dropped = [item.chunk_id for item in merged if item.chunk_id not in retained_ids]
         self.logger.info(
             "guardrail_evidence_merged",
             retrieval_evidence_ids=retrieval_ids,
             calculator_evidence_ids=calculator_ids,
-            retained_context_ids=[item.chunk_id for item in merged],
-            dropped_context_ids=[],
-            max_contexts=get_settings().guardrail_semantic_max_contexts,
+            cited_context_ids=cited_ids,
+            retained_context_ids=[item.chunk_id for item in retained],
+            dropped_context_ids=dropped,
+            max_contexts=max_contexts,
         )
-        return merged
+        return retained
+
+    def _enrich_numeric_claim_citations(
+        self, draft: AgentAnswerDraft, evidence: list[EvidenceContext]
+    ) -> AgentAnswerDraft:
+        """Attach retrieved source chunks that contain an omitted literal number.
+
+        This is deliberately narrow: it never invents a chunk ID, changes a claim,
+        or treats lexical overlap as legal support. It only completes a structured
+        citation with already retrieved canonical evidence. The final semantic
+        guardrail still verifies every claim against the resulting evidence set.
+        """
+
+        by_chunk_id = {item.chunk_id: item for item in evidence}
+        enriched_claims: list[AgentAtomicClaim] = []
+        additions: dict[str, list[str]] = {}
+        for claim in draft.claims:
+            cited = list(dict.fromkeys(claim.citation_chunk_ids))
+            cited_contexts = [
+                by_chunk_id[chunk_id] for chunk_id in cited if chunk_id in by_chunk_id
+            ]
+            supported_numbers = (
+                set().union(*(extract_numeric_tokens(item.content) for item in cited_contexts))
+                if cited_contexts
+                else set()
+            )
+            supported_numbers.update(str(item.article_number) for item in cited_contexts)
+            supported_numbers.update(
+                str(item.clause_number) for item in cited_contexts if item.clause_number is not None
+            )
+            missing_numbers = extract_numeric_tokens(claim.text) - supported_numbers
+            candidates: list[str] = []
+            for item in evidence:
+                if item.chunk_id in cited:
+                    continue
+                item_numbers = extract_numeric_tokens(item.content)
+                item_numbers.add(str(item.article_number))
+                if item.clause_number is not None:
+                    item_numbers.add(str(item.clause_number))
+                if missing_numbers.intersection(item_numbers):
+                    candidates.append(item.chunk_id)
+            added = candidates[: max(0, 10 - len(cited))]
+            if added:
+                additions[claim.claim_id] = added
+                cited.extend(added)
+            enriched_claims.append(claim.model_copy(update={"citation_chunk_ids": cited}))
+        all_citations = list(
+            dict.fromkeys(
+                chunk_id for claim in enriched_claims for chunk_id in claim.citation_chunk_ids
+            )
+        )
+        if not additions or len(all_citations) > 10:
+            return draft
+        self.logger.info(
+            "agent_claim_citations_enriched",
+            claim_ids=sorted(additions),
+            added_context_ids=additions,
+        )
+        return draft.model_copy(
+            update={"claims": enriched_claims, "citation_chunk_ids": all_citations}
+        )
+
+    def _article_lookup_fallback(self, state: AgentState) -> AgentAnswerDraft | None:
+        """Build a bounded, verbatim source projection for a generic article lookup.
+
+        It is available only after an LLM draft fails closed. The projection uses
+        the existing MCP response, does not infer a rule, and is verified by the
+        same claim guardrail before it can become public output.
+        """
+
+        if state.get("intent") != AgentIntent.RETRIEVAL_ONLY.value or state.get(
+            "planned_tools"
+        ) != [ToolName.GET_ARTICLE.value]:
+            return None
+        source_state: AgentState = {**state, "answer_draft": None}
+        available = self._guardrail_evidence(source_state)
+        max_contexts = get_settings().guardrail_semantic_max_contexts
+        answer_parts: list[str] = []
+        claims: list[AgentAtomicClaim] = []
+        for item in available[:max_contexts]:
+            if len(item.content) > 1200:
+                continue
+            candidate_length = sum(len(part) for part in answer_parts) + len(item.content)
+            if answer_parts:
+                candidate_length += 2 * len(answer_parts)
+            if candidate_length > 6000:
+                break
+            answer_parts.append(item.content)
+            claims.append(
+                AgentAtomicClaim(
+                    claim_id=f"AGENT-CLM-SOURCE-{len(claims) + 1:02d}",
+                    text=item.content,
+                    citation_chunk_ids=[item.chunk_id],
+                )
+            )
+        if not claims:
+            return None
+        chunk_ids = [claim.citation_chunk_ids[0] for claim in claims]
+        return AgentAnswerDraft(
+            answer="\n\n".join(answer_parts), citation_chunk_ids=chunk_ids, claims=claims
+        )
 
     async def finalize(self, state: AgentState) -> dict[str, Any]:
         return {"completed_at": self._now()}

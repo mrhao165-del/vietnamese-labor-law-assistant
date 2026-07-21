@@ -10,10 +10,16 @@ from vietnamese_labor_law_assistant.agent.errors import (
     IntentClassificationError,
 )
 from vietnamese_labor_law_assistant.agent.routing import (
+    ANSWER_SYSTEM_PROMPT,
     OpenAIStructuredAgentAnswerGenerator,
     OpenAIStructuredIntentRouter,
 )
 from vietnamese_labor_law_assistant.common.settings import Settings
+
+
+def test_answer_prompt_requires_claim_level_evidence_for_numeric_conditions() -> None:
+    assert "number, duration, threshold, exception, or condition" in ANSWER_SYSTEM_PROMPT
+    assert "union of the claim citation IDs" in ANSWER_SYSTEM_PROMPT
 
 
 class ParseClient:
