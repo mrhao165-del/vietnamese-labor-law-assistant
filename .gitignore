@@ -33,6 +33,9 @@ Thumbs.db
 models/
 huggingface/
 data/qdrant_local/
+data/runtime/
+frontend/node_modules/
+frontend/dist/
 
 # Jupyter
 .ipynb_checkpoints/

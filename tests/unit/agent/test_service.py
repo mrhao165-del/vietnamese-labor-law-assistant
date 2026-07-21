@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import threading
+import time
 from typing import Any
 
 import pytest
@@ -13,6 +15,9 @@ from vietnamese_labor_law_assistant.agent.models import (
 )
 from vietnamese_labor_law_assistant.agent.policies import AgentPolicy
 from vietnamese_labor_law_assistant.agent.service import AgentService
+from vietnamese_labor_law_assistant.common.settings import Settings
+from vietnamese_labor_law_assistant.guardrails.enums import VerificationStatus
+from vietnamese_labor_law_assistant.guardrails.models import EvidenceContext, VerificationResult
 
 
 class FakeRouter:
@@ -302,3 +307,81 @@ def test_router_rejects_unknown_tool_and_graph_has_no_back_edge() -> None:
         edge.source == "generate_answer" and edge.target == "classify_intent"
         for edge in graph.edges
     )
+
+
+@pytest.mark.asyncio
+async def test_claim_guardrail_runs_sync_scoring_off_the_event_loop() -> None:
+    class SyncGuardrail:
+        def __init__(self) -> None:
+            self.thread_id: int | None = None
+
+        def verify(self, claims: Any, evidence: Any) -> VerificationResult:
+            self.thread_id = threading.get_ident()
+            return VerificationResult(status=VerificationStatus.SUPPORTED)
+
+    workflow = service(retrieval_output())
+    guardrail = SyncGuardrail()
+    workflow.guardrail_service = guardrail  # type: ignore[assignment]
+    workflow._guardrail_evidence = lambda _: [  # type: ignore[method-assign]
+        EvidenceContext(
+            chunk_id="chunk-1",
+            content="Nội dung",
+            article_number=35,
+            clause_number=1,
+        )
+    ]
+    result = await workflow.apply_claim_guardrail(
+        {
+            "intent": AgentIntent.RETRIEVAL_ONLY.value,
+            "answer_draft": {
+                "claims": [
+                    {
+                        "claim_id": "AGENT-CLM-001",
+                        "text": "Nội dung",
+                        "citation_chunk_ids": ["chunk-1"],
+                    }
+                ]
+            },
+            "final_answer": "Nội dung",
+        }
+    )
+    assert result["verification"]["status"] == VerificationStatus.SUPPORTED.value
+    assert guardrail.thread_id is not None and guardrail.thread_id != threading.get_ident()
+
+
+@pytest.mark.asyncio
+async def test_claim_guardrail_timeout_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    class SlowGuardrail:
+        def verify(self, claims: Any, evidence: Any) -> VerificationResult:
+            del claims, evidence
+            time.sleep(0.03)
+            return VerificationResult(status=VerificationStatus.SUPPORTED)
+
+    workflow = service(retrieval_output())
+    workflow.guardrail_service = SlowGuardrail()  # type: ignore[assignment]
+    workflow._guardrail_evidence = lambda _: [  # type: ignore[method-assign]
+        EvidenceContext(chunk_id="chunk-1", content="Nội dung", article_number=35, clause_number=1)
+    ]
+    monkeypatch.setattr(
+        "vietnamese_labor_law_assistant.agent.service.get_settings",
+        lambda: Settings(guardrail_semantic_timeout_seconds=0.001),
+    )
+    result = await workflow.apply_claim_guardrail(
+        {
+            "intent": AgentIntent.RETRIEVAL_ONLY.value,
+            "answer_draft": {
+                "claims": [
+                    {
+                        "claim_id": "AGENT-CLM-001",
+                        "text": "Nội dung",
+                        "citation_chunk_ids": ["chunk-1"],
+                    }
+                ]
+            },
+            "final_answer": "Nội dung",
+        }
+    )
+    assert result["verification"] == {
+        "status": "INSUFFICIENT_CONTEXT",
+        "reason": "GUARDRAIL_TIMEOUT",
+    }

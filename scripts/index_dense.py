@@ -6,6 +6,7 @@ import argparse
 import json
 import platform
 import sys
+import time
 from datetime import UTC, datetime
 from importlib.metadata import version
 from pathlib import Path
@@ -47,6 +48,23 @@ def main() -> int:
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"])
     parser.add_argument("--recreate", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--validation-report-path",
+        type=Path,
+        default=Path("data/processed/embedding_validation_report.json"),
+        help="Write validation output here (the default is the canonical report path).",
+    )
+    parser.add_argument(
+        "--manifest-path",
+        type=Path,
+        default=Path("data/processed/dense_index_manifest.json"),
+        help="Write the indexing manifest here (the default is the canonical manifest path).",
+    )
+    parser.add_argument(
+        "--skip-if-indexed",
+        action="store_true",
+        help="Exit successfully when the configured collection already has points.",
+    )
     parser.add_argument("--limit", type=int)
     args = parser.parse_args()
     overrides = {
@@ -62,6 +80,18 @@ def main() -> int:
         if value is not None
     }
     settings = Settings(**overrides)
+    if args.skip_if_indexed:
+        store = QdrantStore(settings)
+        for attempt in range(30):
+            try:
+                if store.collection_exists() and store.count_points() > 0:
+                    print("Collection already contains points; indexing skipped.")
+                    return 0
+                break
+            except Exception as exc:
+                if attempt == 29:
+                    raise RuntimeError("Qdrant did not become available for indexing.") from exc
+                time.sleep(2)
     chunks = read_chunks_jsonl(args.input)
     if args.limit is not None:
         chunks = chunks[: args.limit]
@@ -81,12 +111,15 @@ def main() -> int:
         for chunk, text in zip(chunks, texts, strict=True)
     ]
     report = build_token_report(counts, settings.embedding_max_length, settings.embedding_model)
-    _write_json(ROOT / "data/processed/embedding_validation_report.json", report)
+    _write_json(args.validation_report_path, report)
     if report["over_limit_count"] and settings.long_chunk_policy == "error":
         print("Token validation failed; no legal content was truncated.", file=sys.stderr)
         return 1
     if args.dry_run:
-        print(f"Validated {len(chunks)} chunks; token report written to data/processed.")
+        print(
+            f"Validated {len(chunks)} chunks; token report written to "
+            f"{args.validation_report_path}."
+        )
         return 0
     import FlagEmbedding
     import torch
@@ -150,7 +183,7 @@ def main() -> int:
         "transformers_version": transformers.__version__,
         "qdrant_client_version": version("qdrant-client"),
     }
-    _write_json(ROOT / "data/processed/dense_index_manifest.json", manifest)
+    _write_json(args.manifest_path, manifest)
     print(
         json.dumps(
             {

@@ -16,11 +16,9 @@ from vietnamese_labor_law_assistant.guardrails.judge import OpenAIStructuredClai
 from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
 from vietnamese_labor_law_assistant.guardrails.policy import guarded_answer
 from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
-from vietnamese_labor_law_assistant.guardrails.similarity import BgeM3SemanticScorer
 from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
 from vietnamese_labor_law_assistant.mcp_clients.legal_calculator import LegalCalculatorMcpClient
 from vietnamese_labor_law_assistant.mcp_clients.legal_retrieval import LegalRetrievalMcpClient
-from vietnamese_labor_law_assistant.retrieval.embeddings import BgeM3EmbeddingProvider
 
 from .enums import AgentIntent, ToolName, WorkflowStatus
 from .errors import (
@@ -66,7 +64,12 @@ class AgentService:
         self.graph = build_agent_graph(self).compile()
 
     @classmethod
-    def from_settings(cls, settings: Settings | None = None) -> AgentService:
+    def from_settings(
+        cls,
+        settings: Settings | None = None,
+        *,
+        guardrail_service: CitationGuardrailService | None = None,
+    ) -> AgentService:
         settings = settings or get_settings()
         policy = AgentPolicy(
             max_input_length=settings.agent_max_input_length,
@@ -87,9 +90,9 @@ class AgentService:
                 LegalCalculatorMcpClient(timeout_seconds=policy.tool_timeout_seconds)
             ),
             policy=policy,
-            guardrail_service=CitationGuardrailService(
+            guardrail_service=guardrail_service
+            or CitationGuardrailService(
                 CanonicalSourceRegistry(settings.guardrail_canonical_source_path),
-                BgeM3SemanticScorer(BgeM3EmbeddingProvider(settings)),
                 judge=OpenAIStructuredClaimJudge(settings)
                 if settings.guardrail_llm_judge_enabled
                 else None,
@@ -476,7 +479,12 @@ class AgentService:
             if isinstance(item, dict)
         ]
         try:
-            result = self.guardrail_service.verify(claims, evidence)
+            # The singleton has already warmed during API startup.  This bounded worker call
+            # protects the event loop and returns a fail-closed result on an abnormal scorer.
+            result = await asyncio.wait_for(
+                asyncio.to_thread(self.guardrail_service.verify, claims, evidence),
+                timeout=settings.guardrail_semantic_timeout_seconds,
+            )
             answer, warnings = guarded_answer(str(state.get("final_answer") or ""), result, claims)
             update: dict[str, Any] = {
                 "verification": result.model_dump(mode="json"),
@@ -487,7 +495,25 @@ class AgentService:
             if result.status.value in {"UNSUPPORTED", "INSUFFICIENT_CONTEXT"}:
                 update["citations"] = []
             return update
-        except Exception:
+        except TimeoutError:
+            self.logger.warning(
+                "guardrail_semantic_timeout",
+                timeout_seconds=settings.guardrail_semantic_timeout_seconds,
+                claim_count=len(claims),
+                evidence_count=len(evidence),
+            )
+            return {
+                "final_answer": "INSUFFICIENT_VERIFIED_EVIDENCE",
+                "citations": [],
+                "verification": {"status": "INSUFFICIENT_CONTEXT", "reason": "GUARDRAIL_TIMEOUT"},
+            }
+        except Exception as exc:
+            self.logger.warning(
+                "guardrail_semantic_failure",
+                exception_type=type(exc).__name__,
+                claim_count=len(claims),
+                evidence_count=len(evidence),
+            )
             return {
                 "final_answer": "INSUFFICIENT_VERIFIED_EVIDENCE",
                 "citations": [],
@@ -496,6 +522,8 @@ class AgentService:
 
     def _guardrail_evidence(self, state: AgentState) -> list[EvidenceContext]:
         rows: list[EvidenceContext] = []
+        retrieval_ids: list[str] = []
+        calculator_ids: list[str] = []
         for response in (state.get("retrieval_result") or {}).get("responses", []):
             data = response.get("data", {})
             for item in data.get("results", []) + data.get("clauses", []) + [data]:
@@ -507,8 +535,10 @@ class AgentService:
                             article_number=item["article_number"],
                             clause_number=item.get("clause_number"),
                             point_label=item.get("point_label"),
+                            point_labels=item.get("point_labels", []),
                         )
                     )
+                    retrieval_ids.append(str(item["chunk_id"]))
         registry = CanonicalSourceRegistry(get_settings().guardrail_canonical_source_path)
         for response in (state.get("calculator_result") or {}).get("responses", []):
             for basis in response.get("data", {}).get("legal_basis", []):
@@ -521,10 +551,21 @@ class AgentService:
                             article_number=chunk.article_number,
                             clause_number=chunk.clause_number,
                             point_label=chunk.point_label,
+                            point_labels=chunk.point_labels,
                             source_kind="calculator",
                         )
                     )
-        return list({item.chunk_id: item for item in rows}.values())
+                    calculator_ids.append(chunk.chunk_id)
+        merged = list({item.chunk_id: item for item in rows}.values())
+        self.logger.info(
+            "guardrail_evidence_merged",
+            retrieval_evidence_ids=retrieval_ids,
+            calculator_evidence_ids=calculator_ids,
+            retained_context_ids=[item.chunk_id for item in merged],
+            dropped_context_ids=[],
+            max_contexts=get_settings().guardrail_semantic_max_contexts,
+        )
+        return merged
 
     async def finalize(self, state: AgentState) -> dict[str, Any]:
         return {"completed_at": self._now()}

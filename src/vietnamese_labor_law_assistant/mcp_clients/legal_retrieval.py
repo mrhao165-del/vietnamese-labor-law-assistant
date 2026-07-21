@@ -15,7 +15,7 @@ from mcp.client.stdio import stdio_client
 from pydantic import BaseModel, ValidationError
 
 from vietnamese_labor_law_assistant.mcp_clients.huggingface_environment import (
-    select_huggingface_cache_environment,
+    select_retrieval_mcp_environment,
 )
 from vietnamese_labor_law_assistant.mcp_servers.legal_retrieval.schemas import (
     ArticleData,
@@ -60,12 +60,12 @@ class LegalRetrievalMcpClient:
                 yield session
 
     def _server_parameters(self) -> StdioServerParameters:
-        """Build stdio parameters with only safe Hugging Face cache overrides."""
+        """Build stdio parameters with only safe retrieval runtime overrides."""
         return StdioServerParameters(
             command=self.server_command,
             args=self.server_args,
             cwd=self.cwd,
-            env=select_huggingface_cache_environment(),
+            env=select_retrieval_mcp_environment(),
         )
 
     async def list_tools(self, session: ClientSession) -> list[str]:

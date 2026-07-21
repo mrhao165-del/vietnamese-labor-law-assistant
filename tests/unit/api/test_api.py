@@ -63,6 +63,23 @@ class FakeStore:
         )
 
 
+class LifecycleScorer:
+    def __init__(self, *, fail: bool = False) -> None:
+        self.ready = False
+        self.fail = fail
+        self.warmup_calls = 0
+
+    @property
+    def is_ready(self) -> bool:
+        return self.ready
+
+    def warmup(self) -> None:
+        self.warmup_calls += 1
+        if self.fail:
+            raise RuntimeError("model unavailable")
+        self.ready = True
+
+
 class FakeLegalRetriever:
     def __init__(self) -> None:
         self.row = FakeRetriever().search("q", 1).results[0]
@@ -103,7 +120,7 @@ class FakeLegalRetriever:
 
 def test_api_health_query_and_source() -> None:
     settings = Settings(openai_api_key=SecretStr("test"), llm_model="configured")
-    app = create_app(settings)
+    app = create_app(settings, semantic_scorer=LifecycleScorer())
     app.dependency_overrides[get_rag_service] = lambda: DenseRagService(
         FakeRetriever(), FakeGenerator(), settings
     )
@@ -136,11 +153,25 @@ def test_api_ready_success(monkeypatch: pytest.MonkeyPatch) -> None:
             "llm_configured": True,
         },
     )
-    with TestClient(create_app(Settings())) as client:
+    scorer = LifecycleScorer()
+    with TestClient(create_app(Settings(), semantic_scorer=scorer)) as client:
         response = client.get("/ready")
     assert response.status_code == 200
     assert response.json()["ready"] is True
+    assert scorer.warmup_calls == 1
 
 
 def test_api_accepts_week6_hybrid_rerank_production_mode() -> None:
-    assert create_app(Settings(retrieval_mode="hybrid_underthesea_rerank"))
+    assert create_app(
+        Settings(retrieval_mode="hybrid_underthesea_rerank"), semantic_scorer=LifecycleScorer()
+    )
+
+
+def test_api_readiness_is_false_when_guardrail_warmup_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(api_main, "readiness", lambda _: {"retrieval": True, "llm": True})
+    with TestClient(create_app(Settings(), semantic_scorer=LifecycleScorer(fail=True))) as client:
+        response = client.get("/ready")
+    assert response.status_code == 503
+    assert response.json()["checks"]["guardrail_semantic"] is False

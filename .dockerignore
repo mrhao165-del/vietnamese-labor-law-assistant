@@ -1,0 +1,17 @@
+.git
+.venv
+.env
+.env.*
+!.env.example
+.cache
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+frontend/node_modules
+frontend/dist
+data/runtime/*.sqlite3
+data/runtime/*.sqlite3-*
+coverage.xml
+htmlcov
+*.log

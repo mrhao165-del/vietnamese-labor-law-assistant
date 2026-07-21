@@ -12,9 +12,6 @@ from vietnamese_labor_law_assistant.common.settings import Settings
 from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
 from vietnamese_labor_law_assistant.guardrails.policy import guarded_answer
 from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
-from vietnamese_labor_law_assistant.guardrails.similarity import BgeM3SemanticScorer
-from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
-from vietnamese_labor_law_assistant.retrieval.embeddings import BgeM3EmbeddingProvider
 from vietnamese_labor_law_assistant.retrieval.models import DenseSearchResult, SearchResponse
 
 from .citations import (
@@ -101,12 +98,30 @@ class RagService:
         if self.settings.guardrail_enabled and all(
             item.chunk_id.startswith("ll_") for item in search.results
         ):
-            guardrail = self.guardrail_service or CitationGuardrailService(
-                CanonicalSourceRegistry(self.settings.guardrail_canonical_source_path),
-                BgeM3SemanticScorer(BgeM3EmbeddingProvider(self.settings)),
-                lower_threshold=self.settings.guardrail_semantic_lower_threshold,
-                high_threshold=self.settings.guardrail_semantic_high_threshold,
-            )
+            guardrail = self.guardrail_service
+            if guardrail is None:
+                # A request must never construct a semantic model.  API composition injects
+                # the warmed singleton; other callers fail closed when it is unavailable.
+                answer = "Không thể xác minh ngữ nghĩa của câu trả lời."
+                citations = []
+                warning = "GUARDRAIL_UNAVAILABLE"
+                verification = {"status": "INSUFFICIENT_CONTEXT", "reason": warning}
+                return QueryResponse(
+                    request_id=request_id,
+                    question=search.query,
+                    answer=answer,
+                    citations=citations,
+                    insufficient_context=True,
+                    warning=warning,
+                    disclaimer=DISCLAIMER,
+                    retrieval=search.model_dump(mode="json", exclude={"results"}),
+                    generation={"called": True, "latency_ms": generation_ms},
+                    total_latency_ms=(time.perf_counter() - started) * 1000,
+                    contexts=[item.model_dump(mode="json") for item in search.results]
+                    if include_contexts
+                    else None,
+                    verification=verification,
+                )
             claims = [
                 AtomicClaim(
                     claim_id=claim.claim_id,
@@ -123,6 +138,7 @@ class RagService:
                     article_number=item.article_number,
                     clause_number=item.clause_number,
                     point_label=item.point_label,
+                    point_labels=item.point_labels,
                 )
                 for item in search.results
             ]

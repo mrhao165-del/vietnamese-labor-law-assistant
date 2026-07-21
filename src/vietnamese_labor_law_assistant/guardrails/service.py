@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 
+import structlog
+
 from .citation_parser import parse_citations
 from .enums import ReasonCode, VerificationStatus
 from .judge import JudgeInvalidOutputError, JudgeUnavailableError, StructuredJudge
@@ -15,7 +17,7 @@ from .models import (
     LegalReference,
     VerificationResult,
 )
-from .similarity import SemanticScorer, TokenCosineScorer
+from .similarity import BatchSemanticScorer, SemanticScorer, TokenCosineScorer
 from .source_registry import CanonicalSourceRegistry
 
 
@@ -38,6 +40,7 @@ class CitationGuardrailService:
         self.judge = judge
         self.lower_threshold = lower_threshold
         self.high_threshold = high_threshold
+        self.logger = structlog.get_logger(__name__)
 
     def verify(
         self,
@@ -57,7 +60,17 @@ class CitationGuardrailService:
                 status=VerificationStatus.INSUFFICIENT_CONTEXT,
                 warnings=[ReasonCode.MISSING_CITATION.value],
             )
-        results = [self._verify_claim(claim, contexts) for claim in claims]
+        semantic_scores = self._semantic_scores(claims, contexts)
+        results = [self._verify_claim(claim, contexts, semantic_scores) for claim in claims]
+        for item in results:
+            self.logger.info(
+                "guardrail_claim_verified",
+                claim_id=item.claim_id,
+                cited_evidence_ids=item.evidence_ids,
+                status=item.status.value,
+                reason_codes=[code.value for code in item.reason_codes],
+                score=item.score,
+            )
         statuses = {item.status for item in results}
         if VerificationStatus.UNSUPPORTED in statuses:
             overall = VerificationStatus.UNSUPPORTED
@@ -69,8 +82,25 @@ class CitationGuardrailService:
             overall = VerificationStatus.SUPPORTED
         return VerificationResult(status=overall, claims=results)
 
+    def _semantic_scores(
+        self, claims: Sequence[AtomicClaim], contexts: Sequence[EvidenceContext]
+    ) -> dict[tuple[str, str], float] | None:
+        """Use a single dense matrix whenever the scorer supports batching."""
+        if not isinstance(self.scorer, BatchSemanticScorer):
+            return None
+        unique_contexts = list(dict.fromkeys(item.content for item in contexts))
+        scores = self.scorer.score_matrix([claim.text for claim in claims], unique_contexts)
+        return {
+            (claim.text, context): scores[claim_index][context_index]
+            for claim_index, claim in enumerate(claims)
+            for context_index, context in enumerate(unique_contexts)
+        }
+
     def _verify_claim(
-        self, claim: AtomicClaim, contexts: Sequence[EvidenceContext]
+        self,
+        claim: AtomicClaim,
+        contexts: Sequence[EvidenceContext],
+        semantic_scores: dict[tuple[str, str], float] | None = None,
     ) -> ClaimVerification:
         parsed = parse_citations(claim.text)
         duplicate_citation = parsed.duplicate_count > 0 or len(claim.cited_context_ids) != len(
@@ -131,7 +161,14 @@ class CitationGuardrailService:
                 reason_codes=[ReasonCode.NUMERIC_CONTRADICTION],
                 evidence_ids=[item.chunk_id for item in evidence],
             )
-        score = max(self.scorer.score(claim.text, item.content) for item in evidence)
+        score = max(
+            (
+                semantic_scores[(claim.text, item.content)]
+                if semantic_scores is not None
+                else self.scorer.score(claim.text, item.content)
+            )
+            for item in evidence
+        )
         if score >= self.high_threshold:
             return ClaimVerification(
                 claim_id=claim.claim_id,
@@ -195,6 +232,10 @@ class CitationGuardrailService:
         return any(
             reference.article == item.article_number
             and (reference.clause is None or reference.clause == item.clause_number)
-            and (reference.point is None or reference.point == item.point_label)
+            and (
+                reference.point is None
+                or reference.point == item.point_label
+                or reference.point in item.point_labels
+            )
             for item in evidence
         )

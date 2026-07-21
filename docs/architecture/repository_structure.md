@@ -120,3 +120,39 @@ production evaluation module; scripts only select paths, invoke that logic, and 
 Structured generation owns claim decomposition. Guardrail service owns parser, membership,
 grounding, optional judge invocation, aggregation, and output policy. Evaluation can inject
 deterministic components but cannot synthesize actual reason codes from expected metadata.
+
+## Week 11 browser and runtime structure
+
+```text
+frontend/                         # independent React/Vite/TypeScript app
+  Dockerfile                      # Node build stage -> Nginx static stage
+  nginx.conf                      # SPA fallback and FastAPI proxy
+src/vietnamese_labor_law_assistant/api/
+  main.py                         # HTTP routes and error envelopes
+  conversation_repository.py      # mutable SQLite adapter only
+data/runtime/                     # local mutable SQLite runtime (not canonical data)
+compose.yaml                      # Qdrant, index bootstrap, API, frontend
+Dockerfile                        # Python API/index-bootstrap image
+tests/integration/test_week11_chat_api.py
+tests/unit/api/                   # Week 11 API contracts/repository/mapper
+tests/end_to_end/fixtures/week11_live_smoke_cases.json # operational, not frozen benchmark
+scripts/run_week11_live_smoke.py  # thin public-HTTP smoke orchestrator
+```
+
+React is an independent application; the Python package contains no frontend implementation.
+The API bounded area contains HTTP and persistence adapters and wires `AgentService`; it does not
+contain legal business rules. The calculator remains in `calculator/` and is limited to the
+existing Article 20/35 rules. Canonical processed data and benchmark evidence remain protected;
+SQLite is mutable runtime state only.
+
+Docker runs Qdrant as a server for concurrent API and MCP access, while the Agent still starts the
+project MCP servers as stdio child processes inside the API container. No MCP network service is
+created. The frontend calls only FastAPI through the Nginx proxy. Week 11 Docker verification
+covered the four services, honest `/ready`, real MCP stdio, HTTP Agent chat, SQLite restart
+persistence, and the CPU-only profile.
+
+The router/answer adapter owns bounded structured-output repair, while `RouterOutput` owns general
+route/tool/argument invariants; there is no keyword-routing fallback. Guardrail evidence preserves
+canonical clause-level `point_labels`, so an explicit point can be validated inside a clause chunk
+without changing the canonical source. BGE lifecycle, batching, timeout, and warm-up remain in the
+retrieval/guardrail bounded areas rather than request handlers or scripts.

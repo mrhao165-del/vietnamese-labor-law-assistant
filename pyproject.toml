@@ -31,6 +31,14 @@ dependencies = [
 requires = ["uv_build>=0.10.11,<0.11.0"]
 build-backend = "uv_build"
 
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
 [dependency-groups]
 dev = [
     "pre-commit>=4.6.0",

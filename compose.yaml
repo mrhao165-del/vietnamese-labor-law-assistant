@@ -1,0 +1,63 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.16.2
+    volumes:
+      - qdrant_server_storage:/qdrant/storage
+  qdrant-index-bootstrap:
+    build: .
+    env_file:
+      - .env
+    command:
+      ["/app/.venv/bin/python", "scripts/index_dense.py", "--qdrant-mode", "remote", "--device", "cpu", "--skip-if-indexed", "--validation-report-path", "/tmp/embedding_validation_report.json", "--manifest-path", "/tmp/dense_index_manifest.json"]
+    environment:
+      QDRANT_MODE: remote
+      QDRANT_URL: http://qdrant:6333
+      HF_HOME: /hf-cache
+      HF_HUB_CACHE: /hf-cache/hub
+      HUGGINGFACE_HUB_CACHE: /hf-cache/hub
+      EMBEDDING_DEVICE: cpu
+      EMBEDDING_USE_FP16: "false"
+    depends_on:
+      qdrant:
+        condition: service_started
+    volumes:
+      - ./.cache/huggingface:/hf-cache
+      - ./data/processed:/app/data/processed:ro
+  api:
+    build: .
+    env_file:
+      - .env
+    environment:
+      APP_DB_PATH: /runtime/app.sqlite3
+      QDRANT_MODE: remote
+      QDRANT_URL: http://qdrant:6333
+      HF_HOME: /hf-cache
+      HF_HUB_CACHE: /hf-cache/hub
+      HUGGINGFACE_HUB_CACHE: /hf-cache/hub
+      EMBEDDING_DEVICE: cpu
+      EMBEDDING_USE_FP16: "false"
+      CORS_ALLOWED_ORIGINS: http://localhost:8080
+      LLM_TIMEOUT_SECONDS: "180"
+      AGENT_TOOL_TIMEOUT_SECONDS: "120"
+      AGENT_WORKFLOW_TIMEOUT_SECONDS: "300"
+    depends_on:
+      qdrant-index-bootstrap:
+        condition: service_completed_successfully
+    volumes:
+      - runtime:/runtime
+      - ./.cache/huggingface:/hf-cache
+      - ./data/processed:/app/data/processed:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  frontend:
+    build: ./frontend
+    ports: ["8080:80"]
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  runtime:
+  qdrant_server_storage:

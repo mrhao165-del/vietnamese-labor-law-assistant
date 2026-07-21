@@ -11,6 +11,13 @@ from .enums import ToolName
 from .errors import CalculatorToolError, RetrievalToolError
 
 
+def _article_number(arguments: dict[str, Any]) -> int:
+    value = arguments.get("article_number", arguments.get("article_id"))
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise RetrievalToolError("article number must be an integer")
+    return value
+
+
 class RetrievalMcpGateway:
     """Call only the static retrieval MCP allowlist through its real stdio client."""
 
@@ -33,10 +40,12 @@ class RetrievalMcpGateway:
             if tool is ToolName.SEARCH_LABOR_LAW:
                 response = await self.client.search_labor_law(session, **arguments)
             elif tool is ToolName.GET_ARTICLE:
-                response = await self.client.get_article(session, arguments["article_number"])
+                response = await self.client.get_article(session, _article_number(arguments))
             elif tool is ToolName.GET_CLAUSE:
                 response = await self.client.get_clause(
-                    session, arguments["article_number"], arguments["clause_number"]
+                    session,
+                    _article_number(arguments),
+                    arguments["clause_number"],
                 )
             else:
                 response = await self.client.get_document_metadata(session)

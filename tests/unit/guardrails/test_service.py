@@ -117,6 +117,35 @@ def test_out_of_scope_is_safe_refusal() -> None:
     assert ReasonCode.OUT_OF_SCOPE_REFUSAL.value in result.warnings
 
 
+def test_clause_chunk_point_labels_preserve_canonical_point_provenance() -> None:
+    text = "Điểm a Khoản 1 Điều 35 người lao động báo trước 45 ngày"
+    context = EvidenceContext(
+        chunk_id=CHUNK,
+        content=text,
+        article_number=35,
+        clause_number=1,
+        point_labels=["a", "b", "c", "d"],
+    )
+    supported = service().verify(
+        [AtomicClaim(claim_id="point-a", text=text, cited_context_ids=[CHUNK])], [context]
+    )
+    assert supported.status is VerificationStatus.SUPPORTED
+
+    mismatch = service().verify(
+        [
+            AtomicClaim(
+                claim_id="point-e",
+                text=text,
+                cited_context_ids=[CHUNK],
+                legal_references=[LegalReference(article=35, clause=1, point="e")],
+            )
+        ],
+        [context],
+    )
+    assert mismatch.status is VerificationStatus.UNSUPPORTED
+    assert mismatch.claims[0].reason_codes == [ReasonCode.LEGAL_REFERENCE_MISMATCH]
+
+
 class AmbiguousScorer:
     def score(self, claim: str, evidence: str) -> float:
         del claim, evidence
@@ -226,4 +255,73 @@ class Embeddings:
 
 
 def test_bge_semantic_scorer_reuses_embedding_protocol() -> None:
-    assert BgeM3SemanticScorer(Embeddings()).score("claim", "evidence") == 1.0
+    scorer = BgeM3SemanticScorer(Embeddings())
+    scorer.warmup()
+    assert scorer.score("claim", "evidence") == 1.0
+
+
+class CountingEmbeddings:
+    def __init__(self) -> None:
+        self.ensure_calls = 0
+        self.batches: list[list[str]] = []
+        self.model_initialization_count = 0
+
+    @property
+    def dimension(self) -> int:
+        return 2
+
+    def ensure_available(self) -> None:
+        self.ensure_calls += 1
+        self.model_initialization_count = 1
+
+    def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
+        self.batches.append(list(texts))
+        return [[1.0, 0.0] for _ in texts]
+
+    def embed_documents_with_batch(
+        self, texts: Sequence[str], batch_size: int
+    ) -> list[list[float]]:
+        assert batch_size >= 1
+        return self.embed_documents(texts)
+
+    def embed_query(self, text: str) -> list[float]:
+        return self.embed_documents([text])[0]
+
+
+def test_semantic_scorer_warms_once_and_encodes_claims_contexts_by_batch() -> None:
+    provider = CountingEmbeddings()
+    scorer = BgeM3SemanticScorer(provider, max_claims=2, max_contexts=2, batch_size=2)
+    scorer.warmup()
+    provider.batches.clear()
+    assert scorer.score_matrix(["claim one", "claim two"], ["context one", "context two"]) == [
+        [1.0, 1.0],
+        [1.0, 1.0],
+    ]
+    assert provider.ensure_calls == 1
+    assert scorer.model_initialization_count == 1
+    assert provider.batches == [["claim one", "claim two"], ["context one", "context two"]]
+
+
+def test_semantic_scorer_enforces_bounds_before_encoding() -> None:
+    provider = CountingEmbeddings()
+    scorer = BgeM3SemanticScorer(provider, max_claims=1, max_contexts=1, max_text_characters=8)
+    scorer.warmup()
+    with pytest.raises(ValueError, match="claim bound"):
+        scorer.score_matrix(["one", "two"], ["context"])
+    with pytest.raises(ValueError, match="text length"):
+        scorer.score_matrix(["too long text"], ["context"])
+    with pytest.raises(ValueError, match="context bound"):
+        scorer.score_matrix(["claim"], ["one", "two"])
+
+
+def test_semantic_scorer_is_not_usable_before_successful_warmup() -> None:
+    class FailingEmbeddings(CountingEmbeddings):
+        def ensure_available(self) -> None:
+            raise RuntimeError("unavailable")
+
+    scorer = BgeM3SemanticScorer(FailingEmbeddings())
+    with pytest.raises(RuntimeError, match="unavailable"):
+        scorer.warmup()
+    assert scorer.is_ready is False and scorer.last_error_type == "RuntimeError"
+    with pytest.raises(RuntimeError, match="not warmed"):
+        scorer.score_matrix(["claim"], ["context"])

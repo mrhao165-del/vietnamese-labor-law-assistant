@@ -64,6 +64,10 @@ class Settings(BaseSettings):
     guardrail_canonical_source_path: Path = Path("data/processed/labor_law_clauses.jsonl")
     guardrail_semantic_lower_threshold: float = Field(default=0.35, ge=0, le=1)
     guardrail_semantic_high_threshold: float = Field(default=0.75, ge=0, le=1)
+    guardrail_semantic_timeout_seconds: float = Field(default=15, gt=0, le=120)
+    guardrail_semantic_batch_size: int = Field(default=4, ge=1, le=64)
+    guardrail_semantic_max_contexts: int = Field(default=10, ge=1, le=50)
+    guardrail_semantic_max_text_characters: int = Field(default=12000, ge=128, le=100000)
     guardrail_llm_judge_enabled: bool = False
     guardrail_judge_timeout_seconds: float = Field(default=10, gt=0, le=120)
     guardrail_max_claims: int = Field(default=12, ge=1, le=50)
@@ -74,10 +78,14 @@ class Settings(BaseSettings):
     agent_tool_timeout_seconds: float = Field(default=30, gt=0, le=120)
     agent_workflow_timeout_seconds: float = Field(default=90, gt=0, le=300)
     agent_max_transport_retries: int = Field(default=1, ge=0, le=3)
+    agent_structured_output_max_retries: int = Field(default=2, ge=0, le=2)
     agent_max_retrieval_top_k: int = Field(default=5, ge=1, le=10)
     agent_tool_output_max_chars: int = Field(default=12000, ge=256, le=100000)
     api_host: str = "127.0.0.1"
     api_port: int = Field(default=8000, ge=1, le=65535)
+    app_db_path: Path = Path("data/runtime/app.sqlite3")
+    cors_allowed_origins: str = "http://localhost:5173,http://localhost:8080"
+    api_max_page_size: int = Field(default=50, ge=1, le=100)
 
     @field_validator("llm_model")
     @classmethod

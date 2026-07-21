@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Plus, MessageCircle, History, HelpCircle, Settings, UserCircle, LogOut, Trash2, Scale } from 'lucide-react';
-import type { Conversation } from '../lib/supabase';
+import { Plus, MessageCircle, History, HelpCircle, Info, ShieldCheck, Trash2, Scale } from 'lucide-react';
+import type { Conversation } from '../api/types';
 
 type Props = {
   conversations: Conversation[];
@@ -85,9 +85,9 @@ export function Sidebar({ conversations, currentId, loading, onNewChat, onSelect
       {/* Static nav */}
       <div className="mt-auto border-t border-outline-variant pt-sm flex flex-col gap-xs">
         <NavIcon icon={<HelpCircle className="w-5 h-5" />} label="Hệ thống có thể làm gì?" />
-        <NavIcon icon={<Settings className="w-5 h-5" />} label="Cài đặt" />
-        <NavIcon icon={<UserCircle className="w-5 h-5" />} label="Tài khoản" />
-        <NavIcon icon={<LogOut className="w-5 h-5" />} label="Đăng xuất" />
+        <NavIcon icon={<Info className="w-5 h-5" />} label="Phạm vi dữ liệu" />
+        <NavIcon icon={<ShieldCheck className="w-5 h-5" />} label="Tuyên bố miễn trừ trách nhiệm" />
+        <NavIcon icon={<HelpCircle className="w-5 h-5" />} label="Phiên bản ứng dụng" />
       </div>
     </nav>
   );

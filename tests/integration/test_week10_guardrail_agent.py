@@ -137,6 +137,7 @@ async def test_canonical_retrieval_and_calculator_routes_are_supported() -> None
         rationale_code="X",
         requested_operation="x",
         planned_tools=[ToolName.CALCULATE_NOTICE_PERIOD],
+        calculator_arguments={"contract_type": "INDEFINITE"},
     )
     result = await make_service(route, TEXT, [], retrieval, calculator).run("x", include_trace=True)
     assert result.verification and result.verification["status"] == "SUPPORTED" and calculator.calls
@@ -151,6 +152,7 @@ async def test_combined_and_hallucinated_routes_fail_closed() -> None:
         rationale_code="X",
         requested_operation="x",
         planned_tools=[ToolName.CALCULATE_NOTICE_PERIOD, ToolName.SEARCH_LABOR_LAW],
+        calculator_arguments={"contract_type": "INDEFINITE"},
     )
     result = await make_service(route, TEXT, [CHUNK], retrieval, calculator).run(
         "x", include_trace=True

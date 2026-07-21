@@ -21,6 +21,7 @@ class EvidenceContext(BaseModel):
     article_number: int = Field(gt=0)
     clause_number: int | None = Field(default=None, gt=0)
     point_label: str | None = None
+    point_labels: list[str] = Field(default_factory=list)
     source_kind: str = "retrieval"
 
 

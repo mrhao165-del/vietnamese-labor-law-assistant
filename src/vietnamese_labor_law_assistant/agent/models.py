@@ -41,6 +41,8 @@ class RouterOutput(BaseModel):
     @model_validator(mode="after")
     def validate_plan(self) -> RouterOutput:
         planned = set(self.planned_tools)
+        retrieval_planned = planned.intersection(RETRIEVAL_TOOLS)
+        calculator_planned = planned.intersection(CALCULATOR_TOOLS)
         if self.intent is AgentIntent.OUT_OF_SCOPE:
             if planned:
                 raise ValueError("OUT_OF_SCOPE must not plan tools")
@@ -52,19 +54,43 @@ class RouterOutput(BaseModel):
                 raise ValueError("clarification requires a question")
             return self
         if self.intent is AgentIntent.RETRIEVAL_ONLY and (
-            not planned or not planned.issubset(RETRIEVAL_TOOLS)
+            len(self.planned_tools) != 1 or len(retrieval_planned) != 1
         ):
-            raise ValueError("retrieval route requires retrieval tools only")
+            raise ValueError("retrieval route requires exactly one retrieval tool")
         if self.intent is AgentIntent.CALCULATOR_ONLY and (
-            len(planned) != 1 or not planned.issubset(CALCULATOR_TOOLS)
+            len(self.planned_tools) != 1 or len(calculator_planned) != 1
         ):
             raise ValueError("calculator route requires exactly one calculator tool")
         if self.intent is AgentIntent.RETRIEVAL_AND_CALCULATOR and (
-            not planned.intersection(RETRIEVAL_TOOLS)
-            or len(planned.intersection(CALCULATOR_TOOLS)) != 1
+            len(self.planned_tools) != 2
+            or len(retrieval_planned) != 1
+            or len(calculator_planned) != 1
         ):
-            raise ValueError("combined route requires retrieval and exactly one calculator tool")
+            raise ValueError(
+                "combined route requires exactly one retrieval and one calculator tool"
+            )
+        self._validate_tool_arguments(planned)
         return self
+
+    def _validate_tool_arguments(self, planned: set[ToolName]) -> None:
+        if ToolName.GET_ARTICLE in planned and not isinstance(
+            self.retrieval_arguments.get("article_number"), int
+        ):
+            raise ValueError("get_article requires integer article_number")
+        if ToolName.GET_CLAUSE in planned and not all(
+            isinstance(self.retrieval_arguments.get(key), int)
+            for key in ("article_number", "clause_number")
+        ):
+            raise ValueError("get_clause requires integer article_number and clause_number")
+        if ToolName.CALCULATE_NOTICE_PERIOD in planned and not self.calculator_arguments.get(
+            "contract_type"
+        ):
+            raise ValueError("calculate_notice_period requires contract_type")
+        if ToolName.CALCULATE_CONTRACT_DURATION in planned and not all(
+            self.calculator_arguments.get(key)
+            for key in ("contract_type", "start_date", "end_date")
+        ):
+            raise ValueError("calculate_contract_duration requires contract_type and dates")
 
 
 class AgentAtomicClaim(BaseModel):

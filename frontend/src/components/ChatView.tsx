@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Bot } from 'lucide-react';
-import type { Message as MessageType } from '../lib/supabase';
+import type { Message as MessageType } from '../api/types';
 import { MessageBubble } from './MessageBubble';
 import { TypingIndicator } from './TypingIndicator';
 
@@ -8,7 +8,7 @@ type Props = {
   messages: MessageType[];
   isThinking: boolean;
   onFeedback: (id: string, feedback: 'up' | 'down') => void;
-  onViewCitation: () => void;
+  onViewCitation: (message: MessageType) => void;
   endRef: React.RefObject<HTMLDivElement>;
 };
 

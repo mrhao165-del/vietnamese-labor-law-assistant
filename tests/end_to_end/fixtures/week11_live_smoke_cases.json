@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0",
+  "classification": "operational_smoke_fixture_not_frozen_benchmark",
+  "provenance": "Derived from the current canonical legal source, encoded calculator rules, Week 9 route contracts, and Week 10 fail-closed behavior. It does not alter Week 9 or Week 10 acceptance labels.",
+  "cases": [
+    {
+      "fixture_id": "week11-retrieval-positive",
+      "source": "week9:w9-001",
+      "question": "Điều 35 quy định gì?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_final_statuses": ["WORKFLOW_VALID"],
+      "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+      "expected_tools": ["get_article"],
+      "minimum_citations": 1
+    },
+    {
+      "fixture_id": "week11-calculator-positive",
+      "source": "week9 notice-period contract",
+      "question": "Người lao động có hợp đồng không xác định thời hạn phải báo trước bao nhiêu ngày?",
+      "runs": 1,
+      "expected_route": "CALCULATOR_ONLY",
+      "expected_final_statuses": ["WORKFLOW_VALID"],
+      "expected_verification_statuses": ["SUPPORTED"],
+      "expected_tools": ["calculate_notice_period"],
+      "minimum_citations": 1
+    },
+    {
+      "fixture_id": "week11-combined-positive",
+      "source": "week9:w9-021",
+      "question": "Hợp đồng không xác định thời hạn báo trước bao lâu và căn cứ Điều 35?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_AND_CALCULATOR",
+      "expected_final_statuses": ["WORKFLOW_VALID"],
+      "expected_verification_statuses": ["SUPPORTED"],
+      "expected_tools": ["calculate_notice_period", "get_article"],
+      "minimum_citations": 1
+    },
+    {
+      "fixture_id": "week11-combined-fail-closed",
+      "source": "Operational unsupported-reference scenario derived from the Week 10 fail-closed contract; canonical source contains no Article 999",
+      "question": "Hợp đồng không xác định thời hạn báo trước bao lâu và căn cứ Điều 999?",
+      "runs": 1,
+      "expected_route": "RETRIEVAL_AND_CALCULATOR",
+      "expected_final_statuses": ["TOOL_ERROR"],
+      "expected_verification_statuses": ["INSUFFICIENT_CONTEXT"],
+      "expected_tools": ["calculate_notice_period", "get_article"],
+      "minimum_citations": 0,
+      "maximum_citations": 0
+    },
+    {
+      "fixture_id": "week11-out-of-scope",
+      "source": "week9:w9-032",
+      "question": "Thủ tục ly hôn thế nào?",
+      "runs": 1,
+      "expected_route": "OUT_OF_SCOPE",
+      "expected_final_statuses": ["OUT_OF_SCOPE"],
+      "expected_verification_statuses": ["INSUFFICIENT_CONTEXT"],
+      "expected_tools": [],
+      "minimum_citations": 0,
+      "maximum_citations": 0
+    },
+    {
+      "fixture_id": "week11-valid-input-insufficient-context",
+      "source": "Operational corpus-absence check: canonical source contains no Article 999",
+      "question": "Điều 999 của Bộ luật Lao động quy định gì?",
+      "runs": 1,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_final_statuses": ["TOOL_ERROR", "WORKFLOW_VALID"],
+      "expected_verification_statuses": ["INSUFFICIENT_CONTEXT"],
+      "expected_tools": ["get_article"],
+      "minimum_citations": 0,
+      "maximum_citations": 0
+    },
+    {
+      "fixture_id": "week11-clarification-required",
+      "source": "week9:w9-019",
+      "question": "Tôi cần tính thời hạn hợp đồng",
+      "runs": 1,
+      "expected_route": "CALCULATOR_ONLY",
+      "expected_final_statuses": ["CLARIFICATION_REQUIRED"],
+      "expected_verification_statuses": ["INSUFFICIENT_CONTEXT"],
+      "expected_tools": [],
+      "minimum_citations": 0,
+      "maximum_citations": 0
+    }
+  ]
+}

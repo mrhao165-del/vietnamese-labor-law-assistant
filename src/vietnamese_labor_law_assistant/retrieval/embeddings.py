@@ -44,6 +44,7 @@ class BgeM3EmbeddingProvider:
         self._dimension: int | None = None
         self.device = "uninitialized"
         self.use_fp16 = False
+        self.model_initialization_count = 0
 
     def _ensure_model(self) -> Any:
         if self._model is not None:
@@ -64,6 +65,7 @@ class BgeM3EmbeddingProvider:
                     use_fp16=self.use_fp16,
                     device=self.device,
                 )
+                self.model_initialization_count += 1
         return self._model
 
     def ensure_available(self) -> None:
@@ -77,12 +79,12 @@ class BgeM3EmbeddingProvider:
             raise RuntimeError("embedding dimension is not known before the first embedding")
         return self._dimension
 
-    def _embed(self, texts: Sequence[str]) -> list[list[float]]:
+    def _embed(self, texts: Sequence[str], *, batch_size: int | None = None) -> list[list[float]]:
         if not texts:
             return []
         output = self._ensure_model().encode(
             list(texts),
-            batch_size=self._settings.embedding_batch_size,
+            batch_size=batch_size or self._settings.embedding_batch_size,
             max_length=self._settings.embedding_max_length,
             return_dense=True,
             return_sparse=False,
@@ -105,6 +107,12 @@ class BgeM3EmbeddingProvider:
     def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
         """Embed document texts with BGE-M3 dense vectors."""
         return self._embed(texts)
+
+    def embed_documents_with_batch(
+        self, texts: Sequence[str], batch_size: int
+    ) -> list[list[float]]:
+        """Embed a bounded guardrail batch without creating another model wrapper."""
+        return self._embed(texts, batch_size=batch_size)
 
     def embed_query(self, text: str) -> list[float]:
         """Embed one query through the same BGE-M3 pipeline."""
