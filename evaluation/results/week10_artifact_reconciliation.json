@@ -1,0 +1,46 @@
+{
+  "decision": "APPROVE_WEEK10_HEAD_DATASET_AS_CANONICAL",
+  "owner_approval_token": "APPROVE_WEEK10_HEAD_DATASET_AS_CANONICAL",
+  "approved_dataset_path": "data/evaluation/week10_guardrail_cases.jsonl",
+  "approved_commit": "0eea899",
+  "previous_checkpoint": "997a8f4",
+  "orphan_declared_checksum": "e45b8c7b98670a4f9dd17635dd983794a013b901cca18c1b7fa6c9c42d4e534a",
+  "approved_dataset_git_checksum": "52447540443a26244885993d2e5c4bc123cb6999",
+  "approved_dataset_raw_worktree_checksum": "d0733506fa20f160dd7ff1b71add313a0ba8723151aac5f875291bfec13a6aeb",
+  "canonical_dataset_checksum": "0ce04c50203e238ad018e14d38e514edb312317a4d2a770309fec2c12e871510",
+  "canonical_source_checksum": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
+  "dataset_case_count": 40,
+  "affected_case_ids": [
+    "w10-002",
+    "w10-033",
+    "w10-036",
+    "w10-037"
+  ],
+  "reason_for_reconciliation": "Owner approved the HEAD Week 10 dataset; official evidence was regenerated with a cross-platform canonical JSONL checksum.",
+  "review_packet": "docs/week10_artifact_reconciliation_review.md",
+  "official_runner_command": "uv run python scripts/run_week10_guardrail_evaluation.py",
+  "official_verifier_command": "uv run python scripts/verify_week10_guardrail.py",
+  "generated_evidence": [
+    {
+      "path": "evaluation/results/week10_guardrail_metrics.json",
+      "sha256": "9b4fdbcf57ce477339adbfba76b2740c4b0e3cf05722291e4d9df166c9a3559f"
+    },
+    {
+      "path": "evaluation/results/week10_guardrail_manifest.json",
+      "sha256": "0179e1dee4d8de821dc2c9aee7a5e34993b324f2477c1c2ec6b0652a09da6446"
+    },
+    {
+      "path": "evaluation/results/week10_guardrail_predictions.jsonl",
+      "sha256": "caa515d2306256c3a0957857d707f6c30673e6431e641fec655f172255e1d5fb"
+    },
+    {
+      "path": "evaluation/results/week10_guardrail_report.md",
+      "sha256": "e40beac1eaed5552c79b8712742a162c1a032c10079d9f86b37a4701337a726a"
+    }
+  ],
+  "verifier_result": {
+    "exit_code": 0,
+    "stdout": "{\"week\": 10, \"status\": \"PASS\", \"case_count\": 40, \"missing_categories\": [], \"provenance_validation\": {\"checked\": 37, \"passed\": 37, \"failed\": 0}, \"metrics_file\": \"evaluation/results/week10_guardrail_metrics.json\"}"
+  },
+  "generated_at": "2026-07-21T01:28:05.624974+00:00"
+}

@@ -1,0 +1,4 @@
+data/evaluation/week10_guardrail_cases.jsonl text eol=lf
+evaluation/results/week10_guardrail_*.json text eol=lf
+evaluation/results/week10_guardrail_*.jsonl text eol=lf
+evaluation/results/week10_guardrail_*.md text eol=lf

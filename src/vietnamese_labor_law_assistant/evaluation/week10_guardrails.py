@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from collections import Counter
@@ -21,6 +22,41 @@ from vietnamese_labor_law_assistant.guardrails.judge import (
 from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
 from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
 from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
+
+CANONICAL_JSONL_SHA256_ALGORITHM = "sha256-jsonl-utf8-sorted-keys-lf-v1"
+
+
+def raw_file_sha256(path: Path) -> str:
+    """Return the audit hash of a file's exact worktree bytes."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def canonical_jsonl_sha256(path: Path) -> str:
+    """Hash ordered JSONL records independently of whitespace and platform EOLs."""
+    canonical_lines: list[bytes] = []
+    text = path.read_text(encoding="utf-8")
+    if not text:
+        raise ValueError("JSONL input must contain at least one record")
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        if not line.strip():
+            raise ValueError(f"JSONL contains a blank record at line {line_number}")
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"malformed JSONL at line {line_number}") from exc
+        if not isinstance(record, dict):
+            raise ValueError(f"JSONL record at line {line_number} must be an object")
+        canonical_lines.append(
+            json.dumps(
+                record,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            ).encode("utf-8")
+            + b"\n"
+        )
+    return hashlib.sha256(b"".join(canonical_lines)).hexdigest()
 
 
 class Week10Category(StrEnum):
@@ -365,6 +401,34 @@ def verify_week10_report(report: dict[str, Any], cases: list[Week10Case]) -> Non
     ]
     if any(failures):
         raise ValueError("Week 10 verification invariants failed")
+
+
+def verify_week10_evidence(
+    dataset: Path, source: Path, metrics_path: Path, manifest_path: Path
+) -> tuple[dict[str, Any], list[Week10Case]]:
+    """Verify current Week 10 evidence against shared canonical dataset provenance."""
+    registry = CanonicalSourceRegistry(source)
+    cases = load_week10_cases(dataset, registry)
+    report: dict[str, Any] = json.loads(metrics_path.read_text(encoding="utf-8"))
+    manifest: dict[str, Any] = json.loads(manifest_path.read_text(encoding="utf-8"))
+    dataset_sha256 = canonical_jsonl_sha256(dataset)
+    source_sha256 = raw_file_sha256(source)
+    if report.get("dataset_sha256") != dataset_sha256:
+        raise ValueError("Week 10 dataset checksum mismatch")
+    if manifest.get("dataset_sha256") != dataset_sha256:
+        raise ValueError("Week 10 manifest dataset checksum mismatch")
+    if report.get("dataset_checksum_algorithm") != CANONICAL_JSONL_SHA256_ALGORITHM:
+        raise ValueError("Week 10 metrics checksum algorithm mismatch")
+    if manifest.get("dataset_checksum_algorithm") != CANONICAL_JSONL_SHA256_ALGORITHM:
+        raise ValueError("Week 10 manifest checksum algorithm mismatch")
+    if report.get("canonical_source_sha256") != source_sha256:
+        raise ValueError("canonical source checksum mismatch")
+    if manifest.get("canonical_source_sha256") != source_sha256:
+        raise ValueError("manifest canonical source checksum mismatch")
+    if report.get("case_count") != len(cases) or manifest.get("case_count") != len(cases):
+        raise ValueError("Week 10 evidence case count mismatch")
+    verify_week10_report(report, cases)
+    return report, cases
 
 
 def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:

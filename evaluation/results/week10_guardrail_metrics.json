@@ -2,16 +2,22 @@
   "week": 10,
   "status": "PASS",
   "mode": "OFFLINE_DETERMINISTIC",
-  "generated_at": "2026-07-18T20:51:03.443898+00:00",
-  "commit_sha": "997a8f4c1131c1854abf076d0f0437edcbb0b263",
+  "generated_at": "2026-07-21T06:30:30.752960+00:00",
+  "commit_sha": "0eea899e579ffb7bc49d567b461c404b134c75a1",
   "case_count": 40,
-  "dataset_sha256": "e45b8c7b98670a4f9dd17635dd983794a013b901cca18c1b7fa6c9c42d4e534a",
+  "dataset_sha256": "0ce04c50203e238ad018e14d38e514edb312317a4d2a770309fec2c12e871510",
+  "dataset_raw_sha256": "d0733506fa20f160dd7ff1b71add313a0ba8723151aac5f875291bfec13a6aeb",
+  "dataset_checksum_algorithm": "sha256-jsonl-utf8-sorted-keys-lf-v1",
   "canonical_source_sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
   "thresholds": {
     "lower": 0.35,
     "high": 0.75
   },
   "judge_mode": "disabled_with_failure_fixtures",
+  "evaluator": {
+    "module": "vietnamese_labor_law_assistant.evaluation.week10_guardrails",
+    "version": "week10-canonical-jsonl-v1"
+  },
   "protected_artifact_status": "CANONICAL_SOURCE_UNCHANGED",
   "category_coverage": {
     "calculator_numeric_contradiction": 1,
@@ -93,8 +99,8 @@
     "out_of_scope_refusal_accuracy": 1.0,
     "false_supported_rate": 0.0,
     "citation_support_rate": 0.25,
-    "mean_verification_latency_ms": 0.04136749985264032,
-    "p95_verification_latency_ms": 0.06610000127693638,
+    "mean_verification_latency_ms": 0.05575749997888124,
+    "p95_verification_latency_ms": 0.06859999984953902,
     "error_timeout_count": 0,
     "required_reason_misses": 0
   }

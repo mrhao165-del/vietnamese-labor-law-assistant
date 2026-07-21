@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 
 from vietnamese_labor_law_assistant.evaluation.week10_guardrails import (
+    CANONICAL_JSONL_SHA256_ALGORITHM,
+    canonical_jsonl_sha256,
     coverage_summary,
     load_week10_cases,
+    raw_file_sha256,
     run_week10_cases,
     validate_provenance,
     verify_week10_report,
@@ -42,10 +44,16 @@ def main() -> int:
         "generated_at": datetime.now(UTC).isoformat(),
         "commit_sha": commit,
         "case_count": len(cases),
-        "dataset_sha256": hashlib.sha256(dataset.read_bytes()).hexdigest(),
-        "canonical_source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        "dataset_sha256": canonical_jsonl_sha256(dataset),
+        "dataset_raw_sha256": raw_file_sha256(dataset),
+        "dataset_checksum_algorithm": CANONICAL_JSONL_SHA256_ALGORITHM,
+        "canonical_source_sha256": raw_file_sha256(source),
         "thresholds": {"lower": 0.35, "high": 0.75},
         "judge_mode": "disabled_with_failure_fixtures",
+        "evaluator": {
+            "module": "vietnamese_labor_law_assistant.evaluation.week10_guardrails",
+            "version": "week10-canonical-jsonl-v1",
+        },
         "protected_artifact_status": "CANONICAL_SOURCE_UNCHANGED",
         **coverage,
         "provenance_validation": provenance,
@@ -64,9 +72,12 @@ def main() -> int:
         for key in (
             "commit_sha",
             "dataset_sha256",
+            "dataset_raw_sha256",
+            "dataset_checksum_algorithm",
             "canonical_source_sha256",
             "case_count",
             "judge_mode",
+            "evaluator",
             "generated_at",
             "thresholds",
             "protected_artifact_status",

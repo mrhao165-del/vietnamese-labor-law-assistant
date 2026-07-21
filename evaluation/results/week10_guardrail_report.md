@@ -64,8 +64,8 @@ Cases: 40
   "out_of_scope_refusal_accuracy": 1.0,
   "false_supported_rate": 0.0,
   "citation_support_rate": 0.25,
-  "mean_verification_latency_ms": 0.04136749985264032,
-  "p95_verification_latency_ms": 0.06610000127693638,
+  "mean_verification_latency_ms": 0.05575749997888124,
+  "p95_verification_latency_ms": 0.06859999984953902,
   "error_timeout_count": 0,
   "required_reason_misses": 0
 }
