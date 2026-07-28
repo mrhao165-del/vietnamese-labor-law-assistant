@@ -192,6 +192,31 @@ no request returned HTTP 504. Conversation/message/feedback IDs survived an API 
 Clarification, out-of-scope, insufficient-context, unsupported, and output-invalid are separate
 contracts. They must not be substituted for one another to satisfy a smoke test.
 
+### Bounded multi-article queries
+
+The Agent supports one to three distinct article targets per request by default
+(`AGENT_MAX_ARTICLES_PER_REQUEST=3`). It creates an ordered plan of repeated `get_article` calls
+with unique call IDs; the executor validates and traces every call independently. Duplicate article
+numbers are collapsed while preserving first-appearance order. No new MCP tool or larger global
+context budget is used.
+
+Evidence remains associated with its article, call ID, tool name, and canonical chunk ID. Context
+projection reserves coverage for every valid target before applying the unchanged global context
+limit, and the guardrail rejects a claim that cites another target article. A valid article remains
+available when another requested article is missing, with an article-specific warning; all-missing
+requests return insufficient context. Requests above the configured limit return a safe
+clarification without calling MCP.
+
+The 2026-07-28 Compose regression passed 11/11 bounded multi-article runs, including stable
+two-article queries, a three-article query, duplicate deduplication, mixed valid/missing,
+all-missing, and over-limit cases. Run it with:
+
+```powershell
+uv run python scripts/run_week11_live_smoke.py `
+  --fixtures tests/end_to_end/fixtures/multi_article_live_cases.json `
+  --timeout 180
+```
+
 ## API surface
 
 Week 11 browser endpoints:
@@ -228,7 +253,7 @@ The established direct retrieval/RAG endpoints remain available under `/api/v1/`
 - Docker CPU runtime was verified; GPU execution was not.
 - Production npm audit reports zero vulnerabilities. Advisory findings in the development/build
   dependency tree are not copied into the final Nginx image.
-- Full Python verification on 2026-07-21: 295 passed, 0 failed, 86.09% coverage; Week 1–10
+- Full Python verification on 2026-07-28: 319 passed, 0 failed, 86.56% coverage; Week 1–10
   regression and the protected-artifact scanner passed.
 - Video demonstration and release publication remain Week 12 work.
 

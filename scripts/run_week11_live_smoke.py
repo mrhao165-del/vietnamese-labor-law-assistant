@@ -89,6 +89,30 @@ def _evaluate(
         checks["article_citations"] = bool(citations) and all(
             citation.get("article_number") == expected_article for citation in citations
         )
+    expected_arguments = fixture.get("expected_article_arguments")
+    if isinstance(expected_arguments, list):
+        article_traces = [
+            item for item in body.get("tool_trace", []) if item.get("tool_name") == "get_article"
+        ]
+        actual_arguments = [
+            item.get("parameters", {}).get("article_number") for item in article_traces
+        ]
+        call_ids = [item.get("call_id") for item in article_traces]
+        checks["article_arguments"] = actual_arguments == expected_arguments
+        checks["unique_call_ids"] = len(call_ids) == len(set(call_ids)) and all(call_ids)
+    expected_citation_articles = fixture.get("expected_citation_articles")
+    if isinstance(expected_citation_articles, list):
+        checks["citation_article_coverage"] = sorted(
+            {item.get("article_number") for item in citations}
+        ) == sorted(expected_citation_articles)
+    expected_warnings = fixture.get("expected_warnings")
+    if isinstance(expected_warnings, list):
+        checks["warnings"] = all(item in body.get("warnings", []) for item in expected_warnings)
+    citation_groups: dict[str, list[str]] = {}
+    for citation in citations:
+        citation_groups.setdefault(str(citation.get("article_number")), []).append(
+            str(citation.get("chunk_id"))
+        )
     return {
         "fixture_id": fixture["fixture_id"],
         "source": fixture["source"],
@@ -97,10 +121,22 @@ def _evaluate(
         "workflow_status": body.get("final_status"),
         "route": body.get("route"),
         "tools": tools,
+        "article_arguments": [
+            item.get("parameters", {}).get("article_number")
+            for item in body.get("tool_trace", [])
+            if item.get("tool_name") == "get_article"
+        ],
+        "call_ids": [
+            item.get("call_id")
+            for item in body.get("tool_trace", [])
+            if item.get("tool_name") == "get_article"
+        ],
         "trace_count": len(body.get("tool_trace", [])),
         "verification": verification.get("status"),
         "reason_code": body.get("verification_code"),
         "citation_count": len(citations),
+        "citations_by_article": citation_groups,
+        "warnings": body.get("warnings", []),
         "canonical_citation_validity": checks["canonical_citations"],
         "latency_ms": body.get("latency_ms"),
         "checks": checks,

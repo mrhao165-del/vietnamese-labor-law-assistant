@@ -442,6 +442,26 @@ data/evaluation/*
 - Full Python: 295 passed, coverage 86.09%. Frontend typecheck/lint/build PASS; production npm audit 0 vulnerabilities. Week 1–10 regression PASS; protected scanner CLEAR.
 - Clarification, out-of-scope, insufficient-context, unsupported và output-invalid là các contract khác nhau. Video demo và release thuộc Week 12.
 
+### Follow-up multi-article regression (2026-07-28)
+
+- Root cause nằm tại Router contract trước executor: retrieval route từng bắt buộc đúng một retrieval
+  tool và không biểu diễn được nhiều arguments cho cùng `get_article`. Direct production MCP
+  `get_article(32)` rồi `get_article(54)` trong cùng session đều PASS.
+- Router hiện trả ordered `tool_plan`; mỗi call có `call_id`, `tool_name`, `arguments`, `sequence`
+  và `purpose`. Repeated tool names được giữ nguyên, article trùng được deduplicate theo thứ tự xuất
+  hiện, và budget được tính theo số call.
+- Mặc định hỗ trợ tối đa ba article khác nhau trong một request qua
+  `AGENT_MAX_ARTICLES_PER_REQUEST=3`. Vượt giới hạn trả clarification trước khi gọi MCP.
+- Executor/evidence giữ association article, call ID, tool name và canonical chunk ID. Context
+  projection bảo đảm mỗi target hợp lệ có evidence trước global limit; guardrail kiểm tra
+  claim/citation theo từng article.
+- Mixed valid/missing giữ phần article hợp lệ và thêm warning `ARTICLE_NOT_FOUND:<article>`;
+  all-missing trả `INSUFFICIENT_CONTEXT`.
+- Live multi-article matrix PASS 11/11; original Week 11 cùng broad single-article matrix PASS
+  27/27; article coverage 220/220 và SQLite persistence qua API restart PASS.
+- Full Python hiện tại: 319 passed, coverage 86.56%. Frontend typecheck/lint/build và production
+  npm audit PASS, 0 vulnerabilities.
+
 ### Còn giới hạn hoặc cần cẩn trọng
 
 - Calculator không phải legal reasoning tổng quát; chỉ bao phủ rules đã encode cho Article 20/35.

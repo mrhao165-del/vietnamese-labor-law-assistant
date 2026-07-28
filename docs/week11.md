@@ -222,6 +222,47 @@ The suite passed 11/11 HTTP requests with no 504. SQLite persistence survived AP
 finished with 295 passed and 86.09% coverage; frontend typecheck/lint/build and production npm
 audit (zero vulnerabilities) passed; Week 1–10 regression and protected scanner passed.
 
+## Multi-article follow-up (2026-07-28)
+
+Single-article questions continue to produce one `get_article` call. A bounded multi-article
+question now produces an ordered list of repeated `get_article` calls with unique call IDs. The
+default limit is three distinct articles per request and is configurable with
+`AGENT_MAX_ARTICLES_PER_REQUEST`; duplicate targets are called once in first-appearance order.
+Requests above the limit return clarification before tool execution.
+
+The executor does not key results by tool name. Each evidence item keeps its target article, call
+ID, tool name, and canonical chunk ID. Canonical chunk IDs drive deduplication. Context projection
+reserves one relevant context for each valid target before filling the unchanged global limit, so a
+large article cannot starve another target. Claims declare their target article, and per-claim
+guardrail verification rejects cross-article citations.
+
+For mixed valid/missing input, supported article groups remain in the answer and the missing target
+is surfaced as `ARTICLE_NOT_FOUND:<article>`. If every target is missing, the public result is
+`INSUFFICIENT_CONTEXT`. No retrieval/calculator rules moved into the Agent or MCP adapters, no new
+MCP tool was added, and the BGE threshold and global context limit remain unchanged.
+
+| Live fixture | Result |
+| --- | --- |
+| Điều 32 và Điều 54, three consecutive runs | 3/3 PASS; two calls; citations grouped 3 + 2 |
+| Điều 34 và Điều 43, three consecutive runs | 3/3 PASS; two calls; both articles retained under the context limit |
+| Điều 20, Điều 35 và Điều 169 | PASS; three calls; citations from all three articles |
+| Điều 35 và Điều 35 | PASS; one deduplicated call |
+| Điều 35 và Điều 999 | PASS; Article 35 retained with an Article 999 warning |
+| Điều 998 và Điều 999 | PASS; insufficient context; no citations |
+| Four distinct articles with default max three | PASS; clarification; zero calls |
+
+Run the dedicated matrix:
+
+```powershell
+uv run python scripts/run_week11_live_smoke.py `
+  --fixtures tests/end_to_end/fixtures/multi_article_live_cases.json `
+  --timeout 180
+```
+
+The final regression also passed the original Week 11 and broad single-article matrix 27/27,
+canonical article coverage 220/220, SQLite persistence across API restart, 319 Python tests with
+86.56% coverage, frontend typecheck/lint/build, and production npm audit with zero vulnerabilities.
+
 ## Clone-to-run procedure
 
 ```powershell

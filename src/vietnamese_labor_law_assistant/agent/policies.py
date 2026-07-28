@@ -14,6 +14,7 @@ from .models import CALCULATOR_TOOLS, RETRIEVAL_TOOLS
 class AgentPolicy:
     max_input_length: int = 4000
     max_tool_calls: int = 3
+    max_articles_per_request: int = 3
     tool_timeout_seconds: float = 30.0
     workflow_timeout_seconds: float = 90.0
     max_transport_retries: int = 1
@@ -27,6 +28,9 @@ class AgentPolicy:
     def ensure_budget(self, used: int) -> None:
         if used >= self.max_tool_calls:
             raise ToolBudgetExceededError("tool-call budget exhausted")
+
+    def article_limit_exceeded(self, article_count: int) -> bool:
+        return article_count > self.max_articles_per_request
 
     def bounded_retrieval_arguments(
         self, arguments: dict[str, Any], question: str

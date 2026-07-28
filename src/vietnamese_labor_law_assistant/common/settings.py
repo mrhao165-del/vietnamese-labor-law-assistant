@@ -75,6 +75,7 @@ class Settings(BaseSettings):
     guardrail_fail_closed: bool = True
     agent_max_input_length: int = Field(default=4000, ge=1, le=16000)
     agent_max_tool_calls: int = Field(default=3, ge=1, le=10)
+    agent_max_articles_per_request: int = Field(default=3, ge=1, le=10)
     agent_tool_timeout_seconds: float = Field(default=30, gt=0, le=120)
     agent_workflow_timeout_seconds: float = Field(default=90, gt=0, le=300)
     agent_max_transport_retries: int = Field(default=1, ge=0, le=3)
@@ -100,6 +101,8 @@ class Settings(BaseSettings):
             raise ValueError("RERANKER_OUTPUT_K must not exceed RERANKER_CANDIDATE_K")
         if self.guardrail_semantic_lower_threshold >= self.guardrail_semantic_high_threshold:
             raise ValueError("GUARDRAIL_SEMANTIC_LOWER_THRESHOLD must be lower than high threshold")
+        if self.agent_max_articles_per_request > self.agent_max_tool_calls:
+            raise ValueError("AGENT_MAX_ARTICLES_PER_REQUEST must not exceed AGENT_MAX_TOOL_CALLS")
         if self.reranker_device == "cpu" and self.reranker_use_fp16:
             raise ValueError("RERANKER_USE_FP16 cannot be enabled on CPU")
         if self.openai_base_url:

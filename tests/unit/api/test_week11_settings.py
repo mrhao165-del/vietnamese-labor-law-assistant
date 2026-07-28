@@ -18,6 +18,7 @@ def test_week11_settings_accept_runtime_path_and_cors() -> None:
     ]
     assert settings.guardrail_semantic_timeout_seconds == 15
     assert settings.guardrail_semantic_batch_size == 4
+    assert settings.agent_max_articles_per_request == 3
 
 
 @pytest.mark.parametrize("size", [0, 101])
@@ -52,3 +53,8 @@ def test_guardrail_semantic_bounds_are_validated(
             Settings(guardrail_semantic_max_contexts=0)
         else:
             Settings(guardrail_semantic_max_text_characters=0)
+
+
+def test_multi_article_limit_must_fit_tool_call_budget() -> None:
+    with pytest.raises(ValidationError, match="AGENT_MAX_ARTICLES_PER_REQUEST"):
+        Settings(agent_max_articles_per_request=4, agent_max_tool_calls=3)

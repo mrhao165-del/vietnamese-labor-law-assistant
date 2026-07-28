@@ -172,6 +172,23 @@ def test_agent_claim_can_repeat_a_cited_source_cross_reference() -> None:
     assert agent.status is VerificationStatus.SUPPORTED
 
 
+def test_target_article_rejects_cross_article_citation() -> None:
+    result = service().verify(
+        [
+            AtomicClaim(
+                claim_id="article-54",
+                text="Nội dung Điều 54.",
+                cited_context_ids=[CHUNK],
+                parse_inline_references=False,
+                target_article_number=54,
+            )
+        ],
+        [evidence("Nội dung Điều 54.")],
+    )
+    assert result.status is VerificationStatus.UNSUPPORTED
+    assert result.claims[0].reason_codes == [ReasonCode.CROSS_ARTICLE_CITATION_MISMATCH]
+
+
 class AmbiguousScorer:
     def score(self, claim: str, evidence: str) -> float:
         del claim, evidence

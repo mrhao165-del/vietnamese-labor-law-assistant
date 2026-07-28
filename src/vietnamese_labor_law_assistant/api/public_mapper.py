@@ -92,6 +92,7 @@ def tool_trace_for(result: AgentResult) -> list[ToolTraceResponse]:
     return [
         ToolTraceResponse(
             sequence=item.sequence,
+            call_id=item.call_id,
             tool_name=item.tool_name.value,
             status=item.status,
             duration_ms=item.latency_ms,

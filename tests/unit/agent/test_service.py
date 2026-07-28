@@ -8,16 +8,23 @@ from typing import Any
 import pytest
 
 from vietnamese_labor_law_assistant.agent.enums import AgentIntent, ToolName, WorkflowStatus
+from vietnamese_labor_law_assistant.agent.errors import WorkflowVerificationError
 from vietnamese_labor_law_assistant.agent.models import (
     AgentAnswerDraft,
     AgentAtomicClaim,
+    AgentState,
+    PlannedToolCall,
     RouterOutput,
 )
 from vietnamese_labor_law_assistant.agent.policies import AgentPolicy
 from vietnamese_labor_law_assistant.agent.service import AgentService
 from vietnamese_labor_law_assistant.common.settings import Settings
 from vietnamese_labor_law_assistant.guardrails.enums import VerificationStatus
-from vietnamese_labor_law_assistant.guardrails.models import EvidenceContext, VerificationResult
+from vietnamese_labor_law_assistant.guardrails.models import (
+    AtomicClaim,
+    EvidenceContext,
+    VerificationResult,
+)
 
 
 class FakeRouter:
@@ -97,6 +104,94 @@ def calculator_output() -> RouterOutput:
         planned_tools=[ToolName.CALCULATE_NOTICE_PERIOD],
         calculator_arguments={"contract_type": "INDEFINITE"},
     )
+
+
+def multi_article_output(*article_numbers: int) -> RouterOutput:
+    return RouterOutput(
+        intent=AgentIntent.RETRIEVAL_ONLY,
+        confidence=1,
+        rationale_code="MULTI_ARTICLE_LOOKUP",
+        requested_operation="get_articles",
+        tool_plan=[
+            PlannedToolCall(
+                call_id=f"article-{article_number}-{index}",
+                tool_name=ToolName.GET_ARTICLE,
+                arguments={"article_number": article_number},
+                sequence=index,
+                purpose=f"retrieve article {article_number}",
+            )
+            for index, article_number in enumerate(article_numbers, 1)
+        ],
+    )
+
+
+class ArticleGateway(FakeGateway):
+    def __init__(self, missing: set[int] | None = None) -> None:
+        super().__init__()
+        self.missing = missing or set()
+
+    async def execute(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        self.calls.append((tool_name, arguments))
+        article_number = int(arguments["article_number"])
+        if article_number in self.missing:
+            return {
+                "ok": False,
+                "data": None,
+                "error": {
+                    "code": "ARTICLE_NOT_FOUND",
+                    "message": "safe",
+                    "retryable": False,
+                },
+                "meta": {
+                    "tool": tool_name,
+                    "schema_version": "1.0",
+                    "request_id": f"missing-{article_number}",
+                },
+            }
+        return envelope(
+            ToolName.GET_ARTICLE,
+            {
+                "article_number": article_number,
+                "clauses": [
+                    {
+                        "chunk_id": f"chunk-{article_number}",
+                        "content": f"Nội dung Điều {article_number}.",
+                        "article_number": article_number,
+                    }
+                ],
+            },
+        )
+
+
+class MultiArticleGenerator(FakeGenerator):
+    async def generate(
+        self,
+        question: str,
+        retrieval_result: dict[str, Any] | None,
+        calculator_result: dict[str, Any] | None,
+    ) -> AgentAnswerDraft:
+        del question, calculator_result
+        claims: list[AgentAtomicClaim] = []
+        for response in (retrieval_result or {}).get("responses", []):
+            for item in response.get("data", {}).get("clauses", []):
+                article_number = int(item["article_number"])
+                claims.append(
+                    AgentAtomicClaim(
+                        claim_id=f"AGENT-CLM-{article_number}",
+                        text=str(item["content"]),
+                        citation_chunk_ids=[str(item["chunk_id"])],
+                        target_article_number=article_number,
+                    )
+                )
+        return AgentAnswerDraft(
+            answer="\n\n".join(
+                f"Điều {claim.target_article_number}:\n{claim.text}" for claim in claims
+            ),
+            citation_chunk_ids=[
+                chunk_id for claim in claims for chunk_id in claim.citation_chunk_ids
+            ],
+            claims=claims,
+        )
 
 
 def service(
@@ -191,6 +286,127 @@ async def test_combined_route_calls_calculator_then_retrieval() -> None:
         ToolName.CALCULATE_NOTICE_PERIOD,
         ToolName.GET_ARTICLE,
     ]
+
+
+def test_router_plan_deduplicates_repeated_article_and_requires_unique_call_ids() -> None:
+    output = multi_article_output(35, 35)
+    assert len(output.tool_plan) == 1
+    assert output.tool_plan[0].arguments == {"article_number": 35}
+    with pytest.raises(ValueError, match="call IDs must be unique"):
+        RouterOutput(
+            intent=AgentIntent.RETRIEVAL_ONLY,
+            confidence=1,
+            rationale_code="MULTI",
+            requested_operation="get_articles",
+            tool_plan=[
+                PlannedToolCall(
+                    call_id="same",
+                    tool_name=ToolName.GET_ARTICLE,
+                    arguments={"article_number": article_number},
+                    sequence=index,
+                )
+                for index, article_number in enumerate((32, 54), 1)
+            ],
+        )
+
+
+@pytest.mark.asyncio
+async def test_executor_runs_repeated_tool_names_and_preserves_per_call_trace() -> None:
+    output = multi_article_output(32, 54)
+    gateway = ArticleGateway()
+    workflow = service(output, retrieval=gateway, generator=MultiArticleGenerator())
+    state: AgentState = {
+        "request_id": "request",
+        "normalized_question": "Điều 32 và Điều 54 quy định gì?",
+        "router_output": output.model_dump(mode="json"),
+        "tool_plan": [call.model_dump(mode="json") for call in output.tool_plan],
+        "planned_tools": [tool.value for tool in output.planned_tools],
+        "tool_calls_used": 0,
+        "tool_trace": [],
+        "errors": [],
+    }
+    update = await workflow._execute_matching_tools(state, "retrieval")
+    assert [arguments for _, arguments in gateway.calls] == [
+        {"article_number": 32},
+        {"article_number": 54},
+    ]
+    assert update["tool_calls_used"] == 2
+    assert [item["call_id"] for item in update["tool_trace"]] == [
+        "article-32-1",
+        "article-54-2",
+    ]
+    assert [item["sequence"] for item in update["tool_trace"]] == [1, 2]
+    assert [
+        response["agent_call"]["target_article_number"]
+        for response in update["retrieval_result"]["responses"]
+    ] == [32, 54]
+
+
+@pytest.mark.asyncio
+async def test_tool_budget_is_evaluated_by_call_count() -> None:
+    output = multi_article_output(32, 54)
+    workflow = service(output, retrieval=ArticleGateway(), policy=AgentPolicy(max_tool_calls=1))
+    result = await workflow.run("Điều 32 và Điều 54 quy định gì?", include_trace=True)
+    assert result.status is WorkflowStatus.CLARIFICATION_REQUIRED
+    assert result.tool_trace == []
+
+
+@pytest.mark.asyncio
+async def test_duplicate_article_executes_only_one_call() -> None:
+    output = multi_article_output(35, 35)
+    gateway = ArticleGateway()
+    result = await service(output, retrieval=gateway, generator=MultiArticleGenerator()).run(
+        "Điều 35 và Điều 35 quy định gì?", include_trace=True
+    )
+    assert len(gateway.calls) == 1
+    assert len(result.tool_trace) == 1
+
+
+@pytest.mark.asyncio
+async def test_too_many_articles_returns_clarification_without_calls() -> None:
+    output = multi_article_output(20, 32, 35, 54)
+    gateway = ArticleGateway()
+    result = await service(output, retrieval=gateway, generator=MultiArticleGenerator()).run(
+        "bốn Điều", include_trace=True
+    )
+    assert result.status is WorkflowStatus.CLARIFICATION_REQUIRED
+    assert gateway.calls == []
+    assert "tối đa 3" in (result.clarification_question or "")
+
+
+@pytest.mark.asyncio
+async def test_mixed_valid_and_missing_article_preserves_valid_response_and_warning() -> None:
+    class SupportedGuardrail:
+        def verify(self, claims: Any, evidence: Any) -> VerificationResult:
+            del evidence
+            return VerificationResult(
+                status=VerificationStatus.SUPPORTED,
+                claims=[],
+            )
+
+    output = multi_article_output(35, 999)
+    gateway = ArticleGateway(missing={999})
+    workflow = service(output, retrieval=gateway, generator=MultiArticleGenerator())
+    workflow.guardrail_service = SupportedGuardrail()  # type: ignore[assignment]
+    result = await workflow.run("Điều 35 và Điều 999 quy định gì?", include_trace=True)
+    assert result.status is WorkflowStatus.WORKFLOW_VALID
+    assert len(result.tool_trace) == 2
+    assert result.citations == [{"chunk_id": "chunk-35"}]
+    assert result.verification is not None
+    assert "ARTICLE_NOT_FOUND:999" in result.verification["warnings"]
+
+
+@pytest.mark.asyncio
+async def test_all_missing_articles_are_insufficient_context() -> None:
+    output = multi_article_output(998, 999)
+    result = await service(
+        output,
+        retrieval=ArticleGateway(missing={998, 999}),
+        generator=MultiArticleGenerator(),
+    ).run("Điều 998 và Điều 999 quy định gì?", include_trace=True)
+    assert result.status is WorkflowStatus.INSUFFICIENT_CONTEXT
+    assert len(result.tool_trace) == 2
+    assert result.citations == []
 
 
 @pytest.mark.asyncio
@@ -376,6 +592,186 @@ def test_guardrail_evidence_bounds_contexts_without_dropping_cited_chunks(
         }
     )
     assert [item.chunk_id for item in retained] == ["chunk-3", "chunk-1"]
+
+
+def test_evidence_preserves_call_tool_and_target_article_association() -> None:
+    workflow = service(retrieval_output())
+    evidence = workflow._guardrail_evidence(
+        {
+            "tool_plan": [
+                {
+                    "call_id": "article-32",
+                    "tool_name": "get_article",
+                    "arguments": {"article_number": 32},
+                    "sequence": 1,
+                }
+            ],
+            "retrieval_result": {
+                "responses": [
+                    {
+                        "agent_call": {
+                            "call_id": "article-32",
+                            "tool_name": "get_article",
+                            "target_article_number": 32,
+                        },
+                        "data": {
+                            "clauses": [
+                                {
+                                    "chunk_id": "chunk-32",
+                                    "content": "Nội dung Điều 32.",
+                                    "article_number": 32,
+                                }
+                            ]
+                        },
+                    }
+                ]
+            },
+        }
+    )
+    assert evidence[0].article_number == 32
+    assert evidence[0].origin_call_ids == ["article-32"]
+    assert evidence[0].origin_tool_names == ["get_article"]
+    assert evidence[0].target_article_numbers == [32]
+
+
+def test_context_projection_retains_evidence_from_every_target(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workflow = service(retrieval_output())
+    monkeypatch.setattr(
+        "vietnamese_labor_law_assistant.agent.service.get_settings",
+        lambda: Settings(guardrail_semantic_max_contexts=2),
+    )
+    responses = []
+    for article_number, count in ((32, 3), (54, 2)):
+        responses.append(
+            {
+                "agent_call": {
+                    "call_id": f"article-{article_number}",
+                    "tool_name": "get_article",
+                    "target_article_number": article_number,
+                },
+                "data": {
+                    "clauses": [
+                        {
+                            "chunk_id": f"chunk-{article_number}-{index}",
+                            "content": f"Nội dung {index}.",
+                            "article_number": article_number,
+                        }
+                        for index in range(1, count + 1)
+                    ]
+                },
+            }
+        )
+    retained = workflow._guardrail_evidence(
+        {
+            "tool_plan": [
+                {
+                    "call_id": f"article-{article_number}",
+                    "tool_name": "get_article",
+                    "arguments": {"article_number": article_number},
+                    "sequence": index,
+                }
+                for index, article_number in enumerate((32, 54), 1)
+            ],
+            "retrieval_result": {"responses": responses},
+            "answer_draft": {
+                "claims": [
+                    {
+                        "claim_id": "AGENT-CLM-32",
+                        "text": "Điều 32",
+                        "citation_chunk_ids": ["chunk-32-3"],
+                        "target_article_number": 32,
+                    }
+                ]
+            },
+        }
+    )
+    assert [item.article_number for item in retained] == [32, 54]
+    assert retained[0].chunk_id == "chunk-32-3"
+
+
+def test_claim_article_contract_accepts_matching_and_rejects_cross_article() -> None:
+    workflow = service(retrieval_output())
+    state: AgentState = {
+        "tool_plan": [
+            {
+                "call_id": f"article-{article_number}",
+                "tool_name": "get_article",
+                "arguments": {"article_number": article_number},
+                "sequence": index,
+            }
+            for index, article_number in enumerate((32, 54), 1)
+        ]
+    }
+    evidence = [
+        EvidenceContext(chunk_id="chunk-32", content="Điều 32.", article_number=32),
+        EvidenceContext(chunk_id="chunk-54", content="Điều 54.", article_number=54),
+    ]
+    valid = AgentAnswerDraft(
+        answer="Điều 32.\n\nĐiều 54.",
+        citation_chunk_ids=["chunk-32", "chunk-54"],
+        claims=[
+            AgentAtomicClaim(
+                claim_id="AGENT-CLM-32",
+                text="Điều 32.",
+                citation_chunk_ids=["chunk-32"],
+                target_article_number=32,
+            ),
+            AgentAtomicClaim(
+                claim_id="AGENT-CLM-54",
+                text="Điều 54.",
+                citation_chunk_ids=["chunk-54"],
+                target_article_number=54,
+            ),
+        ],
+    )
+    workflow._validate_claim_article_associations(valid, evidence, state)
+    invalid = valid.model_copy(
+        update={
+            "claims": [
+                AgentAtomicClaim(
+                    claim_id="AGENT-CLM-54",
+                    text="Điều 54.",
+                    citation_chunk_ids=["chunk-32"],
+                    target_article_number=54,
+                )
+            ]
+        }
+    )
+    with pytest.raises(WorkflowVerificationError, match="cross-article"):
+        workflow._validate_claim_article_associations(invalid, evidence, state)
+
+
+def test_supported_multi_article_answer_is_grouped_by_target() -> None:
+    workflow = service(retrieval_output())
+    claims = [
+        AtomicClaim(
+            claim_id=f"article-{article_number}",
+            text=f"Nội dung {article_number}.",
+            cited_context_ids=[f"chunk-{article_number}"],
+            target_article_number=article_number,
+        )
+        for article_number in (32, 54)
+    ]
+    answer = workflow._structured_multi_article_answer(
+        "flat",
+        VerificationResult(status=VerificationStatus.SUPPORTED),
+        claims,
+        {
+            "tool_plan": [
+                {
+                    "call_id": f"article-{article_number}",
+                    "tool_name": "get_article",
+                    "arguments": {"article_number": article_number},
+                    "sequence": index,
+                }
+                for index, article_number in enumerate((32, 54), 1)
+            ]
+        },
+    )
+    assert answer.startswith("Điều 32:\n- ")
+    assert "\n\nĐiều 54:\n- " in answer
 
 
 def test_numeric_citation_enrichment_only_uses_retrieved_canonical_contexts() -> None:

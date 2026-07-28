@@ -38,6 +38,7 @@ class ToolTraceResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     sequence: int = Field(ge=1)
+    call_id: str | None = None
     tool_name: str
     status: str
     duration_ms: float = Field(ge=0)

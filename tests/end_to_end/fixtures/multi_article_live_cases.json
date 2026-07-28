@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "classification": "operational_multi_article_regression_not_frozen_benchmark",
+  "provenance": "Queries exercise bounded repeated production get_article calls without changing canonical legal data or frozen Week 9/10 datasets.",
+  "cases": [
+    {
+      "fixture_id": "multi-article-32-54",
+      "source": "canonical:articles-32-54",
+      "question": "Điều 32 và Điều 54 quy định gì?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_final_statuses": ["WORKFLOW_VALID"],
+      "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+      "expected_tools": ["get_article", "get_article"],
+      "expected_article_arguments": [32, 54],
+      "expected_citation_articles": [32, 54],
+      "minimum_citations": 2
+    },
+    {
+      "fixture_id": "multi-article-34-43",
+      "source": "canonical:articles-34-43",
+      "question": "Điều 34 và Điều 43 quy định gì?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_final_statuses": ["WORKFLOW_VALID"],
+      "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+      "expected_tools": ["get_article", "get_article"],
+      "expected_article_arguments": [34, 43],
+      "expected_citation_articles": [34, 43],
+      "minimum_citations": 2
+    },
+    {
+      "fixture_id": "multi-article-20-35-169",
+      "source": "canonical:articles-20-35-169",
+      "question": "Điều 20, Điều 35 và Điều 169 quy định gì?",
+      "runs": 1,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_final_statuses": ["WORKFLOW_VALID"],
+      "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+      "expected_tools": ["get_article", "get_article", "get_article"],
+      "expected_article_arguments": [20, 35, 169],
+      "expected_citation_articles": [20, 35, 169],
+      "minimum_citations": 3
+    },
+    {
+      "fixture_id": "multi-article-duplicate-35",
+      "source": "canonical:article-35",
+      "question": "Điều 35 và Điều 35 quy định gì?",
+      "runs": 1,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_final_statuses": ["WORKFLOW_VALID"],
+      "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+      "expected_tools": ["get_article"],
+      "expected_article_arguments": [35],
+      "expected_citation_articles": [35],
+      "minimum_citations": 1
+    },
+    {
+      "fixture_id": "multi-article-valid-missing",
+      "source": "canonical:article-35-and-absent-999",
+      "question": "Điều 35 và Điều 999 quy định gì?",
+      "runs": 1,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_final_statuses": ["WORKFLOW_VALID"],
+      "expected_verification_statuses": ["SUPPORTED", "PARTIALLY_SUPPORTED"],
+      "expected_tools": ["get_article", "get_article"],
+      "expected_article_arguments": [35, 999],
+      "expected_citation_articles": [35],
+      "expected_warnings": ["ARTICLE_NOT_FOUND:999"],
+      "minimum_citations": 1
+    },
+    {
+      "fixture_id": "multi-article-all-missing",
+      "source": "canonical:absent-998-999",
+      "question": "Điều 998 và Điều 999 quy định gì?",
+      "runs": 1,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_final_statuses": ["INSUFFICIENT_CONTEXT"],
+      "expected_verification_statuses": ["INSUFFICIENT_CONTEXT"],
+      "expected_tools": ["get_article", "get_article"],
+      "expected_article_arguments": [998, 999],
+      "expected_citation_articles": [],
+      "minimum_citations": 0,
+      "maximum_citations": 0
+    },
+    {
+      "fixture_id": "multi-article-over-limit",
+      "source": "bounded-agent-policy",
+      "question": "Điều 20, Điều 32, Điều 35 và Điều 54 quy định gì?",
+      "runs": 1,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_final_statuses": ["CLARIFICATION_REQUIRED"],
+      "expected_verification_statuses": ["INSUFFICIENT_CONTEXT"],
+      "expected_tools": [],
+      "expected_article_arguments": [],
+      "expected_citation_articles": [],
+      "minimum_citations": 0,
+      "maximum_citations": 0
+    }
+  ]
+}

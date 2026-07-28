@@ -58,6 +58,54 @@ def combined_payload() -> dict[str, object]:
     }
 
 
+def multi_article_payload() -> dict[str, object]:
+    return {
+        "intent": "RETRIEVAL_ONLY",
+        "confidence": 1,
+        "rationale_code": "MULTI_ARTICLE_LOOKUP",
+        "requested_operation": "get_articles",
+        "tool_plan": [
+            {
+                "call_id": "article-32",
+                "tool_name": "get_article",
+                "arguments": {"article_number": 32},
+                "sequence": 1,
+                "purpose": "retrieve article 32",
+            },
+            {
+                "call_id": "article-54",
+                "tool_name": "get_article",
+                "arguments": {"article_number": 54},
+                "sequence": 2,
+                "purpose": "retrieve article 54",
+            },
+        ],
+    }
+
+
+@pytest.mark.asyncio
+async def test_router_preserves_two_repeated_get_article_calls() -> None:
+    client = ParseClient([multi_article_payload()])
+    result = await OpenAIStructuredIntentRouter(settings(), client).classify("question")
+    assert [call.tool_name.value for call in result.tool_plan] == [
+        "get_article",
+        "get_article",
+    ]
+    assert [call.call_id for call in result.tool_plan] == ["article-32", "article-54"]
+    assert [call.arguments for call in result.tool_plan] == [
+        {"article_number": 32},
+        {"article_number": 54},
+    ]
+
+
+@pytest.mark.asyncio
+async def test_router_invalid_then_valid_multi_article_retry_still_works() -> None:
+    client = ParseClient([RuntimeError("malformed response"), multi_article_payload()])
+    result = await OpenAIStructuredIntentRouter(settings(), client).classify("question")
+    assert len(result.tool_plan) == 2
+    assert client.calls == 2
+
+
 @pytest.mark.asyncio
 async def test_router_valid_first_response_does_not_retry() -> None:
     client = ParseClient([combined_payload()])

@@ -136,6 +136,15 @@ class CitationGuardrailService:
                     reason_codes=[ReasonCode.CITATION_NOT_IN_RETRIEVED_CONTEXT],
                 )
             evidence.append(evidence_by_id[chunk_id])
+        if claim.target_article_number is not None and any(
+            item.article_number != claim.target_article_number for item in evidence
+        ):
+            return ClaimVerification(
+                claim_id=claim.claim_id,
+                status=VerificationStatus.UNSUPPORTED,
+                reason_codes=[ReasonCode.CROSS_ARTICLE_CITATION_MISMATCH],
+                evidence_ids=[item.chunk_id for item in evidence],
+            )
         references = list(
             {
                 (item.article, item.clause, item.point): item

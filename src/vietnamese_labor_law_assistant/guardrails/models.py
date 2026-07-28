@@ -23,6 +23,9 @@ class EvidenceContext(BaseModel):
     point_label: str | None = None
     point_labels: list[str] = Field(default_factory=list)
     source_kind: str = "retrieval"
+    origin_call_ids: list[str] = Field(default_factory=list)
+    origin_tool_names: list[str] = Field(default_factory=list)
+    target_article_numbers: list[int] = Field(default_factory=list)
 
 
 class AtomicClaim(BaseModel):
@@ -32,6 +35,7 @@ class AtomicClaim(BaseModel):
     cited_context_ids: list[str] = Field(default_factory=list, max_length=10)
     legal_references: list[LegalReference] = Field(default_factory=list, max_length=10)
     parse_inline_references: bool = True
+    target_article_number: int | None = Field(default=None, gt=0)
 
 
 class ClaimVerification(BaseModel):

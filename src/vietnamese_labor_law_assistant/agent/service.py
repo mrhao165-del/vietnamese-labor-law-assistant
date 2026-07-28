@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import time
 import uuid
@@ -14,7 +15,11 @@ import structlog
 from vietnamese_labor_law_assistant.common.settings import Settings, get_settings
 from vietnamese_labor_law_assistant.guardrails.citation_parser import extract_numeric_tokens
 from vietnamese_labor_law_assistant.guardrails.judge import OpenAIStructuredClaimJudge
-from vietnamese_labor_law_assistant.guardrails.models import AtomicClaim, EvidenceContext
+from vietnamese_labor_law_assistant.guardrails.models import (
+    AtomicClaim,
+    EvidenceContext,
+    VerificationResult,
+)
 from vietnamese_labor_law_assistant.guardrails.policy import guarded_answer
 from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
 from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
@@ -40,7 +45,7 @@ from .models import (
     AgentAtomicClaim,
     AgentResult,
     AgentState,
-    RouterOutput,
+    PlannedToolCall,
     ToolTrace,
 )
 from .policies import AgentPolicy
@@ -82,6 +87,7 @@ class AgentService:
         policy = AgentPolicy(
             max_input_length=settings.agent_max_input_length,
             max_tool_calls=settings.agent_max_tool_calls,
+            max_articles_per_request=settings.agent_max_articles_per_request,
             tool_timeout_seconds=settings.agent_tool_timeout_seconds,
             workflow_timeout_seconds=settings.agent_workflow_timeout_seconds,
             max_transport_retries=settings.agent_max_transport_retries,
@@ -180,6 +186,7 @@ class AgentService:
             update: dict[str, Any] = {
                 "intent": output.intent.value,
                 "router_output": output.model_dump(mode="json"),
+                "tool_plan": [call.model_dump(mode="json") for call in output.tool_plan],
                 "planned_tools": [tool.value for tool in output.planned_tools],
                 "missing_parameters": output.missing_parameters,
                 "clarification_question": output.clarification_question,
@@ -189,9 +196,33 @@ class AgentService:
                 request_id=str(state.get("request_id") or ""),
                 intent=output.intent.value,
                 planned_tools=update["planned_tools"],
+                tool_plan=[
+                    {
+                        "call_id": call.call_id,
+                        "tool_name": call.tool_name.value,
+                        "arguments": self.policy.sanitized_arguments(call.arguments),
+                        "sequence": call.sequence,
+                    }
+                    for call in output.tool_plan
+                ],
                 question_length=len(normalized_question),
             )
-            if output.requires_clarification or output.missing_parameters:
+            article_count = sum(call.tool_name is ToolName.GET_ARTICLE for call in output.tool_plan)
+            plan_exceeds_budget = len(output.tool_plan) > self.policy.max_tool_calls
+            if self.policy.article_limit_exceeded(article_count) or plan_exceeds_budget:
+                update.update(
+                    {
+                        "route_status": WorkflowStatus.CLARIFICATION_REQUIRED.value,
+                        "tool_plan": [],
+                        "planned_tools": [],
+                        "clarification_question": (
+                            "Vui lòng giảm số Điều cần tra cứu trong một yêu cầu "
+                            f"xuống tối đa {self.policy.max_articles_per_request} "
+                            "và trong ngân sách công cụ hiện có."
+                        ),
+                    }
+                )
+            elif output.requires_clarification or output.missing_parameters:
                 update.update(
                     {
                         "route_status": WorkflowStatus.CLARIFICATION_REQUIRED.value,
@@ -234,9 +265,12 @@ class AgentService:
     async def _execute_matching_tools(self, state: AgentState, kind: str) -> dict[str, Any]:
         started = time.perf_counter()
         outputs: list[dict[str, Any]] = []
+        missing_targets: list[dict[str, Any]] = []
         updates: dict[str, Any] = {"tool_trace": list(state.get("tool_trace", []))}
-        for raw_tool in state.get("planned_tools", []):
-            tool = ToolName(raw_tool)
+        used = state.get("tool_calls_used", 0)
+        for raw_call in state.get("tool_plan", []):
+            call = PlannedToolCall.model_validate(raw_call)
+            tool = call.tool_name
             is_retrieval = tool.value in {
                 ToolName.SEARCH_LABOR_LAW.value,
                 ToolName.GET_ARTICLE.value,
@@ -245,54 +279,85 @@ class AgentService:
             }
             if (kind == "retrieval") != is_retrieval:
                 continue
-            arguments = self._arguments_for(tool, state)
+            arguments = self._arguments_for(call, state)
             result, trace, error = await self._execute_tool(
                 state,
-                tool,
+                call,
                 arguments,
                 self.retrieval_gateway if is_retrieval else self.calculator_gateway,
+                used,
             )
             updates["tool_trace"].append(trace.model_dump(mode="json"))
-            updates["tool_calls_used"] = state.get("tool_calls_used", 0) + len(outputs) + 1
+            used += 1
+            updates["tool_calls_used"] = used
             if error:
-                updates["errors"] = [*state.get("errors", []), error]
+                updates["errors"] = [*updates.get("errors", state.get("errors", [])), error]
+                if tool is ToolName.GET_ARTICLE and error.get("code") == "ARTICLE_NOT_FOUND":
+                    missing_targets.append(
+                        {
+                            "call_id": call.call_id,
+                            "tool_name": tool.value,
+                            "article_number": arguments["article_number"],
+                            "error_code": "ARTICLE_NOT_FOUND",
+                        }
+                    )
+                    continue
                 updates["route_status"] = WorkflowStatus.TOOL_ERROR.value
                 break
             if result is not None:
-                outputs.append(result)
+                outputs.append(
+                    {
+                        **result,
+                        "agent_call": {
+                            "call_id": call.call_id,
+                            "tool_name": tool.value,
+                            "sequence": call.sequence,
+                            "target_article_number": arguments.get("article_number"),
+                        },
+                    }
+                )
         if kind == "retrieval":
-            updates["retrieval_result"] = {"responses": outputs}
+            updates["retrieval_result"] = {
+                "responses": outputs,
+                "missing_targets": missing_targets,
+            }
             if outputs and not self._retrieved_chunk_ids(updates["retrieval_result"]):
+                updates["route_status"] = WorkflowStatus.INSUFFICIENT_CONTEXT.value
+            elif missing_targets and not outputs:
                 updates["route_status"] = WorkflowStatus.INSUFFICIENT_CONTEXT.value
         else:
             updates["calculator_result"] = {"responses": outputs}
         self._timing(updates, state, f"{kind}_tools", started)
         return updates
 
-    def _arguments_for(self, tool: ToolName, state: AgentState) -> dict[str, Any]:
-        router = RouterOutput.model_validate(state.get("router_output") or {})
-        if tool in {
+    def _arguments_for(self, call: PlannedToolCall, state: AgentState) -> dict[str, Any]:
+        if call.tool_name in {
             ToolName.SEARCH_LABOR_LAW,
             ToolName.GET_ARTICLE,
             ToolName.GET_CLAUSE,
             ToolName.GET_DOCUMENT_METADATA,
         }:
-            if tool is ToolName.SEARCH_LABOR_LAW:
+            if call.tool_name is ToolName.SEARCH_LABOR_LAW:
                 return self.policy.bounded_retrieval_arguments(
-                    router.retrieval_arguments, str(state.get("normalized_question") or "")
+                    call.arguments, str(state.get("normalized_question") or "")
                 )
-            return router.retrieval_arguments
-        return router.calculator_arguments
+        return call.arguments
 
     async def _execute_tool(
-        self, state: AgentState, tool: ToolName, arguments: dict[str, Any], gateway: ToolGateway
+        self,
+        state: AgentState,
+        call: PlannedToolCall,
+        arguments: dict[str, Any],
+        gateway: ToolGateway,
+        used: int,
     ) -> tuple[dict[str, Any] | None, ToolTrace, dict[str, Any] | None]:
+        tool = call.tool_name
         try:
-            self.policy.ensure_budget(state.get("tool_calls_used", 0))
+            self.policy.ensure_budget(used)
         except ToolBudgetExceededError as exc:
             return (
                 None,
-                self._trace(state, tool, arguments, "blocked", 0, 0, exc.code),
+                self._trace(state, call, arguments, "blocked", 0, 0, exc.code, used),
                 self._error(exc),
             )
         started_at, started = self._now(), time.perf_counter()
@@ -309,7 +374,8 @@ class AgentService:
                     raise ToolResponseValidationError("tool output exceeded policy limit")
                 trace = ToolTrace(
                     request_id=str(state.get("request_id") or ""),
-                    sequence=state.get("tool_calls_used", 0) + 1,
+                    call_id=call.call_id,
+                    sequence=used + 1,
                     server="legal-retrieval"
                     if tool.name.startswith(("SEARCH", "GET_"))
                     else "legal-calculator",
@@ -344,7 +410,7 @@ class AgentService:
         error = last_error or AgentError("tool execution failed")
         return (
             None,
-            self._trace(state, tool, arguments, "error", started, retry_count, error.code),
+            self._trace(state, call, arguments, "error", started, retry_count, error.code, used),
             self._error(error),
         )
 
@@ -382,7 +448,7 @@ class AgentService:
         try:
             draft = await self.answer_generator.generate(
                 str(state.get("normalized_question") or ""),
-                state.get("retrieval_result"),
+                self._project_retrieval_result(state),
                 state.get("calculator_result"),
             )
             draft = self._enrich_numeric_claim_citations(draft, self._guardrail_evidence(state))
@@ -397,6 +463,7 @@ class AgentService:
             claim_ids = {
                 chunk_id for claim in draft.claims for chunk_id in claim.citation_chunk_ids
             }
+            self._validate_claim_article_associations(draft, self._guardrail_evidence(state), state)
             if any(
                 chunk_id not in allowed_ids for chunk_id in draft.citation_chunk_ids
             ) or not claim_ids.issubset(allowed_ids):
@@ -484,6 +551,7 @@ class AgentService:
                 text=str(item["text"]),
                 cited_context_ids=list(item.get("citation_chunk_ids", [])),
                 parse_inline_references=False,
+                target_article_number=item.get("target_article_number"),
             )
             for item in raw_claims
             if isinstance(item, dict)
@@ -514,6 +582,7 @@ class AgentService:
                         text=claim.text,
                         cited_context_ids=claim.citation_chunk_ids,
                         parse_inline_references=False,
+                        target_article_number=claim.target_article_number,
                     )
                     for claim in fallback.claims
                 ]
@@ -535,7 +604,13 @@ class AgentService:
                     state = fallback_state
                     fallback_used = True
                     fallback_citation_ids = fallback.citation_chunk_ids
+            missing_warnings = self._missing_article_warnings(state)
+            if missing_warnings:
+                result = result.model_copy(
+                    update={"warnings": [*result.warnings, *missing_warnings]}
+                )
             answer, warnings = guarded_answer(str(state.get("final_answer") or ""), result, claims)
+            answer = self._structured_multi_article_answer(answer, result, claims, state)
             update: dict[str, Any] = {
                 "verification": result.model_dump(mode="json"),
                 "final_answer": answer,
@@ -586,6 +661,10 @@ class AgentService:
         calculator_ids: list[str] = []
         for response in (state.get("retrieval_result") or {}).get("responses", []):
             data = response.get("data", {})
+            call = response.get("agent_call", {})
+            call_id = call.get("call_id")
+            tool_name = call.get("tool_name")
+            target_article = call.get("target_article_number")
             for item in data.get("results", []) + data.get("clauses", []) + [data]:
                 if isinstance(item, dict) and item.get("chunk_id") and item.get("content"):
                     rows.append(
@@ -596,6 +675,11 @@ class AgentService:
                             clause_number=item.get("clause_number"),
                             point_label=item.get("point_label"),
                             point_labels=item.get("point_labels", []),
+                            origin_call_ids=[call_id] if isinstance(call_id, str) else [],
+                            origin_tool_names=[tool_name] if isinstance(tool_name, str) else [],
+                            target_article_numbers=(
+                                [target_article] if isinstance(target_article, int) else []
+                            ),
                         )
                     )
                     retrieval_ids.append(str(item["chunk_id"]))
@@ -616,7 +700,31 @@ class AgentService:
                         )
                     )
                     calculator_ids.append(chunk.chunk_id)
-        merged = list({item.chunk_id: item for item in rows}.values())
+        merged_by_id: dict[str, EvidenceContext] = {}
+        for item in rows:
+            existing = merged_by_id.get(item.chunk_id)
+            if existing is None:
+                merged_by_id[item.chunk_id] = item
+                continue
+            merged_by_id[item.chunk_id] = existing.model_copy(
+                update={
+                    "origin_call_ids": list(
+                        dict.fromkeys([*existing.origin_call_ids, *item.origin_call_ids])
+                    ),
+                    "origin_tool_names": list(
+                        dict.fromkeys([*existing.origin_tool_names, *item.origin_tool_names])
+                    ),
+                    "target_article_numbers": list(
+                        dict.fromkeys(
+                            [
+                                *existing.target_article_numbers,
+                                *item.target_article_numbers,
+                            ]
+                        )
+                    ),
+                }
+            )
+        merged = list(merged_by_id.values())
         draft = state.get("answer_draft") or {}
         raw_claims = draft.get("claims") or [] if isinstance(draft, dict) else []
         cited_ids = list(
@@ -628,14 +736,13 @@ class AgentService:
                 if isinstance(chunk_id, str)
             )
         )
-        if not raw_claims:
-            return merged
-        by_chunk_id = {item.chunk_id: item for item in merged}
-        prioritized = [by_chunk_id[chunk_id] for chunk_id in cited_ids if chunk_id in by_chunk_id]
-        cited_id_set = set(cited_ids)
-        remaining = [item for item in merged if item.chunk_id not in cited_id_set]
         max_contexts = get_settings().guardrail_semantic_max_contexts
-        retained = [*prioritized, *remaining][:max_contexts]
+        retained = self._fair_context_projection(
+            merged,
+            cited_ids,
+            self._requested_article_numbers(state),
+            max_contexts,
+        )
         retained_ids = {item.chunk_id for item in retained}
         dropped = [item.chunk_id for item in merged if item.chunk_id not in retained_ids]
         self.logger.info(
@@ -644,10 +751,144 @@ class AgentService:
             calculator_evidence_ids=calculator_ids,
             cited_context_ids=cited_ids,
             retained_context_ids=[item.chunk_id for item in retained],
+            retained_context_origins=[
+                {
+                    "chunk_id": item.chunk_id,
+                    "article_number": item.article_number,
+                    "call_ids": item.origin_call_ids,
+                    "tool_names": item.origin_tool_names,
+                    "target_articles": item.target_article_numbers,
+                }
+                for item in retained
+            ],
             dropped_context_ids=dropped,
             max_contexts=max_contexts,
         )
         return retained
+
+    @staticmethod
+    def _fair_context_projection(
+        evidence: list[EvidenceContext],
+        cited_ids: list[str],
+        target_articles: list[int],
+        max_contexts: int,
+    ) -> list[EvidenceContext]:
+        by_id = {item.chunk_id: item for item in evidence}
+        cited = {chunk_id for chunk_id in cited_ids if chunk_id in by_id}
+        ordered_targets = list(
+            dict.fromkeys([*target_articles, *(item.article_number for item in evidence)])
+        )
+        selected: list[EvidenceContext] = []
+        selected_ids: set[str] = set()
+
+        def add(item: EvidenceContext) -> None:
+            if item.chunk_id not in selected_ids and len(selected) < max_contexts:
+                selected.append(item)
+                selected_ids.add(item.chunk_id)
+
+        # Reserve one context per target first; prefer a cited context for that target.
+        for article_number in ordered_targets:
+            candidates = [item for item in evidence if item.article_number == article_number]
+            seed = next(
+                (
+                    by_id[chunk_id]
+                    for chunk_id in cited_ids
+                    if chunk_id in cited and by_id[chunk_id].article_number == article_number
+                ),
+                None,
+            )
+            if seed is None and candidates:
+                seed = candidates[0]
+            if seed is not None:
+                add(seed)
+        # All remaining cited contexts precede uncited global fill.
+        for chunk_id in cited_ids:
+            if chunk_id in by_id:
+                add(by_id[chunk_id])
+        for item in evidence:
+            add(item)
+        return selected
+
+    def _project_retrieval_result(self, state: AgentState) -> dict[str, Any] | None:
+        result = state.get("retrieval_result")
+        if not result:
+            return None
+        retained_ids = {item.chunk_id for item in self._guardrail_evidence(state)}
+        projected = copy.deepcopy(result)
+        for response in projected.get("responses", []):
+            data = response.get("data", {})
+            for key in ("results", "clauses"):
+                if isinstance(data.get(key), list):
+                    data[key] = [
+                        item
+                        for item in data[key]
+                        if isinstance(item, dict) and item.get("chunk_id") in retained_ids
+                    ]
+            if isinstance(data.get("chunk_id"), str) and data["chunk_id"] not in retained_ids:
+                response["data"] = {}
+        return projected
+
+    def _requested_article_numbers(self, state: AgentState) -> list[int]:
+        return [
+            int(call["arguments"]["article_number"])
+            for call in state.get("tool_plan", [])
+            if call.get("tool_name") == ToolName.GET_ARTICLE.value
+            and isinstance(call.get("arguments"), dict)
+            and isinstance(call["arguments"].get("article_number"), int)
+        ]
+
+    def _validate_claim_article_associations(
+        self,
+        draft: AgentAnswerDraft,
+        evidence: list[EvidenceContext],
+        state: AgentState,
+    ) -> None:
+        targets = self._requested_article_numbers(state)
+        if not targets:
+            return
+        by_id = {item.chunk_id: item for item in evidence}
+        multi_article = len(targets) > 1
+        for claim in draft.claims:
+            target = claim.target_article_number
+            if multi_article and target is None:
+                raise WorkflowVerificationError("multi-article claim lacks target article")
+            if target is not None and target not in targets:
+                raise WorkflowVerificationError("claim target not in requested articles")
+            if target is not None and any(
+                by_id[chunk_id].article_number != target
+                for chunk_id in claim.citation_chunk_ids
+                if chunk_id in by_id
+            ):
+                raise WorkflowVerificationError("cross-article citation mismatch")
+
+    def _missing_article_warnings(self, state: AgentState) -> list[str]:
+        return [
+            f"ARTICLE_NOT_FOUND:{item['article_number']}"
+            for item in (state.get("retrieval_result") or {}).get("missing_targets", [])
+            if isinstance(item, dict) and isinstance(item.get("article_number"), int)
+        ]
+
+    def _structured_multi_article_answer(
+        self,
+        answer: str,
+        result: VerificationResult,
+        claims: list[AtomicClaim],
+        state: AgentState,
+    ) -> str:
+        targets = self._requested_article_numbers(state)
+        if result.status.value != "SUPPORTED" or len(targets) < 2:
+            return answer
+        grouped: dict[int, list[str]] = {article_number: [] for article_number in targets}
+        for claim in claims:
+            if claim.target_article_number in grouped:
+                grouped[claim.target_article_number].append(claim.text)
+        sections = [
+            f"Điều {article_number}:\n"
+            + "\n".join(f"- {claim_text}" for claim_text in grouped[article_number])
+            for article_number in targets
+            if grouped[article_number]
+        ]
+        return "\n\n".join(sections) or answer
 
     def _enrich_numeric_claim_citations(
         self, draft: AgentAnswerDraft, evidence: list[EvidenceContext]
@@ -681,6 +922,11 @@ class AgentService:
             candidates: list[str] = []
             for item in evidence:
                 if item.chunk_id in cited:
+                    continue
+                if (
+                    claim.target_article_number is not None
+                    and item.article_number != claim.target_article_number
+                ):
                     continue
                 item_numbers = extract_numeric_tokens(item.content)
                 item_numbers.add(str(item.article_number))
@@ -717,33 +963,56 @@ class AgentService:
         same claim guardrail before it can become public output.
         """
 
-        if state.get("intent") != AgentIntent.RETRIEVAL_ONLY.value or state.get(
-            "planned_tools"
-        ) != [ToolName.GET_ARTICLE.value]:
+        planned_tools = state.get("planned_tools", [])
+        if (
+            state.get("intent") != AgentIntent.RETRIEVAL_ONLY.value
+            or not planned_tools
+            or any(tool != ToolName.GET_ARTICLE.value for tool in planned_tools)
+        ):
             return None
         source_state: AgentState = {**state, "answer_draft": None}
         available = self._guardrail_evidence(source_state)
         max_contexts = get_settings().guardrail_semantic_max_contexts
-        answer_parts: list[str] = []
+        requested_articles = self._requested_article_numbers(state)
+        article_order = list(
+            dict.fromkeys([*requested_articles, *(item.article_number for item in available)])
+        )
+        multi_article = len(article_order) > 1
+        grouped_parts: dict[int, list[str]] = {article: [] for article in article_order}
         claims: list[AgentAtomicClaim] = []
+        answer_length = 0
         for item in available[:max_contexts]:
             if len(item.content) > 1200:
                 continue
-            candidate_length = sum(len(part) for part in answer_parts) + len(item.content)
-            if answer_parts:
-                candidate_length += 2 * len(answer_parts)
-            if candidate_length > 6000:
+            heading_length = (
+                len(f"Điều {item.article_number}:\n")
+                if multi_article and not grouped_parts[item.article_number]
+                else 0
+            )
+            separator_length = 2 if grouped_parts[item.article_number] else 0
+            if answer_length + heading_length + separator_length + len(item.content) > 6000:
                 break
-            answer_parts.append(item.content)
+            grouped_parts[item.article_number].append(item.content)
+            answer_length += heading_length + separator_length + len(item.content)
             claims.append(
                 AgentAtomicClaim(
                     claim_id=f"AGENT-CLM-SOURCE-{len(claims) + 1:02d}",
                     text=item.content,
                     citation_chunk_ids=[item.chunk_id],
+                    target_article_number=item.article_number,
                 )
             )
         if not claims:
             return None
+        answer_parts = []
+        for article_number in article_order:
+            contents = grouped_parts[article_number]
+            if not contents:
+                continue
+            article_text = "\n\n".join(contents)
+            answer_parts.append(
+                f"Điều {article_number}:\n{article_text}" if multi_article else article_text
+            )
         chunk_ids = [claim.citation_chunk_ids[0] for claim in claims]
         return AgentAnswerDraft(
             answer="\n\n".join(answer_parts), citation_chunk_ids=chunk_ids, claims=claims
@@ -780,16 +1049,19 @@ class AgentService:
     def _trace(
         self,
         state: AgentState,
-        tool: ToolName,
+        call: PlannedToolCall,
         arguments: dict[str, Any],
         status: str,
         started: float | int,
         retry_count: int,
         error_code: str | None,
+        used: int,
     ) -> ToolTrace:
+        tool = call.tool_name
         return ToolTrace(
             request_id=str(state.get("request_id") or ""),
-            sequence=state.get("tool_calls_used", 0) + 1,
+            call_id=call.call_id,
+            sequence=used + 1,
             server="legal-retrieval"
             if tool.name.startswith(("SEARCH", "GET_"))
             else "legal-calculator",
