@@ -7,3 +7,36 @@ evaluation/results/week10_guardrail_*.md text eol=lf
 # Do not normalize line endings: historical SHA-256 values include exact EOL bytes.
 data/evaluation/labor_law_eval_v1.jsonl -text
 docs/week1_manual_validation.csv -text
+
+# Raw-checksum historical evidence below is stored byte-for-byte.
+# Exact EOL/BOM bytes are part of the recorded SHA-256 provenance.
+compose.yaml -text
+frontend/package-lock.json -text
+data/evaluation/labor_law_eval_v1_manifest.json -text
+data/evaluation/labor_law_eval_v1_independent_review_packet.csv -text
+evaluation/results/week4_current_retrieval_predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/dev/R1_DENSE_C10_O5_L512_B1/predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/dev/R1_DENSE_C20_O5_L512_B1/predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/dev/R1_DENSE_C30_O5_L512_B1/predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/dev/R1_DENSE_C10_O8_L512_B1/predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/dev/R1_DENSE_C10_O5_L768_B1/predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/dev/R2_H2_C10_O5_L512_B1/predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/dev/R2_H2_C20_O5_L512_B1/predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/dev/R2_H2_C30_O5_L512_B1/predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/dev/R2_H2_C10_O8_L512_B1/predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/dev/R2_H2_C10_O5_L768_B1/predictions.jsonl -text
+evaluation/results/week5_current_checkpoints/test/R2_H2_C10_O5_L512_B1/predictions.jsonl -text
+evaluation/results/week12/final_week11_live_smoke.json -text
+evaluation/results/week12/final_round1_pass_regression.json -text
+evaluation/results/week12/final_round2_pass_regression.json -text
+evaluation/results/week12/final_round3_targeted_matrix.json -text
+evaluation/results/week12/remediation_manifest.json -text
+evaluation/review/week12_manual_review_packet.csv -text
+evaluation/review/archive/round1/week12_manual_review_packet_reviewed_round1.csv -text
+evaluation/review/week12_manual_review_round2.csv -text
+evaluation/review/week12_manual_review_round2_ai_pre_review.csv -text
+evaluation/review/week12_manual_review_round2_reviewed.csv -text
+evaluation/review/archive/round2/week12_manual_review_round2_reviewed.csv -text
+evaluation/review/week12_manual_review_round3.csv -text
+evaluation/review/week12_manual_review_round3_reviewed.csv -text
+evaluation/review/archive/round3/week12_manual_review_round3_reviewed.csv -text

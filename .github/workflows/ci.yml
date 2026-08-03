@@ -28,6 +28,7 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run ruff check .
       - run: uv run pyright
+      - run: uv run python scripts/validate_frozen_evidence_bytes.py
       - run: uv run pytest --cov=vietnamese_labor_law_assistant
       - run: uv run python scripts/verify_week9_agent.py
       - run: uv run python scripts/verify_week10_guardrail.py
