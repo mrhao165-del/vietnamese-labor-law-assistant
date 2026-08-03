@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "phase": "POST_ROUND3_FINAL_RELEASE_CANDIDATE",
+  "status": "CURRENT_RELEASE_CANDIDATE",
+  "generated_at": "2026-08-03T16:04:59.6180563Z",
+  "source_head": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+  "source_branch": "fix/week12-review-remediation",
+  "working_tree": "UNCOMMITTED_RELEASE_CANDIDATE",
+  "python_version": "3.11.15",
+  "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+  "guardrail_thresholds": {
+    "lower": 0.35,
+    "high": 0.75
+  },
+  "checksums": {
+    "data/processed/labor_law_clauses.jsonl": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
+    "data/evaluation/labor_law_eval_v1.jsonl": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+    "data/evaluation/labor_law_eval_v1_manifest.json": "08ceada3bb4a6bbd7c6a00ae0e007e8027d59acc5d0e63a563c2169f1cf5d5bd",
+    "uv.lock": "f7ad9e404480f51e7aaf99e1995949ba65e952d6061bf51bf140dd29872580ca",
+    "frontend/package-lock.json": "e4f2e71b15db60f8e2f67820990d52bcd0fe985c7ac8ff53005a34a1a090c7d9",
+    "compose.yaml": "dcff63cead56ce00a9fd742608bbf1b5f58ec61834d1d1dffc62a5164b3023d7",
+    "evaluation/review/week12_manual_review_packet.csv": "2a03422784aa3586ace61f3ee9243bc2a27f6c6d3c29ee35848bbe542ca4a8f7",
+    "evaluation/review/week12_manual_review_round2_reviewed.csv": "9677b52f67d26ca7c05cfda72c8dd19b4218c4adb99e1b75d9e28a6c603f35ad",
+    "evaluation/review/archive/round2/week12_manual_review_round2_reviewed.csv": "9677b52f67d26ca7c05cfda72c8dd19b4218c4adb99e1b75d9e28a6c603f35ad",
+    "evaluation/review/week12_manual_review_round3_reviewed.csv": "ebb9dcff6a6b39ea9b11862f8f7b1542bc3694dff9c233b6c20790a1487e4c0a",
+    "evaluation/review/archive/round3/week12_manual_review_round3_reviewed.csv": "ebb9dcff6a6b39ea9b11862f8f7b1542bc3694dff9c233b6c20790a1487e4c0a"
+  },
+  "historical_manifests": {
+    "release_manifest.json": "fb87084a4fb5c852e91f42416b727477d91d44bda4c95ebfe52452ec21448a5f",
+    "remediation_manifest.json": "7c30e28def76dba1f9f9ca8be538f9d7df298aa944db72f93c9f0acbe047f549"
+  },
+  "notes": [
+    "release_manifest.json and remediation_manifest.json remain immutable historical evidence.",
+    "This manifest identifies the current uncommitted post-round-3 release candidate.",
+    "Validation results are recorded separately and do not mutate this candidate identity."
+  ]
+}

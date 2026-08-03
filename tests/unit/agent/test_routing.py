@@ -5,12 +5,15 @@ from types import SimpleNamespace
 import pytest
 from pydantic import SecretStr
 
+from vietnamese_labor_law_assistant.agent.enums import AgentIntent, ToolName
 from vietnamese_labor_law_assistant.agent.errors import (
     AnswerGenerationError,
     IntentClassificationError,
 )
+from vietnamese_labor_law_assistant.agent.models import PlannedToolCall, RouterOutput
 from vietnamese_labor_law_assistant.agent.routing import (
     ANSWER_SYSTEM_PROMPT,
+    ROUTER_SYSTEM_PROMPT,
     OpenAIStructuredAgentAnswerGenerator,
     OpenAIStructuredIntentRouter,
 )
@@ -20,6 +23,25 @@ from vietnamese_labor_law_assistant.common.settings import Settings
 def test_answer_prompt_requires_claim_level_evidence_for_numeric_conditions() -> None:
     assert "number, duration, threshold, exception, or condition" in ANSWER_SYSTEM_PROMPT
     assert "union of the claim citation IDs" in ANSWER_SYSTEM_PROMPT
+
+
+def test_router_prompt_distinguishes_notice_overview_and_duration_ambiguity() -> None:
+    for phrase in (
+        "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+        "Các thời hạn báo trước khi nghỉ việc là gì?",
+        "Muốn nghỉ việc thì báo trước mấy ngày?",
+    ):
+        assert phrase in ROUTER_SYSTEM_PROMPT
+    for phrase in (
+        "Tính thời hạn hợp đồng giúp tôi.",
+        "Hợp đồng của tôi kéo dài bao lâu?",
+        "Tính số ngày của hợp đồng.",
+        "Tính thời gian cần báo trước.",
+    ):
+        assert phrase in ROUTER_SYSTEM_PROMPT
+    assert "NOTICE_FRAMEWORK_OVERVIEW" in ROUTER_SYSTEM_PROMPT
+    assert "CLARIFY_CONTRACT_DURATION_PURPOSE" in ROUTER_SYSTEM_PROMPT
+    assert "CLARIFY_NOTICE_PARAMETERS" in ROUTER_SYSTEM_PROMPT
 
 
 class ParseClient:
@@ -189,3 +211,30 @@ async def test_answer_invalid_all_attempts_fails_closed_separately() -> None:
         await OpenAIStructuredAgentAnswerGenerator(settings(), client).generate(
             "question", None, None
         )
+
+
+def test_no_notice_special_case_plan_does_not_require_contract_type() -> None:
+    output = RouterOutput(
+        intent=AgentIntent.RETRIEVAL_AND_CALCULATOR,
+        confidence=1,
+        rationale_code="SPECIAL_NO_NOTICE_WITH_BASIS",
+        requested_operation="notice_with_basis",
+        tool_plan=[
+            PlannedToolCall(
+                call_id="calculate-special",
+                tool_name=ToolName.CALCULATE_NOTICE_PERIOD,
+                arguments={"special_case": "WORKPLACE_SEXUAL_HARASSMENT"},
+                sequence=1,
+            ),
+            PlannedToolCall(
+                call_id="article-35-clause-2",
+                tool_name=ToolName.GET_CLAUSE,
+                arguments={"article_number": 35, "clause_number": 2},
+                sequence=2,
+            ),
+        ],
+    )
+    assert output.planned_tools == [
+        ToolName.CALCULATE_NOTICE_PERIOD,
+        ToolName.GET_CLAUSE,
+    ]

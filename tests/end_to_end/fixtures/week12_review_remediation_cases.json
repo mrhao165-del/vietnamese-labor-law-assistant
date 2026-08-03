@@ -1,0 +1,110 @@
+{
+  "schema_version": "1.0",
+  "classification": "LIVE_DOCKER_CPU_REMEDIATION_MATRIX",
+  "cases": [
+    {
+      "original_review_id": "W12-001",
+      "question": "Điều 20, Điều 35 và Điều 169 quy định gì?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_tools": ["get_article", "get_article", "get_article"],
+      "expected_articles": [20, 35, 169],
+      "expected_status": "WORKFLOW_VALID"
+    },
+    {
+      "original_review_id": "W12-003",
+      "question": "Điều 34 và Điều 43 quy định gì?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_tools": ["get_article", "get_article"],
+      "expected_articles": [34, 43],
+      "expected_status": "WORKFLOW_VALID",
+      "required_text": ["Điều 44"]
+    },
+    {
+      "original_review_id": "W12-006",
+      "question": "Điều 20, Điều 32, Điều 35 và Điều 54 quy định gì?",
+      "runs": 1,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_tools": [],
+      "expected_status": "CLARIFICATION_REQUIRED",
+      "expected_reason": "CLARIFICATION_REQUIRED",
+      "required_text": ["tối đa 3"]
+    },
+    {
+      "original_review_id": "W12-008",
+      "question": "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_tools_one_of": [["get_article"], ["search_labor_law"]],
+      "expected_articles": [35],
+      "expected_status": "WORKFLOW_VALID"
+    },
+    {
+      "original_review_id": "W12-010",
+      "question": "Quy định về hợp đồng xác định thời hạn?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_tools_one_of": [["get_article"], ["search_labor_law"]],
+      "expected_articles": [20],
+      "expected_status": "WORKFLOW_VALID",
+      "forbidden_text": ["ốm đau", "điều trị", "bệnh tật"]
+    },
+    {
+      "original_review_id": "W12-011",
+      "question": "Tôi bị nợ lương thì có cần báo trước không, hợp đồng 24 tháng?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_AND_CALCULATOR",
+      "expected_tools_unordered_one_of": [
+        ["calculate_notice_period", "get_article"],
+        ["calculate_notice_period", "search_labor_law"]
+      ],
+      "expected_articles": [35],
+      "expected_status": "WORKFLOW_VALID",
+      "expected_parameters": {
+        "calculate_notice_period": {
+          "contract_type": "FIXED_TERM_12_TO_36_MONTHS",
+          "special_case": "UNPAID_OR_LATE_WAGES"
+        }
+      },
+      "required_text": ["Điều 97"]
+    },
+    {
+      "original_review_id": "W12-012",
+      "question": "Quấy rối tình dục tại nơi làm việc có cần báo trước và căn cứ?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_AND_CALCULATOR",
+      "expected_tools_unordered_one_of": [
+        ["calculate_notice_period", "get_article"],
+        ["calculate_notice_period", "search_labor_law"]
+      ],
+      "expected_articles": [35],
+      "expected_status": "WORKFLOW_VALID",
+      "expected_parameters": {
+        "calculate_notice_period": {
+          "special_case": "WORKPLACE_SEXUAL_HARASSMENT"
+        }
+      },
+      "forbidden_text": ["sa thải người quấy rối", "hình thức xử lý kỷ luật"]
+    },
+    {
+      "original_review_id": "W12-015",
+      "question": "Điều 34 quy định gì?",
+      "runs": 3,
+      "expected_route": "RETRIEVAL_ONLY",
+      "expected_tools": ["get_article"],
+      "expected_articles": [34],
+      "expected_status": "WORKFLOW_VALID",
+      "required_clauses": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    },
+    {
+      "original_review_id": "W12-019",
+      "question": "Tôi cần tính thời hạn hợp đồng",
+      "runs": 1,
+      "expected_route": "CALCULATOR_ONLY",
+      "expected_tools": [],
+      "expected_status": "CLARIFICATION_REQUIRED",
+      "expected_reason": "CLARIFICATION_REQUIRED"
+    }
+  ]
+}

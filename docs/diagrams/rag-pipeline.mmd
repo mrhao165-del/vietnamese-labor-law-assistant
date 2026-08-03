@@ -1,0 +1,10 @@
+flowchart LR
+    Q[Question] --> D[BGE-M3 dense retrieval]
+    Q --> V[Vietnamese normalization + Underthesea]
+    V --> B[BM25S lexical retrieval]
+    D --> R[Reciprocal Rank Fusion]
+    B --> R
+    R --> K[10 candidates]
+    K --> X[BGE reranker v2-m3]
+    X --> O[Top 5 contexts]
+    O --> C[Cited answer]

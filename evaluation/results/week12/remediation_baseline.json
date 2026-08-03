@@ -1,0 +1,195 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS_WITH_EXPECTED_REVIEW_CONTRACT_MISMATCH",
+  "recorded_at": "2026-07-30T15:44:09.7394966+00:00",
+  "source_state": {
+    "branch": "fix/week12-review-remediation",
+    "head": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+    "git_status_short": [
+      " M README.md",
+      " M docs/architecture/repository_structure.md",
+      " M frontend/package-lock.json",
+      " M frontend/package.json",
+      " M pyproject.toml",
+      " M uv.lock",
+      "?? .github/",
+      "?? CHANGELOG.md",
+      "?? docs/diagrams/",
+      "?? docs/evaluation/",
+      "?? docs/images/",
+      "?? docs/releases/",
+      "?? evaluation/results/week12/",
+      "?? evaluation/review/",
+      "?? scripts/generate_portfolio_assets.py",
+      "?? scripts/generate_week12_manual_review_packet.py",
+      "?? scripts/generate_week12_portfolio.py",
+      "?? scripts/validate_week12_release.py",
+      "?? src/vietnamese_labor_law_assistant/evaluation/week12_portfolio.py",
+      "?? tests/unit/evaluation/test_week12_portfolio.py"
+    ],
+    "pre_existing_changes_preserved": true
+  },
+  "environment": {
+    "platform": "Microsoft Windows NT 10.0.19045.0",
+    "python": "3.11.15",
+    "uv": "0.10.11",
+    "node": "24.15.0",
+    "npm": "11.12.1",
+    "docker": "29.6.1",
+    "docker_compose": "v5.3.0",
+    "docker_profile": "CPU-only",
+    "external_app_env_file_available": false,
+    "pre_existing_ignored_private_env_present": true
+  },
+  "locked_inputs": {
+    "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+    "corpus": {
+      "path": "data/processed/labor_law_clauses.jsonl",
+      "sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
+      "matches_release_manifest": true
+    },
+    "evaluation_dataset": {
+      "path": "data/evaluation/labor_law_eval_v1.jsonl",
+      "sha256": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+      "matches_release_manifest": true,
+      "total": 60,
+      "dev": 42,
+      "test": 18
+    },
+    "split_manifest": {
+      "path": "data/evaluation/labor_law_eval_v1_manifest.json",
+      "sha256": "08ceada3bb4a6bbd7c6a00ae0e007e8027d59acc5d0e63a563c2169f1cf5d5bd",
+      "status": "FROZEN",
+      "matches_release_manifest": true
+    },
+    "guardrail_thresholds": {
+      "lower": 0.35,
+      "high": 0.75,
+      "unchanged": true
+    }
+  },
+  "selected_package_versions": {
+    "fastapi": "0.139.0",
+    "pydantic": "2.13.4",
+    "bm25s": "0.3.9",
+    "underthesea": "9.5.0",
+    "qdrant-client": "1.18.0",
+    "flagembedding": "1.4.0",
+    "torch": "2.13.0+cpu",
+    "transformers": "4.57.6",
+    "langgraph": "1.2.9",
+    "mcp": "1.28.1",
+    "openai": "2.45.0",
+    "structlog": "26.1.0",
+    "pytest": "9.1.1",
+    "ruff": "0.15.21",
+    "pyright": "1.1.411",
+    "react": "18.3.1",
+    "vite": "5.4.8",
+    "typescript_declared": "^5.5.3"
+  },
+  "checks": [
+    {
+      "name": "git diff --check",
+      "status": "PASS"
+    },
+    {
+      "name": "uv lock --check",
+      "status": "PASS"
+    },
+    {
+      "name": "Ruff format check",
+      "status": "PASS",
+      "detail": "240 files already formatted"
+    },
+    {
+      "name": "Ruff lint",
+      "status": "PASS"
+    },
+    {
+      "name": "Pyright",
+      "status": "PASS",
+      "detail": "0 errors, 0 warnings"
+    },
+    {
+      "name": "full pytest with coverage",
+      "status": "PASS",
+      "tests_passed": 323,
+      "coverage_percent": 86.21,
+      "coverage_threshold_percent": 82.0
+    },
+    {
+      "name": "production MCP stdio demos",
+      "status": "PASS",
+      "detail": "2 demos; 5 canonical checks"
+    },
+    {
+      "name": "Week 1-12 frozen and provenance coverage",
+      "status": "PASS",
+      "detail": "Covered by the full suite, checksum comparison, and Week 12 reproducibility checks"
+    },
+    {
+      "name": "Week 9 Agent verifier",
+      "status": "PASS",
+      "case_count": 40,
+      "provenance": "offline contract benchmark with fake router and MCP envelopes"
+    },
+    {
+      "name": "Week 10 guardrail verifier",
+      "status": "PASS",
+      "case_count": 40,
+      "provenance_checks": "37/37"
+    },
+    {
+      "name": "Week 12 benchmark reproducibility",
+      "status": "PASS"
+    },
+    {
+      "name": "Week 12 diagram and chart regeneration check",
+      "status": "PASS"
+    },
+    {
+      "name": "frontend npm ci",
+      "status": "PASS"
+    },
+    {
+      "name": "frontend typecheck",
+      "status": "PASS"
+    },
+    {
+      "name": "frontend lint",
+      "status": "PASS"
+    },
+    {
+      "name": "frontend production build",
+      "status": "PASS"
+    },
+    {
+      "name": "npm audit --omit=dev --audit-level=high",
+      "status": "PASS",
+      "production_vulnerabilities": 0,
+      "note": "npm ci reported development dependency findings; the required production-only audit passed"
+    },
+    {
+      "name": "docker compose --env-file .env config --quiet",
+      "status": "PASS"
+    },
+    {
+      "name": "protected artifact scanner",
+      "status": "PASS",
+      "detail": "CLEAR"
+    },
+    {
+      "name": "documentation link and tracked secret/runtime scan",
+      "status": "PASS"
+    },
+    {
+      "name": "existing Week 12 release validator",
+      "status": "EXPECTED_FAIL",
+      "error": "reviewer_decision must remain blank",
+      "classification": "Directly related contract mismatch: the validator only accepts the pre-review blank packet and has not yet been updated for an archived completed review."
+    }
+  ],
+  "unrelated_pre_existing_failures": [],
+  "baseline_allows_remediation_to_continue": true
+}

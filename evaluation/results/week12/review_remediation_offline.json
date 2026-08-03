@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "generated_at": "2026-07-30T17:21:20.569132+00:00",
+  "targeted_tests": {
+    "passed": 182,
+    "failed": 0
+  },
+  "cases": [
+    {
+      "review_id": "W12-001",
+      "status": "PASS",
+      "provenance": "DETERMINISTIC_OFFLINE_TESTS"
+    },
+    {
+      "review_id": "W12-003",
+      "status": "PASS",
+      "provenance": "DETERMINISTIC_OFFLINE_TESTS"
+    },
+    {
+      "review_id": "W12-006",
+      "status": "PASS",
+      "provenance": "DETERMINISTIC_OFFLINE_TESTS"
+    },
+    {
+      "review_id": "W12-008",
+      "status": "PASS",
+      "provenance": "DETERMINISTIC_OFFLINE_TESTS"
+    },
+    {
+      "review_id": "W12-010",
+      "status": "PASS",
+      "provenance": "DETERMINISTIC_OFFLINE_TESTS"
+    },
+    {
+      "review_id": "W12-011",
+      "status": "PASS",
+      "provenance": "DETERMINISTIC_OFFLINE_TESTS"
+    },
+    {
+      "review_id": "W12-012",
+      "status": "PASS",
+      "provenance": "DETERMINISTIC_OFFLINE_TESTS"
+    },
+    {
+      "review_id": "W12-015",
+      "status": "PASS",
+      "provenance": "DETERMINISTIC_OFFLINE_TESTS"
+    },
+    {
+      "review_id": "W12-019",
+      "status": "PASS",
+      "provenance": "DETERMINISTIC_OFFLINE_TESTS"
+    }
+  ],
+  "checks": [
+    "calculator and Article 35 provenance",
+    "Agent routing contracts and finite workflow",
+    "fair multi-article context projection",
+    "broad-article completeness fallback",
+    "claim/citation guardrail",
+    "public API failure mapping",
+    "Week 8 MCP protocol",
+    "Week 9 Agent integration",
+    "Week 10 guardrail integration",
+    "Week 11 browser API regression"
+  ],
+  "limitations": [
+    "Offline tests use deterministic fakes where an LLM would otherwise be required.",
+    "Offline test duration is not reported as live Agent latency."
+  ]
+}

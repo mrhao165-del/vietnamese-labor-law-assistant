@@ -1,0 +1,1269 @@
+{
+  "summary": {
+    "schema_version": "1.1",
+    "classification": "operational_smoke_fixture_not_frozen_benchmark",
+    "runs": 27,
+    "passed": 27,
+    "failed": 0
+  },
+  "attempts": [
+    {
+      "fixture_id": "week11-retrieval-positive",
+      "source": "week9:w9-001",
+      "request_id": "babea0ff-6fbd-46d0-9536-6c389f4537fe",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        35
+      ],
+      "call_ids": [
+        "get_art_35_001"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 2,
+      "citations_by_article": {
+        "35": [
+          "ll_6af59ba448952c1c927978713d34d984",
+          "ll_610e9077fc973dabc980978eb3f3da54"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 16035.572236000007,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 16139.448
+    },
+    {
+      "fixture_id": "week11-retrieval-positive",
+      "source": "week9:w9-001",
+      "request_id": "27e3183a-44dc-4528-93f1-c857c134839d",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        35
+      ],
+      "call_ids": [
+        "get_art_35_001"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 2,
+      "citations_by_article": {
+        "35": [
+          "ll_6af59ba448952c1c927978713d34d984",
+          "ll_610e9077fc973dabc980978eb3f3da54"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 13457.609837000007,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 2,
+      "client_elapsed_ms": 13516.535
+    },
+    {
+      "fixture_id": "week11-retrieval-positive",
+      "source": "week9:w9-001",
+      "request_id": "f4f0907d-93d1-4a72-a98c-5f727bdf0ca6",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        35
+      ],
+      "call_ids": [
+        "get_art_35_001"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 2,
+      "citations_by_article": {
+        "35": [
+          "ll_6af59ba448952c1c927978713d34d984",
+          "ll_610e9077fc973dabc980978eb3f3da54"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 13561.965636999957,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 3,
+      "client_elapsed_ms": 13613.726
+    },
+    {
+      "fixture_id": "week11-calculator-positive",
+      "source": "week9 notice-period contract",
+      "request_id": "f6407af9-5408-4731-a650-ef0a112012b6",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "CALCULATOR_ONLY",
+      "tools": [
+        "calculate_notice_period"
+      ],
+      "article_arguments": [],
+      "call_ids": [],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 1,
+      "citations_by_article": {
+        "35": [
+          "ll_6af59ba448952c1c927978713d34d984"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 5052.220011999963,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 5103.038
+    },
+    {
+      "fixture_id": "week11-combined-positive",
+      "source": "week9:w9-021",
+      "request_id": "a48fc98d-4f8e-4fb4-aa1a-a9d28b0ae7f4",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "article_arguments": [
+        35
+      ],
+      "call_ids": [
+        "get_art_001"
+      ],
+      "trace_count": 2,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 1,
+      "citations_by_article": {
+        "35": [
+          "ll_6af59ba448952c1c927978713d34d984"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 12676.407050000023,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 12727.801
+    },
+    {
+      "fixture_id": "week11-combined-positive",
+      "source": "week9:w9-021",
+      "request_id": "06926ed9-79e4-406f-95bf-7639358585b2",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "article_arguments": [
+        35
+      ],
+      "call_ids": [
+        "get_art_001"
+      ],
+      "trace_count": 2,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 1,
+      "citations_by_article": {
+        "35": [
+          "ll_6af59ba448952c1c927978713d34d984"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 15496.759515999998,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 2,
+      "client_elapsed_ms": 15555.458
+    },
+    {
+      "fixture_id": "week11-combined-positive",
+      "source": "week9:w9-021",
+      "request_id": "0035c5cb-6bc8-4d27-a20a-a69b9e0102cc",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "article_arguments": [
+        35
+      ],
+      "call_ids": [
+        "get_art_001"
+      ],
+      "trace_count": 2,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 1,
+      "citations_by_article": {
+        "35": [
+          "ll_6af59ba448952c1c927978713d34d984"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 16523.18531100002,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 3,
+      "client_elapsed_ms": 16585.189
+    },
+    {
+      "fixture_id": "week11-combined-fail-closed",
+      "source": "Operational unsupported-reference scenario derived from the Week 10 fail-closed contract; canonical source contains no Article 999",
+      "request_id": "a2f80055-2dd2-4626-a518-a8c26cf5c743",
+      "http_status": 200,
+      "workflow_status": "INSUFFICIENT_CONTEXT",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "article_arguments": [
+        999
+      ],
+      "call_ids": [
+        "explicit-article-999"
+      ],
+      "trace_count": 2,
+      "verification": "INSUFFICIENT_CONTEXT",
+      "reason_code": "ARTICLE_NOT_FOUND",
+      "citation_count": 0,
+      "citations_by_article": {},
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 9313.927811999974,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 9336.7
+    },
+    {
+      "fixture_id": "week11-out-of-scope",
+      "source": "week9:w9-032",
+      "request_id": "b1044dc2-5ca1-4a5f-8e3a-b75529cb8f2c",
+      "http_status": 200,
+      "workflow_status": "OUT_OF_SCOPE",
+      "route": "OUT_OF_SCOPE",
+      "tools": [],
+      "article_arguments": [],
+      "call_ids": [],
+      "trace_count": 0,
+      "verification": "INSUFFICIENT_CONTEXT",
+      "reason_code": "INSUFFICIENT_CONTEXT",
+      "citation_count": 0,
+      "citations_by_article": {},
+      "warnings": [
+        "OUT_OF_SCOPE_REFUSAL"
+      ],
+      "canonical_citation_validity": true,
+      "latency_ms": 1931.6424699999857,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 1981.947
+    },
+    {
+      "fixture_id": "week11-valid-input-insufficient-context",
+      "source": "Operational corpus-absence check: canonical source contains no Article 999",
+      "request_id": "dfc97035-6395-41da-a26a-e01b47c748c7",
+      "http_status": 200,
+      "workflow_status": "INSUFFICIENT_CONTEXT",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        999
+      ],
+      "call_ids": [
+        "get_article_999"
+      ],
+      "trace_count": 1,
+      "verification": "INSUFFICIENT_CONTEXT",
+      "reason_code": "ARTICLE_NOT_FOUND",
+      "citation_count": 0,
+      "citations_by_article": {},
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 7294.753386999957,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 7313.56
+    },
+    {
+      "fixture_id": "week11-clarification-required",
+      "source": "week9:w9-019",
+      "request_id": "e42734e6-0547-4979-9f21-d19cf83f1458",
+      "http_status": 200,
+      "workflow_status": "CLARIFICATION_REQUIRED",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [],
+      "article_arguments": [],
+      "call_ids": [],
+      "trace_count": 0,
+      "verification": "CLARIFICATION_REQUIRED",
+      "reason_code": "CLARIFICATION_REQUIRED",
+      "citation_count": 0,
+      "citations_by_article": {},
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 2022.5188990000333,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 2041.259
+    },
+    {
+      "fixture_id": "week11-article-20",
+      "source": "canonical:article-20",
+      "request_id": "21bfb973-807d-4d73-aeca-fd33a12d6d38",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        20
+      ],
+      "call_ids": [
+        "get_art_20"
+      ],
+      "trace_count": 1,
+      "verification": "PARTIALLY_SUPPORTED",
+      "reason_code": "PARTIAL_EVIDENCE",
+      "citation_count": 2,
+      "citations_by_article": {
+        "20": [
+          "ll_d0c5f537983c0aad635529f412e426f5",
+          "ll_3496d03c125f3647e4b59d17ba1517aa"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 13610.509033000028,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 13653.558
+    },
+    {
+      "fixture_id": "week11-article-34",
+      "source": "canonical:article-34",
+      "request_id": "32feafcd-e792-4c18-b0ce-c8e971dd23fa",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        34
+      ],
+      "call_ids": [
+        "get_art_34"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 13,
+      "citations_by_article": {
+        "34": [
+          "ll_58b7dfddf9d10dd216e7e56a9b94665b",
+          "ll_e6cf85494c7d7983c4772842965ab114",
+          "ll_175c1f555aa2add5bd99608d0fe59945",
+          "ll_e5b17107dac59b19f4dc7bc77998e4aa",
+          "ll_1199cdf97334037b184baeda5bf1b646",
+          "ll_b89c1d53396256a4d945a0dbee6c1b4b",
+          "ll_890db25ee9854dcdf4eaca66c3b2880d",
+          "ll_1e77f0b627b0d024c97ecc8758cb8201",
+          "ll_908006b059cbf6422269d281c9a426ad",
+          "ll_b269f9ee3f3fa848dcbf4e0267701fec",
+          "ll_a78dd14cc5e598d481ce8fa21cb96742",
+          "ll_bec71ffaf5eceb34b42e96a70ba059d4",
+          "ll_ac3443e401d1e610baca5259d4db6fcd"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 16195.70239799998,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 16257.95
+    },
+    {
+      "fixture_id": "week11-article-34",
+      "source": "canonical:article-34",
+      "request_id": "98262f09-d2eb-4399-a96d-0c9ee0c42567",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        34
+      ],
+      "call_ids": [
+        "get_art_34"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 13,
+      "citations_by_article": {
+        "34": [
+          "ll_58b7dfddf9d10dd216e7e56a9b94665b",
+          "ll_e6cf85494c7d7983c4772842965ab114",
+          "ll_175c1f555aa2add5bd99608d0fe59945",
+          "ll_e5b17107dac59b19f4dc7bc77998e4aa",
+          "ll_1199cdf97334037b184baeda5bf1b646",
+          "ll_b89c1d53396256a4d945a0dbee6c1b4b",
+          "ll_890db25ee9854dcdf4eaca66c3b2880d",
+          "ll_1e77f0b627b0d024c97ecc8758cb8201",
+          "ll_908006b059cbf6422269d281c9a426ad",
+          "ll_b269f9ee3f3fa848dcbf4e0267701fec",
+          "ll_a78dd14cc5e598d481ce8fa21cb96742",
+          "ll_bec71ffaf5eceb34b42e96a70ba059d4",
+          "ll_ac3443e401d1e610baca5259d4db6fcd"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 15533.11077799998,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 2,
+      "client_elapsed_ms": 15598.045
+    },
+    {
+      "fixture_id": "week11-article-34",
+      "source": "canonical:article-34",
+      "request_id": "2a32221c-f9c0-4c54-a55c-23998cecfa86",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        34
+      ],
+      "call_ids": [
+        "get_art_34"
+      ],
+      "trace_count": 1,
+      "verification": "PARTIALLY_SUPPORTED",
+      "reason_code": "PARTIAL_EVIDENCE",
+      "citation_count": 10,
+      "citations_by_article": {
+        "34": [
+          "ll_58b7dfddf9d10dd216e7e56a9b94665b",
+          "ll_e6cf85494c7d7983c4772842965ab114",
+          "ll_175c1f555aa2add5bd99608d0fe59945",
+          "ll_e5b17107dac59b19f4dc7bc77998e4aa",
+          "ll_1199cdf97334037b184baeda5bf1b646",
+          "ll_b89c1d53396256a4d945a0dbee6c1b4b",
+          "ll_890db25ee9854dcdf4eaca66c3b2880d",
+          "ll_1e77f0b627b0d024c97ecc8758cb8201",
+          "ll_908006b059cbf6422269d281c9a426ad",
+          "ll_b269f9ee3f3fa848dcbf4e0267701fec"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 16618.24556199997,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 3,
+      "client_elapsed_ms": 16667.656
+    },
+    {
+      "fixture_id": "week11-article-35",
+      "source": "canonical:article-35",
+      "request_id": "1af6b0a4-1c08-464a-8d8c-3c740a2af5e3",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        35
+      ],
+      "call_ids": [
+        "get_art_35_001"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 2,
+      "citations_by_article": {
+        "35": [
+          "ll_6af59ba448952c1c927978713d34d984",
+          "ll_610e9077fc973dabc980978eb3f3da54"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 14406.312596999953,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 14471.819
+    },
+    {
+      "fixture_id": "week11-article-35",
+      "source": "canonical:article-35",
+      "request_id": "9a2ab4c5-6558-4a1f-9bc2-85234aa5880d",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        35
+      ],
+      "call_ids": [
+        "get_art_35_001"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 2,
+      "citations_by_article": {
+        "35": [
+          "ll_6af59ba448952c1c927978713d34d984",
+          "ll_610e9077fc973dabc980978eb3f3da54"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 14305.691808000007,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 2,
+      "client_elapsed_ms": 14351.247
+    },
+    {
+      "fixture_id": "week11-article-35",
+      "source": "canonical:article-35",
+      "request_id": "dd1fc779-f358-44ae-b58d-9acc6429f865",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        35
+      ],
+      "call_ids": [
+        "get_art_35_001"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 2,
+      "citations_by_article": {
+        "35": [
+          "ll_6af59ba448952c1c927978713d34d984",
+          "ll_610e9077fc973dabc980978eb3f3da54"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 13660.219789999985,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 3,
+      "client_elapsed_ms": 13718.354
+    },
+    {
+      "fixture_id": "week11-article-36",
+      "source": "canonical:article-36",
+      "request_id": "d3ffe99c-97ef-447c-a917-db123aaadce0",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        36
+      ],
+      "call_ids": [
+        "get_article_36"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 3,
+      "citations_by_article": {
+        "36": [
+          "ll_85c91f8360c6b8d3fefcc386cfb13eb5",
+          "ll_ef77b75ca6d385b4f3d7a631da24ef4c",
+          "ll_1b0e30c814d27ca23a2d58de9fae81a2"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 16332.879806999983,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 16375.493
+    },
+    {
+      "fixture_id": "week11-article-43",
+      "source": "canonical:article-43",
+      "request_id": "82798f26-1d03-4534-961a-b3fca6a3ea36",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        43
+      ],
+      "call_ids": [
+        "get_article_43"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 3,
+      "citations_by_article": {
+        "43": [
+          "ll_b659a9ce80f0b48750e7b8d4308ac8e1",
+          "ll_38d57834b19e5e40f7722772826c883d",
+          "ll_813322864fda8e33463a84df154d530e"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 12514.546850000044,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 12558.563
+    },
+    {
+      "fixture_id": "week11-article-43",
+      "source": "canonical:article-43",
+      "request_id": "69c6fdc9-2a0d-48a3-8b8c-32239587f61e",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        43
+      ],
+      "call_ids": [
+        "get_article_43"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 3,
+      "citations_by_article": {
+        "43": [
+          "ll_b659a9ce80f0b48750e7b8d4308ac8e1",
+          "ll_38d57834b19e5e40f7722772826c883d",
+          "ll_813322864fda8e33463a84df154d530e"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 15375.885142000016,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 2,
+      "client_elapsed_ms": 15426.283
+    },
+    {
+      "fixture_id": "week11-article-43",
+      "source": "canonical:article-43",
+      "request_id": "e2f3f8ca-79e4-4bf1-ac07-033df9c8515e",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        43
+      ],
+      "call_ids": [
+        "get_article_43"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 3,
+      "citations_by_article": {
+        "43": [
+          "ll_b659a9ce80f0b48750e7b8d4308ac8e1",
+          "ll_38d57834b19e5e40f7722772826c883d",
+          "ll_813322864fda8e33463a84df154d530e"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 11982.422007999958,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 3,
+      "client_elapsed_ms": 12040.117
+    },
+    {
+      "fixture_id": "week11-article-97",
+      "source": "canonical:article-97",
+      "request_id": "b262c4e0-3b66-4c69-968b-8d9a8579ec68",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        97
+      ],
+      "call_ids": [
+        "get_article_97"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 4,
+      "citations_by_article": {
+        "97": [
+          "ll_2fb15d519697bae7798f4ca30376dcf6",
+          "ll_3472f76567ef46ce3aa70e5cef04c465",
+          "ll_6c240c97a10261a8b7b76c78917bf2ff",
+          "ll_637097a07e629f3154a38864853c6790"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 14080.110866999916,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 14119.336
+    },
+    {
+      "fixture_id": "week11-article-105",
+      "source": "canonical:article-105",
+      "request_id": "53f85f1f-6ed1-49c5-a8e4-1e391eaaf29b",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        105
+      ],
+      "call_ids": [
+        "get_article_105"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 3,
+      "citations_by_article": {
+        "105": [
+          "ll_795d914c6a1937245fdbf4302d1a40bb",
+          "ll_1132410e9dd1c1f92ace3aaf76ae6278",
+          "ll_d08e65e2c2ab7756cc8e661130ea23ac"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 16135.056256999975,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 16175.894
+    },
+    {
+      "fixture_id": "week11-article-113",
+      "source": "canonical:article-113",
+      "request_id": "210bf074-b2ca-4275-89e2-b01fc2d5b99e",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        113
+      ],
+      "call_ids": [
+        "get_art_113"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 7,
+      "citations_by_article": {
+        "113": [
+          "ll_583ad6cd6ad14839eeb30718780ab860",
+          "ll_24e904d466bdcf271fa00a047e279d16",
+          "ll_91a9b871670bf585833bc7dcf579b896",
+          "ll_64eb266fcae24ab204722e93a5b03817",
+          "ll_501c32a89451e9cfa1229c12b646a0d7",
+          "ll_a3a2492f3412134d86be921a05bb3496",
+          "ll_b87ad64571b88e5bf473b2405b1c7ecc"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 15957.621213000039,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 16005.548
+    },
+    {
+      "fixture_id": "week11-article-138",
+      "source": "canonical:article-138",
+      "request_id": "fc7e4534-9b25-409a-8afa-21155455b688",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        138
+      ],
+      "call_ids": [
+        "get_article_138"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 2,
+      "citations_by_article": {
+        "138": [
+          "ll_734c02a52d8ded4e9df460a8c3b80ebb",
+          "ll_1be18ce3acf6fc6c6f2d3b3e3fbc0b60"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 12013.39377499994,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 12073.181
+    },
+    {
+      "fixture_id": "week11-article-169",
+      "source": "canonical:article-169",
+      "request_id": "dd05545a-f316-4099-a7ad-108f3ef68720",
+      "http_status": 200,
+      "workflow_status": "WORKFLOW_VALID",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [
+        "get_article"
+      ],
+      "article_arguments": [
+        169
+      ],
+      "call_ids": [
+        "get_art_169"
+      ],
+      "trace_count": 1,
+      "verification": "SUPPORTED",
+      "reason_code": "SUPPORTED",
+      "citation_count": 5,
+      "citations_by_article": {
+        "169": [
+          "ll_dbd3abadeef0463d361d9e82afe24065",
+          "ll_d46b468f7e75375226fc9255165252c0",
+          "ll_5e5c61808a0cf9a202766600043297b2",
+          "ll_b5fc7f7303def7fcc05a56cc012b391e",
+          "ll_d58c1ac5280f87afac6ff26e225a8f7b"
+        ]
+      },
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 15000.962716000004,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true,
+        "get_article_argument": true,
+        "article_citations": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 15057.895
+    }
+  ]
+}

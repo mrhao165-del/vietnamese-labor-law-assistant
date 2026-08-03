@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import threading
 import time
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -310,6 +311,31 @@ def test_router_plan_deduplicates_repeated_article_and_requires_unique_call_ids(
         )
 
 
+def test_router_plan_removes_article_lookup_redundant_with_exact_clause() -> None:
+    output = RouterOutput(
+        intent=AgentIntent.RETRIEVAL_ONLY,
+        confidence=1,
+        rationale_code="EXACT_CLAUSE",
+        requested_operation="get_clause",
+        tool_plan=[
+            PlannedToolCall(
+                call_id="article-35",
+                tool_name=ToolName.GET_ARTICLE,
+                arguments={"article_number": 35},
+                sequence=1,
+            ),
+            PlannedToolCall(
+                call_id="clause-35-1",
+                tool_name=ToolName.GET_CLAUSE,
+                arguments={"article_number": 35, "clause_number": 1},
+                sequence=2,
+            ),
+        ],
+    )
+    assert [call.tool_name for call in output.tool_plan] == [ToolName.GET_CLAUSE]
+    assert output.tool_plan[0].sequence == 1
+
+
 @pytest.mark.asyncio
 async def test_executor_runs_repeated_tool_names_and_preserves_per_call_trace() -> None:
     output = multi_article_output(32, 54)
@@ -352,6 +378,67 @@ async def test_tool_budget_is_evaluated_by_call_count() -> None:
 
 
 @pytest.mark.asyncio
+async def test_explicit_article_limit_canonicalizes_router_clarification() -> None:
+    output = RouterOutput(
+        intent=AgentIntent.RETRIEVAL_ONLY,
+        confidence=1,
+        rationale_code="TOO_MANY_ARTICLES",
+        requested_operation="RETRIEVAL_ONLY",
+        requires_clarification=True,
+        clarification_question="Vui lòng thu hẹp yêu cầu.",
+    )
+    result = await service(output).run(
+        "Điều 20, Điều 32, Điều 35 và Điều 54 quy định gì?", include_trace=True
+    )
+    assert result.status is WorkflowStatus.CLARIFICATION_REQUIRED
+    assert result.router_decision == "CLARIFY_ARTICLE_LIMIT"
+    assert result.planned_tools == []
+    assert result.tool_trace == []
+    assert "tối đa 3" in result.answer
+
+
+def test_explicit_article_plan_recovers_out_of_scope_and_replaces_search() -> None:
+    out_of_scope = RouterOutput(
+        intent=AgentIntent.OUT_OF_SCOPE,
+        confidence=1,
+        rationale_code="UNKNOWN_ARTICLE",
+        requested_operation="REFUSE",
+        out_of_scope_reason="unknown",
+    )
+    recovered = AgentService._align_explicit_article_plan(out_of_scope, [998, 999])
+    assert recovered.intent is AgentIntent.RETRIEVAL_ONLY
+    assert [call.arguments for call in recovered.tool_plan] == [
+        {"article_number": 998},
+        {"article_number": 999},
+    ]
+    combined = RouterOutput(
+        intent=AgentIntent.RETRIEVAL_AND_CALCULATOR,
+        confidence=1,
+        rationale_code="LEGAL_BASIS",
+        requested_operation="NOTICE_WITH_BASIS",
+        tool_plan=[
+            PlannedToolCall(
+                call_id="calculate",
+                tool_name=ToolName.CALCULATE_NOTICE_PERIOD,
+                arguments={"contract_type": "INDEFINITE"},
+                sequence=1,
+            ),
+            PlannedToolCall(
+                call_id="search",
+                tool_name=ToolName.SEARCH_LABOR_LAW,
+                arguments={"query": "Điều 999"},
+                sequence=2,
+            ),
+        ],
+    )
+    aligned = AgentService._align_explicit_article_plan(combined, [999])
+    assert [call.tool_name for call in aligned.tool_plan] == [
+        ToolName.CALCULATE_NOTICE_PERIOD,
+        ToolName.GET_ARTICLE,
+    ]
+
+
+@pytest.mark.asyncio
 async def test_duplicate_article_executes_only_one_call() -> None:
     output = multi_article_output(35, 35)
     gateway = ArticleGateway()
@@ -370,7 +457,15 @@ async def test_too_many_articles_returns_clarification_without_calls() -> None:
         "bốn Điều", include_trace=True
     )
     assert result.status is WorkflowStatus.CLARIFICATION_REQUIRED
+    assert result.router_decision == "CLARIFY_ARTICLE_LIMIT"
     assert gateway.calls == []
+    assert result.answer == result.clarification_question
+    assert result.verification == {
+        "status": "CLARIFICATION_REQUIRED",
+        "reason": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "claims": [],
+    }
     assert "tối đa 3" in (result.clarification_question or "")
 
 
@@ -423,6 +518,204 @@ async def test_missing_parameter_requires_clarification_without_a_tool_call() ->
     result = await service(output, calculator=calculator).run("Tính thời hạn")
     assert result.status is WorkflowStatus.CLARIFICATION_REQUIRED
     assert calculator.calls == []
+    assert result.answer == output.clarification_question
+    assert result.verification == {
+        "status": "CLARIFICATION_REQUIRED",
+        "reason": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "claims": [],
+    }
+
+
+ARTICLE_35_NOTICE = (
+    "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước "
+    "như sau: a) Ít nhất 45 ngày đối với hợp đồng không xác định thời hạn; b) Ít nhất 30 "
+    "ngày đối với hợp đồng xác định thời hạn từ 12 tháng đến 36 tháng; c) Ít nhất 03 ngày "
+    "làm việc đối với hợp đồng dưới 12 tháng; d) Ngành, nghề, công việc đặc thù thực hiện "
+    "theo quy định của Chính phủ."
+)
+ARTICLE_35_NO_NOTICE = (
+    "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước "
+    "trong các trường hợp quy định tại khoản này."
+)
+
+
+def notice_overview_output() -> RouterOutput:
+    return RouterOutput(
+        intent=AgentIntent.RETRIEVAL_ONLY,
+        confidence=1,
+        rationale_code="GENERAL_NOTICE_OVERVIEW",
+        requested_operation="NOTICE_FRAMEWORK_OVERVIEW",
+        tool_plan=[
+            PlannedToolCall(
+                call_id="article-35-overview",
+                tool_name=ToolName.GET_ARTICLE,
+                arguments={"article_number": 35},
+                sequence=1,
+                purpose="retrieve the complete notice framework",
+            )
+        ],
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+        "Các thời hạn báo trước khi nghỉ việc là gì?",
+        "Muốn nghỉ việc thì báo trước mấy ngày?",
+    ],
+)
+async def test_general_notice_overview_is_complete_without_calculator(question: str) -> None:
+    class SupportedGuardrail:
+        def verify(self, claims: Any, evidence: Any) -> VerificationResult:
+            assert len(claims) == 2 and len(evidence) == 2
+            return VerificationResult(status=VerificationStatus.SUPPORTED)
+
+    retrieval = FakeGateway(
+        {
+            ToolName.GET_ARTICLE.value: envelope(
+                ToolName.GET_ARTICLE,
+                {
+                    "article_number": 35,
+                    "clauses": [
+                        {
+                            "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+                            "content": ARTICLE_35_NOTICE,
+                            "article_number": 35,
+                            "clause_number": 1,
+                        },
+                        {
+                            "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+                            "content": ARTICLE_35_NO_NOTICE,
+                            "article_number": 35,
+                            "clause_number": 2,
+                        },
+                    ],
+                },
+            )
+        }
+    )
+    calculator = FakeGateway()
+    workflow = service(
+        notice_overview_output(),
+        retrieval=retrieval,
+        calculator=calculator,
+        generator=FakeGenerator(RuntimeError("overview must not depend on LLM generation")),
+    )
+    workflow.guardrail_service = SupportedGuardrail()  # type: ignore[assignment]
+    result = await workflow.run(question, include_trace=True)
+    assert result.status is WorkflowStatus.WORKFLOW_VALID
+    assert result.router_decision == "NOTICE_FRAMEWORK_OVERVIEW"
+    assert [call[0] for call in retrieval.calls] == [ToolName.GET_ARTICLE.value]
+    assert calculator.calls == []
+    for required in (
+        "45 ngày",
+        "30 ngày",
+        "03 ngày làm việc",
+        "quy định của Chính phủ",
+        "không cần báo trước",
+    ):
+        assert required in result.answer
+    assert {item["chunk_id"] for item in result.citations} == {
+        "ll_6af59ba448952c1c927978713d34d984",
+        "ll_610e9077fc973dabc980978eb3f3da54",
+    }
+    assert result.verification is not None
+    assert result.verification["status"] == "SUPPORTED"
+    assert "INSUFFICIENT_VERIFIED_EVIDENCE" not in result.answer
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Tôi muốn biết mình phải báo trước bao lâu",
+        "Tính thời gian cần báo trước.",
+    ],
+)
+async def test_personalized_notice_without_contract_type_asks_for_notice_facts(
+    question: str,
+) -> None:
+    output = RouterOutput(
+        intent=AgentIntent.CALCULATOR_ONLY,
+        confidence=1,
+        rationale_code="NOTICE_PARAMETERS_MISSING",
+        requested_operation="CLARIFY_NOTICE_PARAMETERS",
+        requires_clarification=True,
+        clarification_question="Hợp đồng xác định thời hạn từ 12 đến 36 tháng?",
+    )
+    calculator = FakeGateway()
+    result = await service(output, calculator=calculator).run(question, include_trace=True)
+    assert result.status is WorkflowStatus.CLARIFICATION_REQUIRED
+    assert result.router_decision == "CLARIFY_NOTICE_PARAMETERS"
+    assert calculator.calls == [] and result.tool_trace == []
+    assert "dưới 12 tháng" in result.answer
+    assert "12 đến 36 tháng" in result.answer
+    assert "không xác định thời hạn" in result.answer
+    assert "khoản 2 Điều 35" in result.answer
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Tính thời hạn hợp đồng giúp tôi.",
+        "Hợp đồng của tôi kéo dài bao lâu?",
+        "Tính số ngày của hợp đồng.",
+    ],
+)
+async def test_ambiguous_contract_duration_requests_concrete_zero_tool_clarification(
+    question: str,
+) -> None:
+    output = RouterOutput(
+        intent=AgentIntent.CALCULATOR_ONLY,
+        confidence=1,
+        rationale_code="AMBIGUOUS_CONTRACT_DURATION",
+        requested_operation="CLARIFY_CONTRACT_DURATION_PURPOSE",
+        requires_clarification=True,
+        clarification_question="Hợp đồng xác định thời hạn từ 12 đến 36 tháng?",
+    )
+    calculator = FakeGateway()
+    retrieval = FakeGateway()
+    result = await service(output, calculator=calculator, retrieval=retrieval).run(
+        question, include_trace=True
+    )
+    assert result.status is WorkflowStatus.CLARIFICATION_REQUIRED
+    assert result.router_decision == "CLARIFY_CONTRACT_DURATION_PURPOSE"
+    assert calculator.calls == [] and retrieval.calls == [] and result.tool_trace == []
+    assert "ngày bắt đầu" in result.answer and "ngày kết thúc" in result.answer
+    assert "thời gian báo trước" in result.answer and "phân loại hợp đồng" in result.answer
+    assert "dưới 12 tháng" in result.answer and "12 đến 36 tháng" in result.answer
+    assert "xác định thời hạn (từ 12 đến 36 tháng)" not in result.answer
+    assert result.verification is not None
+    assert result.verification["status"] == "CLARIFICATION_REQUIRED"
+
+
+@pytest.mark.asyncio
+async def test_valid_no_claim_clarification_bypasses_legal_claim_guardrail() -> None:
+    class RejectUnexpectedGuardrail:
+        def verify(self, claims: Any, evidence: Any) -> VerificationResult:
+            raise AssertionError((claims, evidence))
+
+    workflow = service(retrieval_output())
+    workflow.guardrail_service = RejectUnexpectedGuardrail()  # type: ignore[assignment]
+    update = await workflow.apply_claim_guardrail(
+        {
+            "route_status": WorkflowStatus.CLARIFICATION_REQUIRED.value,
+            "final_answer": "Vui lòng chọn mục tiêu tính toán.",
+            "tool_trace": [],
+        }
+    )
+    assert update == {
+        "verification": {
+            "status": "CLARIFICATION_REQUIRED",
+            "reason": "CLARIFICATION_REQUIRED",
+            "warnings": [],
+            "claims": [],
+        }
+    }
 
 
 @pytest.mark.asyncio
@@ -689,6 +982,107 @@ def test_context_projection_retains_evidence_from_every_target(
     )
     assert [item.article_number for item in retained] == [32, 54]
     assert retained[0].chunk_id == "chunk-32-3"
+
+
+def test_three_article_projection_retains_every_target_and_canonical_id_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workflow = service(retrieval_output())
+    monkeypatch.setattr(
+        "vietnamese_labor_law_assistant.agent.service.get_settings",
+        lambda: Settings(guardrail_semantic_max_contexts=6),
+    )
+    articles = (21, 36, 170)
+    responses = [
+        {
+            "agent_call": {
+                "call_id": f"article-{article}",
+                "tool_name": "get_article",
+                "target_article_number": article,
+            },
+            "data": {
+                "clauses": [
+                    {
+                        "chunk_id": f"chunk-{article}-{index}",
+                        "content": f"Article {article} material {index}.",
+                        "article_number": article,
+                    }
+                    for index in range(1, 4)
+                ]
+            },
+        }
+        for article in articles
+    ]
+    retained = workflow._guardrail_evidence(
+        {
+            "tool_plan": [
+                {
+                    "call_id": f"article-{article}",
+                    "tool_name": "get_article",
+                    "arguments": {"article_number": article},
+                    "sequence": index,
+                }
+                for index, article in enumerate(articles, 1)
+            ],
+            "retrieval_result": {"responses": responses},
+        }
+    )
+    assert {item.article_number for item in retained} == set(articles)
+    assert len({item.chunk_id for item in retained}) == len(retained)
+
+
+def test_broad_article_projection_can_retain_thirteen_material_clauses(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workflow = service(retrieval_output())
+    monkeypatch.setattr(
+        "vietnamese_labor_law_assistant.agent.service.get_settings",
+        lambda: Settings(guardrail_semantic_max_contexts=20),
+    )
+    rows = [
+        {
+            "chunk_id": f"material-{index}",
+            "content": f"Clause {index}.",
+            "article_number": 57,
+            "clause_number": index,
+        }
+        for index in range(1, 14)
+    ]
+    retained = workflow._guardrail_evidence(
+        {
+            "tool_plan": [
+                {
+                    "call_id": "article-57",
+                    "tool_name": "get_article",
+                    "arguments": {"article_number": 57},
+                    "sequence": 1,
+                }
+            ],
+            "retrieval_result": {
+                "responses": [
+                    {
+                        "agent_call": {
+                            "call_id": "article-57",
+                            "tool_name": "get_article",
+                            "target_article_number": 57,
+                        },
+                        "data": {"clauses": rows},
+                    }
+                ]
+            },
+        }
+    )
+    assert [item.clause_number for item in retained] == list(range(1, 14))
+
+
+def test_production_source_contains_no_review_or_fixture_specific_branch() -> None:
+    source_root = Path(__file__).resolve().parents[3] / "src"
+    source = "\n".join(
+        path.read_text(encoding="utf-8") for path in sorted(source_root.rglob("*.py"))
+    )
+    assert "W12-" not in source
+    assert "w9-014" not in source
+    assert "multi-article-20-35-169" not in source
 
 
 def test_claim_article_contract_accepts_matching_and_rejects_cross_article() -> None:

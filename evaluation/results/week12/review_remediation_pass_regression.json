@@ -1,0 +1,344 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP",
+  "generated_at": "2026-07-30T17:15:39.204488+00:00",
+  "case_count": 15,
+  "passed": 15,
+  "failed": 0,
+  "attempts": [
+    {
+      "review_id": "W12-002",
+      "question_id": "multi-article-32-54",
+      "request_id": "0b50ab4b-8e04-4a6a-90ab-8eea74a72bf7",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_article",
+        "get_article"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 5,
+      "latency_ms": 19052.42205100012,
+      "client_elapsed_ms": 19122.197,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-004",
+      "question_id": "multi-article-all-missing",
+      "request_id": "43c88143-4520-4fef-8ffc-fddf03060b76",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_article",
+        "get_article"
+      ],
+      "final_status": "INSUFFICIENT_CONTEXT",
+      "verification_code": "ARTICLE_NOT_FOUND",
+      "citation_count": 0,
+      "latency_ms": 13075.358053999935,
+      "client_elapsed_ms": 13108.952,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-005",
+      "question_id": "multi-article-duplicate-35",
+      "request_id": "70861dc2-e1f3-4f62-b099-15ac6d48d365",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_article"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 2,
+      "latency_ms": 12589.883156000269,
+      "client_elapsed_ms": 12640.199,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-007",
+      "question_id": "multi-article-valid-missing",
+      "request_id": "3e4c7e50-db94-460b-a7a1-40683de90e63",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_article",
+        "get_article"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 2,
+      "latency_ms": 18139.787908000017,
+      "client_elapsed_ms": 18189.388,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-009",
+      "question_id": "w9-005",
+      "request_id": "ae21d6bc-53f4-4366-ab88-1b4f56d7b49a",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_clause"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 1,
+      "latency_ms": 9895.301411999753,
+      "client_elapsed_ms": 9948.824,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-013",
+      "question_id": "week11-article-169",
+      "request_id": "f2b9d61e-329b-44d5-9e8d-1130bc3f109e",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_article"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 5,
+      "latency_ms": 14860.325754999849,
+      "client_elapsed_ms": 14913.808,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-014",
+      "question_id": "week11-article-20",
+      "request_id": "63cfbaf2-77b1-4ce4-859a-77d5e7e9019a",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_article"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 2,
+      "latency_ms": 12523.06985300038,
+      "client_elapsed_ms": 12560.443,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-016",
+      "question_id": "week11-article-43",
+      "request_id": "ece59feb-7299-4e30-b677-99852fff37d3",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_article"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 3,
+      "latency_ms": 11968.218467000042,
+      "client_elapsed_ms": 12019.704,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-017",
+      "question_id": "week11-article-97",
+      "request_id": "d3a5dbb3-ee37-429e-b06a-120bb9c6e195",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_article"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 4,
+      "latency_ms": 14308.049555000252,
+      "client_elapsed_ms": 14364.209,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-018",
+      "question_id": "week11-calculator-positive",
+      "request_id": "68931b17-2922-468b-8dcc-a3ee0a0f3c38",
+      "route": "CALCULATOR_ONLY",
+      "observed_tools": [
+        "calculate_notice_period"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 1,
+      "latency_ms": 4710.1263529998505,
+      "client_elapsed_ms": 4762.912,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-020",
+      "question_id": "week11-combined-fail-closed",
+      "request_id": "6e921594-221e-4587-ac19-dbf6c0dfb0ec",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "observed_tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "final_status": "INSUFFICIENT_CONTEXT",
+      "verification_code": "ARTICLE_NOT_FOUND",
+      "citation_count": 0,
+      "latency_ms": 7897.8683979999005,
+      "client_elapsed_ms": 7932.673,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-021",
+      "question_id": "week11-combined-positive",
+      "request_id": "6153330e-d55e-4808-b282-66ebfa19e40e",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "observed_tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 1,
+      "latency_ms": 12194.245416999365,
+      "client_elapsed_ms": 12244.371,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-022",
+      "question_id": "week11-out-of-scope",
+      "request_id": "8e65feab-2196-4358-9752-9b97d5e32510",
+      "route": "OUT_OF_SCOPE",
+      "observed_tools": [],
+      "final_status": "OUT_OF_SCOPE",
+      "verification_code": "INSUFFICIENT_CONTEXT",
+      "citation_count": 0,
+      "latency_ms": 1514.3553699999757,
+      "client_elapsed_ms": 1546.523,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-023",
+      "question_id": "week11-retrieval-positive",
+      "request_id": "b12cba71-b4cf-4e45-9536-3844dd59bbd1",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_article"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 2,
+      "latency_ms": 12508.954054000242,
+      "client_elapsed_ms": 12564.132,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-024",
+      "question_id": "week11-valid-input-insufficient-context",
+      "request_id": "730f2a12-c2df-4435-84a7-9d90cf0d391d",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_article"
+      ],
+      "final_status": "INSUFFICIENT_CONTEXT",
+      "verification_code": "ARTICLE_NOT_FOUND",
+      "citation_count": 0,
+      "latency_ms": 7065.1133719993595,
+      "client_elapsed_ms": 7099.131,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    }
+  ]
+}

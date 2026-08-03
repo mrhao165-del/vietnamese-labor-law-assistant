@@ -1,0 +1,13 @@
+flowchart LR
+    B[Browser] --> F[React / Vite / TypeScript]
+    F --> N[Nginx static hosting + same-origin proxy]
+    N --> API[FastAPI]
+    API --> DB[(SQLite local persistence)]
+    API --> A[AgentService / finite LangGraph]
+    A -->|stdio child| MR[MCP Legal Retrieval]
+    A -->|stdio child| MC[MCP Legal Calculator]
+    MR --> Q[(Qdrant)]
+    MR --> L[BM25S / Underthesea + RRF + reranker]
+    MC --> C[Deterministic Article 20/35 rules]
+    A --> G[Fail-closed citation / semantic guardrail]
+    G --> API

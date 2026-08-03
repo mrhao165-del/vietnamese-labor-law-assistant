@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Week 12 round-3 reviewed by Tran Phu Hao</title>
+<style>
+body{font:14px system-ui,-apple-system,Segoe UI,Arial,sans-serif;margin:0;background:#f3f6fa;color:#172033;line-height:1.5}
+main{max-width:1400px;margin:auto;padding:24px}
+h1,h2,h3{color:#17365d}
+.notice{background:#e8f5e9;border:1px solid #9ac7a0;padding:14px;border-radius:8px}
+.case{background:#fff;border:1px solid #ced8e5;border-left:8px solid #2e7d32;border-radius:10px;padding:18px;margin:22px 0;box-shadow:0 2px 8px #0001}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.grid>div{background:#eef4fa;padding:8px;border-radius:6px;overflow:auto}
+.block{padding:12px;border-radius:7px;margin:8px 0}
+.answer{background:#edf7ed;border:1px solid #b9d8bd}
+.review{background:#fff8e1;border:1px solid #ebd999}
+pre{white-space:pre-wrap;word-break:break-word;margin:0;font:12px ui-monospace,Consolas,monospace}
+@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body><main>
+<h1>Week 12 round-3 — Human review completed</h1>
+<div class="notice"><strong>Kết quả:</strong> Trần Phú Hào đã xác nhận PASS cho cả 3 case vòng 3.</div>
+
+<section class="case">
+<h2>W12-R3-006 — Điều 20, Điều 32, Điều 35 và Điều 54 quy định gì?</h2>
+<div class="grid">
+<div><b>Router decision</b><pre>CLARIFY_ARTICLE_LIMIT</pre></div>
+<div><b>Internal route</b><pre>RETRIEVAL_ONLY</pre></div>
+<div><b>Outcome</b><pre>CLARIFICATION_REQUIRED</pre></div>
+<div><b>Verification</b><pre>{&quot;status&quot;: &quot;CLARIFICATION_REQUIRED&quot;, &quot;warnings&quot;: [], &quot;checks&quot;: []}</pre></div>
+</div>
+<h3>Câu trả lời đã sửa</h3>
+<div class="block answer">Bạn đã yêu cầu 4 điều luật. Hệ thống hỗ trợ tối đa 3 điều luật trong một yêu cầu. Vui lòng chọn hoặc chia danh sách để mỗi yêu cầu có tối đa 3 điều luật.</div>
+<h3>Human review</h3>
+<div class="block review">
+<b>Decision:</b> PASS<br>
+<b>Reviewer:</b> Tran Phu Hao<br>
+<b>Role:</b> Independent reviewer - law student<br>
+<b>Reviewed at:</b> 2026-08-03T22:58:00+07:00<br><br>
+<b>Evidence note:</b><br>Đã tự kiểm tra lại câu trả lời vòng 3, bằng chứng kỹ thuật và nội dung Bộ luật Lao động; đồng ý với kết quả AI pre-review và xác nhận PASS. Căn cứ: Không phải tranh chấp nội dung Bộ luật; đây là contract Agent/UX về giới hạn tối đa 3 Điều trong một yêu cầu. Đánh giá nội dung: Câu trả lời sửa nêu rõ người dùng đang yêu cầu 4 Điều, giải thích giới hạn tối đa 3 Điều và yêu cầu chọn hoặc chia danh sách. Nội dung rõ ràng, phù hợp và không tạo bất kỳ nhận định pháp lý chưa kiểm chứng nào. Đánh giá kỹ thuật: Router decision là CLARIFY_ARTICLE_LIMIT; route nội bộ RETRIEVAL_ONLY được tách riêng khỏi outcome CLARIFICATION_REQUIRED. Planned tools và observed tools đều rỗng; verification cũng là CLARIFICATION_REQUIRED, không còn bị ánh xạ sai thành INSUFFICIENT_CONTEXT; citations và warnings đều rỗng đúng contract. Kết luận: Có thể đánh PASS. Ghi chú: Vấn đề NEEDS_DISCUSSION ở vòng 2 đã được giải quyết: route, outcome và verification được biểu diễn riêng, còn clarification được giữ nguyên tới phản hồi công khai.
+</div>
+</section>
+
+<section class="case">
+<h2>W12-R3-008 — Người lao động nghỉ việc phải báo trước bao lâu theo luật?</h2>
+<div class="grid">
+<div><b>Router decision</b><pre>NOTICE_FRAMEWORK_OVERVIEW</pre></div>
+<div><b>Internal route</b><pre>RETRIEVAL_ONLY</pre></div>
+<div><b>Outcome</b><pre>WORKFLOW_VALID</pre></div>
+<div><b>Verification</b><pre>{&quot;status&quot;: &quot;SUPPORTED&quot;, &quot;warnings&quot;: [], &quot;checks&quot;: [{&quot;label&quot;: &quot;AGENT-CLM-SOURCE-01&quot;, &quot;passed&quot;: true}, {&quot;label&quot;: &quot;AGENT-CLM-SOURCE-02&quot;, &quot;passed&quot;: true}]}</pre></div>
+</div>
+<h3>Câu trả lời đã sửa</h3>
+<div class="block answer">1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:<br>a) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;<br>b) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;<br>c) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;<br>d) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.<br><br>2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:<br>a) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;<br>b) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;<br>c) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;<br>d) Bị quấy rối tình dục tại nơi làm việc;<br>đ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;<br>e) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;<br>g) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.</div>
+<h3>Human review</h3>
+<div class="block review">
+<b>Decision:</b> PASS<br>
+<b>Reviewer:</b> Tran Phu Hao<br>
+<b>Role:</b> Independent reviewer - law student<br>
+<b>Reviewed at:</b> 2026-08-03T22:58:00+07:00<br><br>
+<b>Evidence note:</b><br>Đã tự kiểm tra lại câu trả lời vòng 3, bằng chứng kỹ thuật và nội dung Bộ luật Lao động; đồng ý với kết quả AI pre-review và xác nhận PASS. Căn cứ: Điều 35 khoản 1 điểm a-d và khoản 2 điểm a-g. Đánh giá nội dung: Câu trả lời sửa đã nêu đầy đủ ma trận báo trước: ít nhất 45 ngày đối với hợp đồng không xác định thời hạn; ít nhất 30 ngày đối với hợp đồng xác định thời hạn từ 12 đến 36 tháng; ít nhất 03 ngày làm việc đối với hợp đồng dưới 12 tháng; ngành, nghề, công việc đặc thù theo quy định của Chính phủ. Đồng thời liệt kê đủ các trường hợp không cần báo trước tại khoản 2 Điều 35. Nội dung khớp nguồn luật. Đánh giá kỹ thuật: Router decision NOTICE_FRAMEWORK_OVERVIEW và route RETRIEVAL_ONLY phù hợp với câu hỏi tổng quan. Planned/observed tools cùng là một get_article. Hai citations tương ứng Điều 35 khoản 1 và khoản 2; verification SUPPORTED, toàn bộ checks PASS và không warning. Kết luận: Có thể đánh PASS. Ghi chú: Lỗi vòng 2 về thiếu các mốc 45/30/03 ngày và ngoại lệ đã được khắc phục hoàn toàn. Câu trả lời khá dài và gần nguyên văn nhưng đây là vấn đề trình bày, không phải lỗi pháp lý.
+</div>
+</section>
+
+<section class="case">
+<h2>W12-R3-019 — Tôi cần tính thời hạn hợp đồng</h2>
+<div class="grid">
+<div><b>Router decision</b><pre>CLARIFY_CONTRACT_DURATION_PURPOSE</pre></div>
+<div><b>Internal route</b><pre>CALCULATOR_ONLY</pre></div>
+<div><b>Outcome</b><pre>CLARIFICATION_REQUIRED</pre></div>
+<div><b>Verification</b><pre>{&quot;status&quot;: &quot;CLARIFICATION_REQUIRED&quot;, &quot;warnings&quot;: [], &quot;checks&quot;: []}</pre></div>
+</div>
+<h3>Câu trả lời đã sửa</h3>
+<div class="block answer">Bạn muốn (1) tính số ngày/tháng của hợp đồng, (2) xác định thời gian báo trước khi nghỉ việc, hay (3) phân loại hợp đồng? Nếu chọn (1), vui lòng cung cấp ngày bắt đầu và ngày kết thúc. Nếu chọn (2), vui lòng cho biết hợp đồng có thời hạn dưới 12 tháng, từ 12 đến 36 tháng, hay không xác định thời hạn, đồng thời cho biết có hoàn cảnh nào thuộc nhóm không cần báo trước tại khoản 2 Điều 35 hay không. Nếu chọn (3), vui lòng cung cấp điều khoản về thời hạn và thời điểm chấm dứt của hợp đồng.</div>
+<h3>Human review</h3>
+<div class="block review">
+<b>Decision:</b> PASS<br>
+<b>Reviewer:</b> Tran Phu Hao<br>
+<b>Role:</b> Independent reviewer - law student<br>
+<b>Reviewed at:</b> 2026-08-03T22:58:00+07:00<br><br>
+<b>Evidence note:</b><br>Đã tự kiểm tra lại câu trả lời vòng 3, bằng chứng kỹ thuật và nội dung Bộ luật Lao động; đồng ý với kết quả AI pre-review và xác nhận PASS. Căn cứ: Điều 20 khoản 1 điểm a-b: hợp đồng xác định thời hạn có thời hạn không quá 36 tháng; Điều 35 khoản 1 và khoản 2 cho nhánh tính thời hạn báo trước. Đánh giá nội dung: Câu trả lời sửa nhận diện đúng ba cách hiểu của yêu cầu: tính độ dài theo ngày/tháng, tính thời hạn báo trước, hoặc phân loại hợp đồng. Nó yêu cầu ngày bắt đầu/kết thúc cho phép tính lịch; phân biệt hợp đồng dưới 12 tháng, từ 12 đến 36 tháng và không xác định thời hạn cho phép tính báo trước; đồng thời hỏi về trường hợp không cần báo trước. Không còn phát biểu sai rằng mọi hợp đồng xác định thời hạn đều phải từ 12 đến 36 tháng. Đánh giá kỹ thuật: Router decision CLARIFY_CONTRACT_DURATION_PURPOSE; route nội bộ CALCULATOR_ONLY nhưng outcome và verification đều là CLARIFICATION_REQUIRED. Planned/observed tools rỗng, không đưa ra kết quả số khi thiếu dữ liệu; citations và warnings rỗng phù hợp với clarification không chứa kết luận pháp lý độc lập. Kết luận: Có thể đánh PASS. Ghi chú: Hai lỗi vòng 2—định nghĩa thiếu nhóm hợp đồng dưới 12 tháng và câu hỏi làm rõ không đủ tham số—đều đã được khắc phục.
+</div>
+</section>
+</main></body></html>

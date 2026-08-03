@@ -1,260 +1,311 @@
 # Vietnamese Labor Law AI Assistant
 
-Source-grounded assistance for the Vietnamese Labour Code. Week 11 adds a browser product around
-the existing retrieval, MCP, Agent, and Week 10 guardrail work.
+A portfolio-grade, source-grounded legal-information assistant for the Vietnamese Labour Code, with
+hybrid retrieval, deterministic calculators, finite Agent orchestration, real MCP stdio tools, and
+fail-closed citation verification.
 
-## Broad article lookup follow-up (2026-07-21)
+> **Legal disclaimer:** This project supports legal-information lookup. It is not a law firm, does
+> not provide professional legal advice, and must not be used as the sole basis for a legal decision.
+> Check the current authoritative law and consult a qualified professional when needed.
 
-The original operational smoke suite proved Article 35 only. A follow-up audit now calls the
-production `get_article` path for every article in the canonical processed corpus: **220/220** are
-retrievable, with zero missing canonical chunks, wrong-article chunks, or unknown chunk IDs. This
-rules out missing corpus records, Qdrant index coverage, and article-specific MCP mappings.
+![Current production architecture](docs/images/architecture.png)
 
-The manual Article 34/43 failures were in Agent evidence projection. Article 34 returned 13 valid
-contexts but exceeded the scorer's existing 10-context bound; cited contexts are now retained first
-and the existing bound is applied deterministically. Article 43 source prose contains legal
-cross-references; structured Agent citation IDs remain mandatory, but those source-internal
-references are no longer incorrectly treated as new direct citations. Numeric claims can only gain
-an already-retrieved canonical context containing the literal number, and the guardrail still checks
-the claim. A generic bounded source-projection fallback makes a second guardrail pass; it has no
-article-number branch, does not change `top_k` or thresholds, and cannot manufacture evidence.
+## Problem
 
-The operational live suite now passes **27/27** requests: the seven original scenario groups
-(11 requests) plus generic retrieval for Articles 20, 34, 35, 36, 43, 97, 105, 113, 138, and 169.
-Articles 34, 35, and 43 each passed three consecutive HTTP runs with canonical citations. Article
-999 remains a fail-closed negative control, not positive coverage.
+General-purpose LLMs can answer fluently while citing the wrong provision or inventing support. This
+project constrains answers to a canonical Vietnamese Labour Code snapshot, exposes deterministic
+rules through typed tools, and rejects claims that cannot pass citation and semantic checks.
 
-For a local clone smoke, Compose defaults to the clone's `.env` but accepts an external service
-environment file without copying a secret into the clone: set `APP_ENV_FILE` to its absolute path
-and pass the same path to `docker compose --env-file`. This is an environment-file selection only;
-the Docker build context still excludes `.env` and cache/runtime artifacts.
+## Scope
 
-The CPU Docker services set `HF_HUB_DISABLE_XET=1`. This preserves the BGE-M3 model and mounted
-runtime cache strategy but avoids the high-memory Xet downloader on a first clone startup; the
-ordinary Hugging Face HTTP downloader may make that first bootstrap slower.
+The system covers the repository's Vietnamese Labour Code snapshot and the calculator's existing
+Article 20/35 rules. It is a local, unauthenticated, single-user portfolio application. It does not
+cover every Vietnamese legal instrument, external implementing regulation, case-specific legal
+strategy, or legal representation.
 
-## Status
+## Key features
 
-`WEEK11_COMPLETE`: Week 11 tests and Docker runtime smoke passed. The supported browser runtime is
-React/Vite/TypeScript, not Streamlit. The checked Docker path is CPU-only; GPU support is not
-claimed.
+- React/Vite/TypeScript browser chat with history, citations, verification, sanitized tool traces,
+  and up/down feedback.
+- Nginx static hosting, SPA fallback, and same-origin proxy to FastAPI.
+- Dense BGE-M3 and Vietnamese BM25S/Underthesea retrieval, project-controlled RRF, and BGE reranking.
+- Locked production configuration: `R2_H2_C10_O5_L512_B1`.
+- Finite LangGraph workflow over project-owned retrieval and calculator MCP clients.
+- Real MCP servers run as stdio child processes inside the API container; they are not network MCP
+  microservices.
+- Deterministic Article 20/35 calculator with canonical legal provenance.
+- Claim/citation membership, semantic support checks, and fail-closed output policy.
+- Local SQLite conversation, message, and feedback persistence.
+- Reproducible offline evidence and CPU-only Docker Compose delivery.
 
-The selected retrieval configuration remains `R2_H2_C10_O5_L512_B1`:
-hybrid Underthesea retrieval, candidate 10, output 5, reranker max length 512, batch size 1.
-
-## Architecture
+## Current architecture
 
 ```text
-React/Vite/TypeScript browser
-        | same-origin HTTP only
-        v
-Nginx frontend -> FastAPI API -> AgentService -> project-owned MCP stdio children
-                                  |                   |- legal retrieval
-                                  |                   `- legal calculator
-                                  v
-                         Week 10 fail-closed guardrail
-
-FastAPI also owns the HTTP adapter and local SQLite conversation/message/feedback persistence.
+Browser
+  -> React / Vite / TypeScript
+  -> Nginx static frontend + same-origin proxy
+  -> FastAPI
+       -> SQLite persistence
+       -> AgentService / finite LangGraph
+            -> project-owned MCP stdio child: Legal Retrieval
+                 -> Qdrant dense retrieval
+                 -> Vietnamese BM25S / Underthesea lexical retrieval
+                 -> reciprocal-rank fusion + reranker
+            -> project-owned MCP stdio child: Legal Calculator
+                 -> deterministic Article 20/35 rules
+            -> fail-closed citation / semantic guardrail
 ```
 
-The browser never calls an LLM, Qdrant, or MCP server directly. FastAPI calls `AgentService`; the
-finite Agent calls the existing project MCP clients over stdio subprocesses. Final Agent output is
-projected through the Week 10 guardrail before it is persisted or returned.
+React replaced the earlier Streamlit direction and is the only current frontend. Docker was verified
+on CPU; GPU Docker support is not claimed.
 
-React replaced the earlier Streamlit direction because this product needs persistent browser-side
-conversation navigation, citation/verification/tool-trace panels, and a separately deployable
-static frontend. The Python package remains backend-only.
+## RAG pipeline
+
+![RAG pipeline](docs/images/rag-pipeline.png)
+
+The production path embeds the question with `BAAI/bge-m3`, retrieves dense candidates from Qdrant,
+and retrieves lexical candidates from a BM25S index tokenized with Underthesea. Project-owned
+reciprocal-rank fusion combines ranks without directly adding incompatible scores. The locked
+`BAAI/bge-reranker-v2-m3` stage reranks 10 candidates to 5 contexts using maximum length 512 and
+batch size 1.
+
+## Agent and MCP workflow
+
+![Finite Agent graph](docs/images/agent-graph.png)
+
+The structured router chooses retrieval, calculator, combined, out-of-scope, or clarification paths.
+The graph is finite: it cannot enter a free-form tool loop. Retrieval and calculation go through
+allowlisted project MCP clients and stdio servers. The Agent never accesses Qdrant or calculator
+business rules directly.
+
+## Citation verification and fail-closed behavior
+
+Generated claims carry structured citation IDs. The guardrail checks citation syntax, membership in
+the bounded retrieved/calculator evidence, canonical source identity, and semantic support. Missing,
+wrong, or unsupported evidence produces a safe `UNSUPPORTED` or `INSUFFICIENT_CONTEXT` result instead
+of an ungrounded answer. Thresholds remain 0.35/0.75; the optional LLM judge is disabled by default.
+
+## Browser UI
+
+The UI provides conversation navigation, message persistence, citation cards, verification details,
+sanitized tool traces, and feedback. The browser calls only FastAPI through Nginx. It never receives
+an API key or calls the LLM, Qdrant, or MCP directly.
+
+Screenshots/GIFs and the demo video are intentionally absent until captured from a real runtime.
+
+## Technology stack
+
+| Area | Technology |
+| --- | --- |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Nginx |
+| API and persistence | FastAPI, Pydantic, Uvicorn, SQLite |
+| Retrieval | BGE-M3, Qdrant, BM25S, Underthesea, RRF, BGE reranker |
+| Agent and tools | LangGraph, MCP Python SDK, project-owned stdio clients/servers |
+| Safety | Canonical source registry, citation parser, BGE semantic scorer, fail-closed policy |
+| Tooling | Python 3.11, uv, Ruff, Pyright, Pytest/coverage, npm, Docker Compose |
+
+## Evaluation methodology
+
+The portfolio keeps retrieval and system metrics separate:
+
+- **V1_DENSE:** current BGE-M3 dense baseline.
+- **V2_HYBRID:** dense + Vietnamese lexical + RRF, without reranking.
+- **V3_HYBRID_RERANKER:** locked production retrieval configuration.
+- **V4_MCP_AGENT_GUARDRAIL:** separate 40-case Agent and 40-case guardrail offline contract suites.
+
+V1–V3 use the same frozen DEV split (42 questions; 23 retrieval-eligible) and aligned corpus/dataset
+checksums. TEST was not used for tuning. Faithfulness, response relevancy, and answer correctness are
+not reported because no reproducible judge-backed metric exists in the repository.
+
+See [methodology](docs/evaluation/methodology.md) and the
+[row-level JSON](evaluation/results/week12/benchmark_summary.json).
+
+## Benchmark results
+
+![Retrieval benchmark](docs/images/evaluation-chart.png)
+
+| Tier | Split / sample | Hit@1 | Recall@5 | MRR | Mean / P95 latency |
+| --- | --- | ---: | ---: | ---: | ---: |
+| V1 Dense | DEV 42 (23 eligible) | 0.8696 | 1.0000 | 0.9217 | 620.18 / 263.69 ms |
+| V2 Hybrid | DEV 42 (23 eligible) | 0.7826 | 1.0000 | 0.8841 | 250.90 / 290.74 ms |
+| V3 Hybrid + reranker | DEV 42 (23 eligible) | 0.9565 | 1.0000 | 0.9783 | 3706.07 / 4999.47 ms |
+
+The preserved offline V4 contract suites remain 40 Agent and 40 guardrail cases. The final
+post-remediation V4 live evaluation adds 87 real Docker/LLM CPU attempts: route/tool selection was
+87/87, explicitly asserted parameters 22/22, clarification 19/19, canonical citation validity
+61/61, with zero timeouts or runner errors. Mean/P95 end-to-end latency was 11.632/25.848 seconds;
+complex CPU-only requests may take several or tens of seconds. See the
+[final Agent/guardrail report](docs/evaluation/final_agent_guardrail.md). V1-V3 retrieval results were
+not changed.
+
+## Repository structure
+
+```text
+src/vietnamese_labor_law_assistant/  production Python package
+  api/ agent/ calculator/ common/ evaluation/ generation/
+  guardrails/ ingestion/ mcp_clients/ mcp_servers/ retrieval/
+frontend/                            React/Vite/TypeScript application
+data/                                protected source, processed, and evaluation data
+evaluation/results/                  benchmark and verification evidence
+evaluation/review/                   Week 12 manual-review packet
+scripts/                             thin operational/generation entry points
+tests/                               unit, integration, and end-to-end tests
+docs/                                architecture, evaluation, and release documentation
+```
+
+Business logic stays in the production package. Scripts, API routes, and MCP servers are adapters.
 
 ## Prerequisites
 
-- Git
-- Python 3.11 and [uv](https://docs.astral.sh/uv/)
-- Node.js 20 and npm (for local Vite development)
-- Docker Desktop with Docker Compose (recommended clone-to-run path)
-- A configured, private LLM credential for live Agent chat
+- Git.
+- Python 3.11 and [uv](https://docs.astral.sh/uv/).
+- Node.js 20+ and npm for local frontend development.
+- Docker Desktop with Docker Compose for clone-to-run.
+- A valid private provider credential and network access for live Agent responses.
 
-No API key is committed or supplied to the frontend.
-
-## Clone and configure
-
-```powershell
-git clone <repository-url>
-cd vietnamese-labor-law-assistant
-Copy-Item .env.example .env
-```
-
-Edit the root `.env` and set `OPENAI_API_KEY`. Ensure `OPENAI_BASE_URL`, `LLM_MODEL`, and
-`LLM_PROVIDER` match the selected provider. Do not copy the root `.env` into `frontend/`.
-
-The canonical processed snapshot must already be available at:
-
-- `data/processed/labor_law_clauses.jsonl`
-- `data/processed/lexical/bm25s_underthesea/` (BM25S manifest/index)
-
-For local embedded-Qdrant development, `data/qdrant_local` must also already contain the selected
-collection. Docker uses a Qdrant server and bootstraps its named `qdrant_server_storage` volume
-from the read-only processed snapshot; it does not use the embedded local directory. Do not
-regenerate or alter canonical data, benchmark evidence, or the locked retrieval configuration as
-part of normal application startup.
-
-## Run with Docker Compose
-
-Docker Compose uses a Qdrant **server** in a persistent named volume. On the first start,
-`qdrant-index-bootstrap` indexes the read-only canonical processed snapshot into that volume using
-the configured BGE-M3 model on CPU. It writes bootstrap reports only to container `/tmp` and skips
-the work when the collection already has points. BM25 is loaded from the processed snapshot; it is
-not rebuilt by Compose.
-
-```powershell
-docker compose config
-docker compose up -d --build
-docker compose ps
-docker compose logs --no-color
-```
-
-The first run can take time to download Hugging Face models and build the Qdrant collection. The
-The host `.cache/huggingface` bind mount, plus the `qdrant_server_storage` and `runtime` named
-volumes, retain model cache, vectors, and SQLite data respectively. Models and credentials are not baked into images. Compose overrides
-`APP_DB_PATH` to `/runtime/app.sqlite3`, uses remote Qdrant at `http://qdrant:6333`, mounts
-`HF_HOME=/hf-cache` and `HF_HUB_CACHE=/hf-cache/hub`, and raises only bounded CPU warm-up
-timeouts. Do not pass a Windows host cache path as a Linux container value; Compose mounts the host
-cache at `/hf-cache`. Local development uses `.env` defaults.
-
-Open these URLs after `api` is healthy:
-
-- Frontend: `http://localhost:8080/`
-- Browser-visible API: `http://localhost:8080/api/v1/`
-- Health: `http://localhost:8080/health`
-- Readiness: `http://localhost:8080/ready`
-- OpenAPI document: `http://localhost:8080/openapi.json`
-
-`/health` confirms the web process is alive. `/ready` is stricter: it reports settings, canonical
-corpus, dense/Qdrant, BM25, locked reranker configuration, LLM configuration, warmed BGE-M3
-guardrail scorer (`guardrail_semantic`), and SQLite runtime database checks. Do not treat a failed
-`/ready` as a healthy deployment.
-
-The semantic scorer is a per-process singleton, explicitly uses CPU with fp16 disabled in Compose,
-and warms before readiness succeeds. Measured diagnostic samples were: constructor 10.4–14.2 s,
-cold encode/score 2.25–3.00 s, warm encode/score 0.38–0.49 s, and API startup warm-up 6.31–6.71 s.
-
-Router and answer structured output uses Pydantic validation and at most two repair retries after
-the initial attempt. The observed root classification was `ROUTER_SCHEMA_INVALID`. No MCP tool is
-called before a valid router plan; exhausted retries fail closed without exposing provider output.
-
-Stop containers while preserving the named volumes:
-
-```powershell
-docker compose down
-```
+The canonical processed snapshot and lexical index are versioned project inputs. Model caches,
+runtime databases, `.env`, `node_modules`, and `frontend/dist` are local/generated.
 
 ## Local development
 
-Use the local Qdrant mode and paths from root `.env`:
-
 ```powershell
-uv sync --all-groups
+uv sync --all-groups --frozen
 uv run uvicorn vietnamese_labor_law_assistant.api.main:app --host 127.0.0.1 --port 8000
 ```
 
-In a second terminal:
+In another terminal:
 
 ```powershell
-cd frontend
-Copy-Item .env.example .env
+Set-Location frontend
 npm ci
 npm run dev
 ```
 
-`frontend/.env` contains only the public `VITE_API_BASE_URL`; it is suitable for a local Vite
-server calling FastAPI at port 8000. In Docker, leave it unset so the frontend uses same-origin
-Nginx proxies.
+Use `frontend/.env.example` only for the public local Vite base URL. Never put credentials in
+`VITE_*` variables.
 
-## Browser chat smoke
+## Docker clone-to-run
 
-1. Open the frontend and wait for a ready status.
-2. Ask: `Điều 35 quy định những trường hợp nào người lao động không cần báo trước?`
-3. Open the returned citation, tool trace, and verification panels.
-4. Ask: `Tôi làm việc theo hợp đồng không xác định thời hạn thì cần báo trước bao lâu?`
-5. Ask: `Hợp đồng của tôi có thời hạn 24 tháng, nếu nghỉ việc thì thời hạn báo trước và căn cứ pháp lý là gì?`
-6. Ask: `Tôi bị xử phạt giao thông thì phải làm gì?` and confirm the out-of-scope refusal has no
-   fabricated tool trace.
-
-Conversations, messages, and up/down feedback are stored in SQLite. Reload the page to confirm
-local history persists; delete a conversation from the UI when it is no longer needed.
-
-The repeatable operational suite is `uv run python scripts/run_week11_live_smoke.py`. Its fixtures
-under `tests/end_to_end/fixtures/` are operational, not frozen benchmark data. The 2026-07-21
-Compose run passed 11/11 requests: retrieval positive 3/3, calculator 1/1, combined positive 3/3,
-combined missing-source fail-closed 1/1, out-of-scope 1/1, valid-input insufficient-context 1/1,
-and `w9-019` clarification-required 1/1. Every returned citation resolved to the canonical source;
-no request returned HTTP 504. Conversation/message/feedback IDs survived an API restart.
-
-Clarification, out-of-scope, insufficient-context, unsupported, and output-invalid are separate
-contracts. They must not be substituted for one another to satisfy a smoke test.
-
-### Bounded multi-article queries
-
-The Agent supports one to three distinct article targets per request by default
-(`AGENT_MAX_ARTICLES_PER_REQUEST=3`). It creates an ordered plan of repeated `get_article` calls
-with unique call IDs; the executor validates and traces every call independently. Duplicate article
-numbers are collapsed while preserving first-appearance order. No new MCP tool or larger global
-context budget is used.
-
-Evidence remains associated with its article, call ID, tool name, and canonical chunk ID. Context
-projection reserves coverage for every valid target before applying the unchanged global context
-limit, and the guardrail rejects a claim that cites another target article. A valid article remains
-available when another requested article is missing, with an article-specific warning; all-missing
-requests return insufficient context. Requests above the configured limit return a safe
-clarification without calling MCP.
-
-The 2026-07-28 Compose regression passed 11/11 bounded multi-article runs, including stable
-two-article queries, a three-article query, duplicate deduplication, mixed valid/missing,
-all-missing, and over-limit cases. Run it with:
+The verified path is CPU-only:
 
 ```powershell
-uv run python scripts/run_week11_live_smoke.py `
-  --fixtures tests/end_to_end/fixtures/multi_article_live_cases.json `
-  --timeout 180
+git clone <repository-url>
+Set-Location vietnamese-labor-law-assistant
+Copy-Item .env.example .env
+# Edit .env privately and set a valid provider credential.
+docker compose --env-file .env config --quiet
+docker compose --env-file .env up -d --build --wait
+docker compose --env-file .env ps
 ```
 
-## API surface
+Open `http://localhost:8080/` and verify `http://localhost:8080/ready`. The first startup may download
+models and bootstrap Qdrant. Named volumes retain Qdrant and SQLite state.
 
-Week 11 browser endpoints:
+Stop without deleting persistent volumes:
 
-- `POST /api/v1/chat`
-- `GET`/`POST /api/v1/conversations`
-- `GET`/`DELETE /api/v1/conversations/{conversation_id}` (messages are on the `GET` route)
-- `PUT /api/v1/messages/{message_id}/feedback`
+```powershell
+docker compose --env-file .env down
+```
 
-The established direct retrieval/RAG endpoints remain available under `/api/v1/`; see
-`/openapi.json` for the generated contract.
+## External environment-file handling
 
-## Security and legal notes
+To keep credentials outside the clone, point both Compose interpolation and service `env_file` at the
+same absolute file:
 
-- Keep `.env` private. Docker receives it at runtime with `env_file`; the frontend receives no
-  API key and no `VITE_*` secret.
-- The retrieval MCP child receives only cache and non-secret Qdrant runtime variables, not the
-  full API process environment.
-- Public errors and tool traces are sanitized; traces omit prompts, questions, tokens, exception
-  strings, and other sensitive fields.
-- Canonical data is mounted read-only in Compose. SQLite is mutable runtime state and is not
-  canonical legal data.
-- This system is informational and source-grounded assistance, not legal advice. Verify important
-  decisions against the applicable law and a qualified professional.
+```powershell
+$env:APP_ENV_FILE = 'D:\private\vietnamese-labor-law.env'
+docker compose --env-file $env:APP_ENV_FILE config --quiet
+docker compose --env-file $env:APP_ENV_FILE up -d --build --wait
+```
+
+Do not copy the external file into the repository. `.env` and `.env.*` remain ignored except
+`.env.example`.
+
+## API overview
+
+- `GET /health` — process liveness.
+- `GET /ready` — corpus, retrieval, reranker, LLM configuration, semantic scorer, and SQLite checks.
+- `POST /api/v1/chat` — finite Agent chat.
+- `GET|POST /api/v1/conversations` — local conversation history.
+- `GET /api/v1/conversations/{id}/messages` and `DELETE /api/v1/conversations/{id}`.
+- `PUT /api/v1/messages/{id}/feedback`.
+- Existing direct search/source/RAG endpoints under `/api/v1/`.
+- `GET /openapi.json` — generated API contract.
+
+## Testing and quality gates
+
+```powershell
+python .agents/skills/project-quality-gate/scripts/run_project_quality_gate.py
+Set-Location frontend
+npm ci
+npm run typecheck
+npm run lint
+npm run build
+npm audit --omit dev --audit-level high
+```
+
+Week 12 also validates benchmark schema/reproducibility, diagram regeneration, documentation paths,
+protected artefacts, ignored runtime files, and Compose configuration. Live LLM/Docker smoke remains
+a documented release gate because it requires credentials, models, network access, and Docker.
+
+## Security and privacy
+
+- Secrets are runtime-only; the frontend never receives them.
+- MCP children receive an allowlisted environment rather than the full API environment.
+- Tool traces and public errors omit prompts, tokens, exception text, and secret-bearing fields.
+- Canonical data is read-only in Compose; mutable SQLite data uses a separate named volume.
+- No authentication or multi-user isolation is implemented. Do not expose this local deployment to
+  untrusted networks.
+- Conversations may contain personal facts. Delete local history when it is no longer required.
 
 ## Known limitations
 
-- Live Agent responses require a valid configured LLM provider and network access.
-- The calculator is deterministic and covers only the existing Article 20/35 rules; it is not a
-  general legal-reasoning engine.
-- The Week 10 guardrail may safely return `UNSUPPORTED` or `INSUFFICIENT_CONTEXT` instead of a
-  generated claim. Ambiguous wording can also be rejected as invalid output.
-- SQLite history is local, unauthenticated, and intended for a single local deployment.
-- Docker CPU runtime was verified; GPU execution was not.
-- Production npm audit reports zero vulnerabilities. Advisory findings in the development/build
-  dependency tree are not copied into the final Nginx image.
-- Full Python verification on 2026-07-28: 319 passed, 0 failed, 86.56% coverage; Week 1–10
-  regression and the protected-artifact scanner passed.
-- Video demonstration and release publication remain Week 12 work.
+- Live Agent responses depend on provider availability, credentials, and network behavior.
+- The legal corpus is a snapshot and may not reflect later amendments or external regulations.
+- The calculator supports only its existing Article 20/35 rules. Article 35(2) no-notice cases take
+  precedence over ordinary duration-based notice and preserve external or clarification qualifiers.
+- Fail-closed verification can reject a useful but insufficiently supported answer.
+- SQLite is local, unauthenticated, and single-user.
+- CPU Docker has evidence; GPU Docker does not.
+- Round-1, round-2, and round-3 human evidence is preserved. All three round-3 cases passed
+  independent review; final technical validation also passed.
+- Screenshots/GIF, demo video, license choice, tag, and GitHub Release are manual actions after
+  technical/review completion.
 
-See [Week 11 delivery details](docs/week11.md), the [repository architecture guide](docs/architecture/repository_structure.md), and [handover.md](handover.md).
+## Demo scenarios
+
+1. Ask what Article 35 says and inspect citations.
+2. Ask the notice period for an indefinite contract.
+3. Ask the 24-month combined calculator-and-legal-basis question.
+4. Ask about traffic penalties and observe the out-of-scope refusal.
+5. Ask for Article 999 and observe insufficient context.
+6. Ask about two valid articles, then a valid/missing pair.
+7. Add feedback, reload, and confirm SQLite persistence.
+
+Use the [recording guide](docs/releases/demo_recording_guide.md) for the real 3–5 minute demo.
+
+## Reproducibility
+
+The versioned [final release manifest](evaluation/results/week12/final_release_manifest.json)
+identifies the current post-remediation candidate while preserving historical release and remediation
+manifests unchanged. It records the corpus, dataset, split, lockfiles, Compose candidate, review
+archives, config, and guardrail thresholds without secrets. See
+[manifest documentation](docs/releases/final_release_manifest.md).
+
+## Release status
+
+Current status is `WEEK12_TECHNICAL_AND_REVIEW_COMPLETE_MANUAL_RELEASE_ACTIONS_REQUIRED`. Independent
+round-3 review and final technical validation passed. License selection, genuine media, GitHub README
+rendering review, final commit/push and successful release-commit Actions, annotated tag, GitHub
+Release, and CV/LinkedIn updates remain manual. See the [release checklist](docs/releases/release_checklist.md).
+
+## License
+
+No repository license has been selected. Until the owner chooses and adds a `LICENSE`, no open-source
+license is asserted by this README.
+
+## Acknowledgements and data attribution
+
+The project uses the Vietnamese Labour Code source snapshot documented by
+`data/raw/source_metadata.json`. Retrieval uses BAAI BGE models, Qdrant, BM25S, and Underthesea;
+orchestration uses LangGraph and MCP; the product uses FastAPI, React, Vite, Nginx, and SQLite.

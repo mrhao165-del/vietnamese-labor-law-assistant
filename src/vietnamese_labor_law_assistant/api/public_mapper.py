@@ -11,12 +11,25 @@ from .chat_models import CitationResponse, ToolTraceResponse, VerificationRespon
 
 _INTERNAL_INSUFFICIENT_CODE = "INSUFFICIENT_VERIFIED_EVIDENCE"
 _INSUFFICIENT_USER_MESSAGE = "Chưa đủ căn cứ pháp lý đã kiểm chứng để trả lời an toàn."
+_SAFE_FAILURE_MESSAGES = {
+    "CLARIFICATION_REQUIRED": ("Cần thêm thông tin cụ thể trước khi có thể trả lời chính xác."),
+    "ARTICLE_NOT_FOUND": "Không tìm thấy điều luật được yêu cầu trong bộ dữ liệu hiện tại.",
+    "INSUFFICIENT_CONTEXT": _INSUFFICIENT_USER_MESSAGE,
+    "UNSUPPORTED": "Câu trả lời chưa có đủ bằng chứng để xác minh.",
+    "OUT_OF_SCOPE": "Yêu cầu nằm ngoài phạm vi Bộ luật Lao động được hệ thống hỗ trợ.",
+    "OUTPUT_INVALID": "Không thể hoàn tất yêu cầu một cách an toàn.",
+}
 
 
-def public_answer(answer: str, verification: dict[str, Any] | None) -> str:
+def public_answer(
+    answer: str,
+    verification: dict[str, Any] | None,
+    workflow_status: str | None = None,
+) -> str:
     """Never expose an internal fail-closed sentinel as browser answer text."""
     if answer == _INTERNAL_INSUFFICIENT_CODE:
-        return _INSUFFICIENT_USER_MESSAGE
+        code = verification_code(verification) or workflow_status or "INSUFFICIENT_CONTEXT"
+        return _SAFE_FAILURE_MESSAGES.get(code, _INSUFFICIENT_USER_MESSAGE)
     return answer
 
 
@@ -126,4 +139,9 @@ def verification_for(result: AgentResult) -> VerificationResponse | None:
 
 def public_message_content(content: str, metadata: dict[str, Any] | None = None) -> str:
     """Normalize legacy persisted sentinel answers at the HTTP boundary."""
-    return public_answer(content, (metadata or {}).get("verification"))
+    safe_metadata = metadata or {}
+    return public_answer(
+        content,
+        safe_metadata.get("verification"),
+        safe_metadata.get("final_status"),
+    )

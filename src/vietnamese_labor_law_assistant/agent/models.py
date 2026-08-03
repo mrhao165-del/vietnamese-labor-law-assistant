@@ -55,10 +55,14 @@ class PlannedToolCall(BaseModel):
             raise ValueError(
                 "get_clause requires positive integer article_number and clause_number"
             )
-        if self.tool_name is ToolName.CALCULATE_NOTICE_PERIOD and not arguments.get(
-            "contract_type"
+        if (
+            self.tool_name is ToolName.CALCULATE_NOTICE_PERIOD
+            and not arguments.get("contract_type")
+            and arguments.get("special_case") in {None, "NONE"}
         ):
-            raise ValueError("calculate_notice_period requires contract_type")
+            raise ValueError(
+                "calculate_notice_period requires contract_type or a no-notice special_case"
+            )
         if self.tool_name is ToolName.CALCULATE_CONTRACT_DURATION and not all(
             arguments.get(key) for key in ("contract_type", "start_date", "end_date")
         ):
@@ -146,6 +150,12 @@ class RouterOutput(BaseModel):
                 )
         deduplicated: list[PlannedToolCall] = []
         seen_articles: set[int] = set()
+        clause_articles: set[int] = set()
+        for call in plan:
+            clause_article = call.arguments.get("article_number")
+            if call.tool_name is ToolName.GET_CLAUSE and _positive_integer(clause_article):
+                assert isinstance(clause_article, int)
+                clause_articles.add(clause_article)
         for call in plan:
             if call.tool_name is ToolName.GET_ARTICLE:
                 raw_article_number = call.arguments["article_number"]
@@ -153,6 +163,8 @@ class RouterOutput(BaseModel):
                     raise ValueError("get_article requires positive integer article_number")
                 assert isinstance(raw_article_number, int)
                 article_number = raw_article_number
+                if article_number in clause_articles:
+                    continue
                 if article_number in seen_articles:
                     continue
                 seen_articles.add(article_number)
@@ -164,7 +176,7 @@ class AgentAtomicClaim(BaseModel):
     model_config = ConfigDict(extra="forbid")
     claim_id: str = Field(pattern=r"^AGENT-CLM-[A-Za-z0-9_-]+$", max_length=80)
     text: str = Field(min_length=1, max_length=1200)
-    citation_chunk_ids: list[str] = Field(default_factory=list, max_length=10)
+    citation_chunk_ids: list[str] = Field(default_factory=list, max_length=20)
     target_article_number: int | None = Field(default=None, gt=0)
 
 
@@ -174,8 +186,8 @@ class AgentAnswerDraft(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     answer: str = Field(min_length=1, max_length=6000)
-    citation_chunk_ids: list[str] = Field(default_factory=list, max_length=10)
-    claims: list[AgentAtomicClaim] = Field(min_length=1, max_length=12)
+    citation_chunk_ids: list[str] = Field(default_factory=list, max_length=20)
+    claims: list[AgentAtomicClaim] = Field(min_length=1, max_length=20)
     warning: str | None = Field(default=None, max_length=500)
 
     @model_validator(mode="after")
@@ -189,6 +201,19 @@ class AgentAnswerDraft(BaseModel):
         ):
             raise ValueError("claim citation IDs must be unique")
         return self
+
+
+class GeneratedAgentAtomicClaim(AgentAtomicClaim):
+    """Provider-facing bounded claim schema kept within structured-output limits."""
+
+    citation_chunk_ids: list[str] = Field(default_factory=list, max_length=10)
+
+
+class GeneratedAgentAnswerDraft(AgentAnswerDraft):
+    """Provider-facing schema; internal source projection may retain more evidence."""
+
+    citation_chunk_ids: list[str] = Field(default_factory=list, max_length=10)
+    claims: list[GeneratedAgentAtomicClaim] = Field(min_length=1, max_length=10)
 
 
 class ToolTrace(BaseModel):
@@ -216,6 +241,8 @@ class AgentResult(BaseModel):
     request_id: str
     question: str
     intent: AgentIntent | None = None
+    router_decision: str | None = Field(default=None, max_length=80)
+    planned_tools: list[ToolName] = Field(default_factory=list, max_length=10)
     status: WorkflowStatus
     answer: str
     disclaimer: str
@@ -235,6 +262,7 @@ class AgentState(TypedDict, total=False):
     intent: str | None
     route_status: str | None
     router_output: dict[str, Any] | None
+    router_decision: str | None
     missing_parameters: list[str]
     clarification_question: str | None
     tool_plan: list[dict[str, Any]]

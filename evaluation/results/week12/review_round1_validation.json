@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS_RELEASE_BLOCKED",
+  "validated_at": "2026-07-30T15:29:20.4666130+00:00",
+  "source": {
+    "path": "evaluation/review/week12_manual_review_packet.csv",
+    "sha256": "2a03422784aa3586ace61f3ee9243bc2a27f6c6d3c29ee35848bbe542ca4a8f7"
+  },
+  "archive": {
+    "path": "evaluation/review/archive/round1/week12_manual_review_packet_reviewed_round1.csv",
+    "already_existed": true,
+    "sha256": "2a03422784aa3586ace61f3ee9243bc2a27f6c6d3c29ee35848bbe542ca4a8f7",
+    "checksum_matches_source": true,
+    "overwritten": false
+  },
+  "rows": {
+    "count": 24,
+    "unique_review_id_count": 24,
+    "duplicate_review_ids": []
+  },
+  "decisions": {
+    "allowed_values": [
+      "PASS",
+      "FAIL",
+      "NEEDS_DISCUSSION"
+    ],
+    "counts": {
+      "PASS": 15,
+      "FAIL": 8,
+      "NEEDS_DISCUSSION": 1
+    },
+    "fail_review_ids": [
+      "W12-001",
+      "W12-003",
+      "W12-006",
+      "W12-008",
+      "W12-011",
+      "W12-012",
+      "W12-015",
+      "W12-019"
+    ],
+    "needs_discussion_review_ids": [
+      "W12-010"
+    ],
+    "matches_expected_distribution": true
+  },
+  "reviewer_metadata": {
+    "reviewer_name_complete": true,
+    "reviewer_role_complete": true,
+    "reviewed_at_complete": true,
+    "reviewed_at_iso8601_parseable": true,
+    "evidence_note_complete": true,
+    "personal_details_copied_to_report": false
+  },
+  "packet_contract": {
+    "column_count": 28,
+    "generated_evidence_columns_present": true,
+    "ai_prereview_columns_separate_from_human_reviewer_columns": true,
+    "human_reviewer_columns": [
+      "reviewer_decision",
+      "reviewer_name",
+      "reviewer_role",
+      "reviewed_at",
+      "evidence_note"
+    ],
+    "generator_initializes_human_reviewer_columns_blank": true,
+    "generator_validation_rejects_nonblank_human_reviewer_columns": true,
+    "immutable_columns_match_archive": true,
+    "full_file_matches_archive": true
+  },
+  "affected_review_ids": [
+    "W12-001",
+    "W12-003",
+    "W12-006",
+    "W12-008",
+    "W12-010",
+    "W12-011",
+    "W12-012",
+    "W12-015",
+    "W12-019"
+  ],
+  "blockers": [
+    "Eight round-1 FAIL decisions require remediation.",
+    "One round-1 NEEDS_DISCUSSION decision requires remediation and human re-review.",
+    "The v1.0.0 release remains blocked until round-2 human approval and final release validation."
+  ]
+}

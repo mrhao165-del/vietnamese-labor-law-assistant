@@ -1,0 +1,25 @@
+{
+  "schema_version": "4.0",
+  "status": "PASS",
+  "evaluation_name": "post_remediation_final_agent_guardrail_v4",
+  "sample_count": 87,
+  "targeted_set": "Week 11 smoke and multi-article cases, round-1 PASS cases, round-2 PASS cases, and round-3 targeted cases",
+  "provenance": "LIVE_DOCKER_CPU_LLM",
+  "metrics": {
+    "route_tool_selection_accuracy": {"value": 1.0, "numerator": 87, "denominator": 87},
+    "parameter_accuracy": {"value": 1.0, "numerator": 22, "denominator": 22, "scope": "explicit get_article and calculator parameter assertions"},
+    "tool_call_success": {"value": 1.0, "numerator": 90, "denominator": 90, "definition": "expected observed tool calls with no unexpected runner error"},
+    "clarification_accuracy": {"value": 1.0, "numerator": 19, "denominator": 19},
+    "out_of_scope_accuracy": {"value": 1.0, "numerator": 2, "denominator": 2},
+    "insufficient_context_accuracy": {"value": 1.0, "numerator": 5, "denominator": 5},
+    "citation_existence": {"value": 1.0, "numerator": 61, "denominator": 61, "scope": "responses expected to contain legal citations"},
+    "citation_validity": {"value": 1.0, "numerator": 61, "denominator": 61},
+    "citation_support": {"value": 0.967213, "fully_supported": 59, "partially_supported": 2, "denominator": 61},
+    "timeout_rate": {"value": 0.0, "numerator": 0, "denominator": 87},
+    "error_rate": {"value": 0.0, "numerator": 0, "denominator": 87},
+    "mean_latency_ms": 11631.858,
+    "p95_latency_ms": 25848.472
+  },
+  "latency_classification": "Real end-to-end Docker/LLM CPU latency",
+  "historical_retrieval_metrics": "V1-V3 unchanged"
+}

@@ -1,0 +1,3170 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP",
+  "generated_at": "2026-07-30T16:58:02.997479+00:00",
+  "attempt_count": 23,
+  "passed": 23,
+  "failed": 0,
+  "attempts": [
+    {
+      "original_review_id": "W12-001",
+      "run_index": 1,
+      "request_id": "c1949602-dc16-409c-9caa-8e5372603e14",
+      "question": "Điều 20, Điều 35 và Điều 169 quy định gì?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        "get_article",
+        "get_article",
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article",
+        "get_article",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 20
+        },
+        {
+          "article_number": 35
+        },
+        {
+          "article_number": 169
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Điều 20:\n- 1. Hợp đồng lao động phải được giao kết theo một trong các loại sau đây:\na) Hợp đồng lao động không xác định thời hạn là hợp đồng mà trong đó hai bên không xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng;\nb) Hợp đồng lao động xác định thời hạn là hợp đồng mà trong đó hai bên xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng trong thời gian không quá 36 tháng kể từ thời điểm có hiệu lực của hợp đồng.\n- 2. Khi hợp đồng lao động quy định tại điểm b khoản 1 Điều này hết hạn mà người lao động vẫn tiếp tục làm việc thì thực hiện như sau:\na) Trong thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn, hai bên phải ký kết hợp đồng lao động mới; trong thời gian chưa ký kết hợp đồng lao động mới thì quyền, nghĩa vụ và lợi ích của hai bên được thực hiện theo hợp đồng đã giao kết;\nb) Nếu hết thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn mà hai bên không ký kết hợp đồng lao động mới thì hợp đồng đã giao kết theo quy định tại điểm b khoản 1 Điều này trở thành hợp đồng lao động không xác định thời hạn;\nc) Trường hợp hai bên ký kết hợp đồng lao động mới là hợp đồng lao động xác định thời hạn thì cũng chỉ được ký thêm 01 lần, sau đó nếu người lao động vẫn tiếp tục làm việc thì phải ký kết hợp đồng lao động không xác định thời hạn, trừ hợp đồng lao động đối với người được thuê làm giám đốc trong doanh nghiệp có vốn nhà nước và trường hợp quy định tại khoản 1 Điều 149, khoản 2 Điều 151 và khoản 4 Điều 177 của Bộ luật này.\n\nĐiều 35:\n- 1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n- 2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.\n\nĐiều 169:\n- 1. Người lao động bảo đảm điều kiện về thời gian đóng bảo hiểm xã hội theo quy định của pháp luật về bảo hiểm xã hội được hưởng lương hưu khi đủ tuổi nghỉ hưu.\n- 2. Tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường được điều chỉnh theo lộ trình cho đến khi đủ 62 tuổi đối với lao động nam vào năm 2028 và đủ 60 tuổi đối với lao động nữ vào năm 2035.\nKể từ năm 2021, tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường là đủ 60 tuổi 03 tháng đối với lao động nam và đủ 55 tuổi 04 tháng đối với lao động nữ; sau đó, cứ mỗi năm tăng thêm 03 tháng đối với lao động nam và 04 tháng đối với lao động nữ.\n- 3. Người lao động bị suy giảm khả năng lao động; làm nghề, công việc đặc biệt nặng nhọc, độc hại, nguy hiểm; làm nghề, công việc nặng nhọc, độc hại, nguy hiểm; làm việc ở vùng có điều kiện kinh tế - xã hội đặc biệt khó khăn có thể nghỉ hưu ở tuổi thấp hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.\n- 4. Người lao động có trình độ chuyên môn, kỹ thuật cao và một số trường hợp đặc biệt có thể nghỉ hưu ở tuổi cao hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.\n- 5. Chính phủ quy định chi tiết Điều này.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_d0c5f537983c0aad635529f412e426f5",
+          "article_number": 20,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hợp đồng lao động phải được giao kết theo một trong các loại sau đây:\na) Hợp đồng lao động không xác định thời hạn là hợp đồng mà trong đó hai bên không xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng;\nb) Hợp đồng lao động xác định thời hạn là hợp đồng mà trong đó hai bên xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng trong thời gian không quá 36 tháng kể từ thời điểm có hiệu lực của hợp đồng.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 3,
+          "chunk_id": "ll_dbd3abadeef0463d361d9e82afe24065",
+          "article_number": 169,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động bảo đảm điều kiện về thời gian đóng bảo hiểm xã hội theo quy định của pháp luật về bảo hiểm xã hội được hưởng lương hưu khi đủ tuổi nghỉ hưu.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 4,
+          "chunk_id": "ll_3496d03c125f3647e4b59d17ba1517aa",
+          "article_number": 20,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Khi hợp đồng lao động quy định tại điểm b khoản 1 Điều này hết hạn mà người lao động vẫn tiếp tục làm việc thì thực hiện như sau:\na) Trong thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn, hai bên phải ký kết hợp đồng lao động mới; trong thời gian chưa ký kết hợp đồng lao động mới thì quyền, nghĩa vụ và lợi ích của hai bên được thực hiện theo hợp đồng đã giao kết;\nb) Nếu hết thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn mà hai bên không ký kết hợp đồng lao động mới thì hợp đồng đã giao kết theo quy định tại điểm b khoản 1 Điều này trở thành hợp đồng lao động không xác định thời hạn;\nc) Trường hợp hai bên ký kết hợp đồng lao động mới là hợp đồng lao động xác định thời hạn thì cũng chỉ được ký thêm 01 lần, sau đó nếu người lao động vẫn tiếp tục làm việc thì phải ký kết hợp đồng lao động không xác định thời hạn, trừ hợp đồng lao động đối với người được thuê làm giám đốc trong doanh nghiệp có vốn nhà nước và trường hợp quy định tại khoản 1 Điều 149, khoản 2 Điều 151 và khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 5,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 6,
+          "chunk_id": "ll_d46b468f7e75375226fc9255165252c0",
+          "article_number": 169,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường được điều chỉnh theo lộ trình cho đến khi đủ 62 tuổi đối với lao động nam vào năm 2028 và đủ 60 tuổi đối với lao động nữ vào năm 2035.\nKể từ năm 2021, tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường là đủ 60 tuổi 03 tháng đối với lao động nam và đủ 55 tuổi 04 tháng đối với lao động nữ; sau đó, cứ mỗi năm tăng thêm 03 tháng đối với lao động nam và 04 tháng đối với lao động nữ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 7,
+          "chunk_id": "ll_5e5c61808a0cf9a202766600043297b2",
+          "article_number": 169,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Người lao động bị suy giảm khả năng lao động; làm nghề, công việc đặc biệt nặng nhọc, độc hại, nguy hiểm; làm nghề, công việc nặng nhọc, độc hại, nguy hiểm; làm việc ở vùng có điều kiện kinh tế - xã hội đặc biệt khó khăn có thể nghỉ hưu ở tuổi thấp hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 8,
+          "chunk_id": "ll_b5fc7f7303def7fcc05a56cc012b391e",
+          "article_number": 169,
+          "clause_number": 4,
+          "point_label": null,
+          "excerpt": "4. Người lao động có trình độ chuyên môn, kỹ thuật cao và một số trường hợp đặc biệt có thể nghỉ hưu ở tuổi cao hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 9,
+          "chunk_id": "ll_d58c1ac5280f87afac6ff26e225a8f7b",
+          "article_number": 169,
+          "clause_number": 5,
+          "point_label": null,
+          "excerpt": "5. Chính phủ quy định chi tiết Điều này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-03",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-04",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-05",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-06",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-07",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-08",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-09",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 40925.76393000036,
+      "client_elapsed_ms": 40988.319,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-001",
+      "run_index": 2,
+      "request_id": "f5a96f90-ec6c-49f8-9b76-23caee7d2247",
+      "question": "Điều 20, Điều 35 và Điều 169 quy định gì?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        "get_article",
+        "get_article",
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article",
+        "get_article",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 20
+        },
+        {
+          "article_number": 35
+        },
+        {
+          "article_number": 169
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Điều 20:\n- 1. Hợp đồng lao động phải được giao kết theo một trong các loại sau đây:\na) Hợp đồng lao động không xác định thời hạn là hợp đồng mà trong đó hai bên không xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng;\nb) Hợp đồng lao động xác định thời hạn là hợp đồng mà trong đó hai bên xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng trong thời gian không quá 36 tháng kể từ thời điểm có hiệu lực của hợp đồng.\n- 2. Khi hợp đồng lao động quy định tại điểm b khoản 1 Điều này hết hạn mà người lao động vẫn tiếp tục làm việc thì thực hiện như sau:\na) Trong thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn, hai bên phải ký kết hợp đồng lao động mới; trong thời gian chưa ký kết hợp đồng lao động mới thì quyền, nghĩa vụ và lợi ích của hai bên được thực hiện theo hợp đồng đã giao kết;\nb) Nếu hết thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn mà hai bên không ký kết hợp đồng lao động mới thì hợp đồng đã giao kết theo quy định tại điểm b khoản 1 Điều này trở thành hợp đồng lao động không xác định thời hạn;\nc) Trường hợp hai bên ký kết hợp đồng lao động mới là hợp đồng lao động xác định thời hạn thì cũng chỉ được ký thêm 01 lần, sau đó nếu người lao động vẫn tiếp tục làm việc thì phải ký kết hợp đồng lao động không xác định thời hạn, trừ hợp đồng lao động đối với người được thuê làm giám đốc trong doanh nghiệp có vốn nhà nước và trường hợp quy định tại khoản 1 Điều 149, khoản 2 Điều 151 và khoản 4 Điều 177 của Bộ luật này.\n\nĐiều 35:\n- 1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n- 2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.\n\nĐiều 169:\n- 1. Người lao động bảo đảm điều kiện về thời gian đóng bảo hiểm xã hội theo quy định của pháp luật về bảo hiểm xã hội được hưởng lương hưu khi đủ tuổi nghỉ hưu.\n- 2. Tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường được điều chỉnh theo lộ trình cho đến khi đủ 62 tuổi đối với lao động nam vào năm 2028 và đủ 60 tuổi đối với lao động nữ vào năm 2035.\nKể từ năm 2021, tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường là đủ 60 tuổi 03 tháng đối với lao động nam và đủ 55 tuổi 04 tháng đối với lao động nữ; sau đó, cứ mỗi năm tăng thêm 03 tháng đối với lao động nam và 04 tháng đối với lao động nữ.\n- 3. Người lao động bị suy giảm khả năng lao động; làm nghề, công việc đặc biệt nặng nhọc, độc hại, nguy hiểm; làm nghề, công việc nặng nhọc, độc hại, nguy hiểm; làm việc ở vùng có điều kiện kinh tế - xã hội đặc biệt khó khăn có thể nghỉ hưu ở tuổi thấp hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.\n- 4. Người lao động có trình độ chuyên môn, kỹ thuật cao và một số trường hợp đặc biệt có thể nghỉ hưu ở tuổi cao hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.\n- 5. Chính phủ quy định chi tiết Điều này.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_d0c5f537983c0aad635529f412e426f5",
+          "article_number": 20,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hợp đồng lao động phải được giao kết theo một trong các loại sau đây:\na) Hợp đồng lao động không xác định thời hạn là hợp đồng mà trong đó hai bên không xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng;\nb) Hợp đồng lao động xác định thời hạn là hợp đồng mà trong đó hai bên xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng trong thời gian không quá 36 tháng kể từ thời điểm có hiệu lực của hợp đồng.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 3,
+          "chunk_id": "ll_dbd3abadeef0463d361d9e82afe24065",
+          "article_number": 169,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động bảo đảm điều kiện về thời gian đóng bảo hiểm xã hội theo quy định của pháp luật về bảo hiểm xã hội được hưởng lương hưu khi đủ tuổi nghỉ hưu.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 4,
+          "chunk_id": "ll_3496d03c125f3647e4b59d17ba1517aa",
+          "article_number": 20,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Khi hợp đồng lao động quy định tại điểm b khoản 1 Điều này hết hạn mà người lao động vẫn tiếp tục làm việc thì thực hiện như sau:\na) Trong thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn, hai bên phải ký kết hợp đồng lao động mới; trong thời gian chưa ký kết hợp đồng lao động mới thì quyền, nghĩa vụ và lợi ích của hai bên được thực hiện theo hợp đồng đã giao kết;\nb) Nếu hết thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn mà hai bên không ký kết hợp đồng lao động mới thì hợp đồng đã giao kết theo quy định tại điểm b khoản 1 Điều này trở thành hợp đồng lao động không xác định thời hạn;\nc) Trường hợp hai bên ký kết hợp đồng lao động mới là hợp đồng lao động xác định thời hạn thì cũng chỉ được ký thêm 01 lần, sau đó nếu người lao động vẫn tiếp tục làm việc thì phải ký kết hợp đồng lao động không xác định thời hạn, trừ hợp đồng lao động đối với người được thuê làm giám đốc trong doanh nghiệp có vốn nhà nước và trường hợp quy định tại khoản 1 Điều 149, khoản 2 Điều 151 và khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 5,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 6,
+          "chunk_id": "ll_d46b468f7e75375226fc9255165252c0",
+          "article_number": 169,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường được điều chỉnh theo lộ trình cho đến khi đủ 62 tuổi đối với lao động nam vào năm 2028 và đủ 60 tuổi đối với lao động nữ vào năm 2035.\nKể từ năm 2021, tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường là đủ 60 tuổi 03 tháng đối với lao động nam và đủ 55 tuổi 04 tháng đối với lao động nữ; sau đó, cứ mỗi năm tăng thêm 03 tháng đối với lao động nam và 04 tháng đối với lao động nữ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 7,
+          "chunk_id": "ll_5e5c61808a0cf9a202766600043297b2",
+          "article_number": 169,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Người lao động bị suy giảm khả năng lao động; làm nghề, công việc đặc biệt nặng nhọc, độc hại, nguy hiểm; làm nghề, công việc nặng nhọc, độc hại, nguy hiểm; làm việc ở vùng có điều kiện kinh tế - xã hội đặc biệt khó khăn có thể nghỉ hưu ở tuổi thấp hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 8,
+          "chunk_id": "ll_b5fc7f7303def7fcc05a56cc012b391e",
+          "article_number": 169,
+          "clause_number": 4,
+          "point_label": null,
+          "excerpt": "4. Người lao động có trình độ chuyên môn, kỹ thuật cao và một số trường hợp đặc biệt có thể nghỉ hưu ở tuổi cao hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 9,
+          "chunk_id": "ll_d58c1ac5280f87afac6ff26e225a8f7b",
+          "article_number": 169,
+          "clause_number": 5,
+          "point_label": null,
+          "excerpt": "5. Chính phủ quy định chi tiết Điều này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-03",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-04",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-05",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-06",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-07",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-08",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-09",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 33011.1507229999,
+      "client_elapsed_ms": 33050.527,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-001",
+      "run_index": 3,
+      "request_id": "d7e7fc1c-4f29-4724-9986-b5e94339cd86",
+      "question": "Điều 20, Điều 35 và Điều 169 quy định gì?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        "get_article",
+        "get_article",
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article",
+        "get_article",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 20
+        },
+        {
+          "article_number": 35
+        },
+        {
+          "article_number": 169
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Điều 20:\n- 1. Hợp đồng lao động phải được giao kết theo một trong các loại sau đây:\na) Hợp đồng lao động không xác định thời hạn là hợp đồng mà trong đó hai bên không xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng;\nb) Hợp đồng lao động xác định thời hạn là hợp đồng mà trong đó hai bên xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng trong thời gian không quá 36 tháng kể từ thời điểm có hiệu lực của hợp đồng.\n- 2. Khi hợp đồng lao động quy định tại điểm b khoản 1 Điều này hết hạn mà người lao động vẫn tiếp tục làm việc thì thực hiện như sau:\na) Trong thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn, hai bên phải ký kết hợp đồng lao động mới; trong thời gian chưa ký kết hợp đồng lao động mới thì quyền, nghĩa vụ và lợi ích của hai bên được thực hiện theo hợp đồng đã giao kết;\nb) Nếu hết thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn mà hai bên không ký kết hợp đồng lao động mới thì hợp đồng đã giao kết theo quy định tại điểm b khoản 1 Điều này trở thành hợp đồng lao động không xác định thời hạn;\nc) Trường hợp hai bên ký kết hợp đồng lao động mới là hợp đồng lao động xác định thời hạn thì cũng chỉ được ký thêm 01 lần, sau đó nếu người lao động vẫn tiếp tục làm việc thì phải ký kết hợp đồng lao động không xác định thời hạn, trừ hợp đồng lao động đối với người được thuê làm giám đốc trong doanh nghiệp có vốn nhà nước và trường hợp quy định tại khoản 1 Điều 149, khoản 2 Điều 151 và khoản 4 Điều 177 của Bộ luật này.\n\nĐiều 35:\n- 1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n- 2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.\n\nĐiều 169:\n- 1. Người lao động bảo đảm điều kiện về thời gian đóng bảo hiểm xã hội theo quy định của pháp luật về bảo hiểm xã hội được hưởng lương hưu khi đủ tuổi nghỉ hưu.\n- 2. Tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường được điều chỉnh theo lộ trình cho đến khi đủ 62 tuổi đối với lao động nam vào năm 2028 và đủ 60 tuổi đối với lao động nữ vào năm 2035.\nKể từ năm 2021, tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường là đủ 60 tuổi 03 tháng đối với lao động nam và đủ 55 tuổi 04 tháng đối với lao động nữ; sau đó, cứ mỗi năm tăng thêm 03 tháng đối với lao động nam và 04 tháng đối với lao động nữ.\n- 3. Người lao động bị suy giảm khả năng lao động; làm nghề, công việc đặc biệt nặng nhọc, độc hại, nguy hiểm; làm nghề, công việc nặng nhọc, độc hại, nguy hiểm; làm việc ở vùng có điều kiện kinh tế - xã hội đặc biệt khó khăn có thể nghỉ hưu ở tuổi thấp hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.\n- 4. Người lao động có trình độ chuyên môn, kỹ thuật cao và một số trường hợp đặc biệt có thể nghỉ hưu ở tuổi cao hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.\n- 5. Chính phủ quy định chi tiết Điều này.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_d0c5f537983c0aad635529f412e426f5",
+          "article_number": 20,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hợp đồng lao động phải được giao kết theo một trong các loại sau đây:\na) Hợp đồng lao động không xác định thời hạn là hợp đồng mà trong đó hai bên không xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng;\nb) Hợp đồng lao động xác định thời hạn là hợp đồng mà trong đó hai bên xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng trong thời gian không quá 36 tháng kể từ thời điểm có hiệu lực của hợp đồng.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 3,
+          "chunk_id": "ll_dbd3abadeef0463d361d9e82afe24065",
+          "article_number": 169,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động bảo đảm điều kiện về thời gian đóng bảo hiểm xã hội theo quy định của pháp luật về bảo hiểm xã hội được hưởng lương hưu khi đủ tuổi nghỉ hưu.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 4,
+          "chunk_id": "ll_3496d03c125f3647e4b59d17ba1517aa",
+          "article_number": 20,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Khi hợp đồng lao động quy định tại điểm b khoản 1 Điều này hết hạn mà người lao động vẫn tiếp tục làm việc thì thực hiện như sau:\na) Trong thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn, hai bên phải ký kết hợp đồng lao động mới; trong thời gian chưa ký kết hợp đồng lao động mới thì quyền, nghĩa vụ và lợi ích của hai bên được thực hiện theo hợp đồng đã giao kết;\nb) Nếu hết thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn mà hai bên không ký kết hợp đồng lao động mới thì hợp đồng đã giao kết theo quy định tại điểm b khoản 1 Điều này trở thành hợp đồng lao động không xác định thời hạn;\nc) Trường hợp hai bên ký kết hợp đồng lao động mới là hợp đồng lao động xác định thời hạn thì cũng chỉ được ký thêm 01 lần, sau đó nếu người lao động vẫn tiếp tục làm việc thì phải ký kết hợp đồng lao động không xác định thời hạn, trừ hợp đồng lao động đối với người được thuê làm giám đốc trong doanh nghiệp có vốn nhà nước và trường hợp quy định tại khoản 1 Điều 149, khoản 2 Điều 151 và khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 5,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 6,
+          "chunk_id": "ll_d46b468f7e75375226fc9255165252c0",
+          "article_number": 169,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường được điều chỉnh theo lộ trình cho đến khi đủ 62 tuổi đối với lao động nam vào năm 2028 và đủ 60 tuổi đối với lao động nữ vào năm 2035.\nKể từ năm 2021, tuổi nghỉ hưu của người lao động trong điều kiện lao động bình thường là đủ 60 tuổi 03 tháng đối với lao động nam và đủ 55 tuổi 04 tháng đối với lao động nữ; sau đó, cứ mỗi năm tăng thêm 03 tháng đối với lao động nam và 04 tháng đối với lao động nữ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 7,
+          "chunk_id": "ll_5e5c61808a0cf9a202766600043297b2",
+          "article_number": 169,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Người lao động bị suy giảm khả năng lao động; làm nghề, công việc đặc biệt nặng nhọc, độc hại, nguy hiểm; làm nghề, công việc nặng nhọc, độc hại, nguy hiểm; làm việc ở vùng có điều kiện kinh tế - xã hội đặc biệt khó khăn có thể nghỉ hưu ở tuổi thấp hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 8,
+          "chunk_id": "ll_b5fc7f7303def7fcc05a56cc012b391e",
+          "article_number": 169,
+          "clause_number": 4,
+          "point_label": null,
+          "excerpt": "4. Người lao động có trình độ chuyên môn, kỹ thuật cao và một số trường hợp đặc biệt có thể nghỉ hưu ở tuổi cao hơn nhưng không quá 05 tuổi so với quy định tại khoản 2 Điều này tại thời điểm nghỉ hưu, trừ trường hợp pháp luật có quy định khác.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 9,
+          "chunk_id": "ll_d58c1ac5280f87afac6ff26e225a8f7b",
+          "article_number": 169,
+          "clause_number": 5,
+          "point_label": null,
+          "excerpt": "5. Chính phủ quy định chi tiết Điều này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-03",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-04",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-05",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-06",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-07",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-08",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-09",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 33780.42289899986,
+      "client_elapsed_ms": 33819.797,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-003",
+      "run_index": 1,
+      "request_id": "c73a4fbc-07e9-4f0b-9a82-ba5d373d2609",
+      "question": "Điều 34 và Điều 43 quy định gì?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        "get_article",
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 34
+        },
+        {
+          "article_number": 43
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Điều 34:\n- 1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.\n- 2. Đã hoàn thành công việc theo hợp đồng lao động.\n- 3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.\n- 4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.\n- 5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.\n- 6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.\n- 7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.\n- 8. Người lao động bị xử lý kỷ luật sa thải.\n- 9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.\n- 10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.\n- 11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.\n- 12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.\n- 13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.\n\nĐiều 43:\n- 1. Trong trường hợp chia, tách, hợp nhất, sáp nhập; bán, cho thuê, chuyển đổi loại hình doanh nghiệp; chuyển nhượng quyền sở hữu, quyền sử dụng tài sản của doanh nghiệp, hợp tác xã mà ảnh hưởng đến việc làm của nhiều người lao động thì người sử dụng lao động phải xây dựng phương án sử dụng lao động theo quy định tại Điều 44 của Bộ luật này.\n- 2. Người sử dụng lao động hiện tại và người sử dụng lao động kế tiếp có trách nhiệm thực hiện phương án sử dụng lao động đã được thông qua.\n- 3. Người lao động bị thôi việc thì được nhận trợ cấp mất việc làm theo quy định tại Điều 47 của Bộ luật này.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_58b7dfddf9d10dd216e7e56a9b94665b",
+          "article_number": 34,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_b659a9ce80f0b48750e7b8d4308ac8e1",
+          "article_number": 43,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Trong trường hợp chia, tách, hợp nhất, sáp nhập; bán, cho thuê, chuyển đổi loại hình doanh nghiệp; chuyển nhượng quyền sở hữu, quyền sử dụng tài sản của doanh nghiệp, hợp tác xã mà ảnh hưởng đến việc làm của nhiều người lao động thì người sử dụng lao động phải xây dựng phương án sử dụng lao động theo quy định tại Điều 44 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 3,
+          "chunk_id": "ll_e6cf85494c7d7983c4772842965ab114",
+          "article_number": 34,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Đã hoàn thành công việc theo hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 4,
+          "chunk_id": "ll_175c1f555aa2add5bd99608d0fe59945",
+          "article_number": 34,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 5,
+          "chunk_id": "ll_e5b17107dac59b19f4dc7bc77998e4aa",
+          "article_number": 34,
+          "clause_number": 4,
+          "point_label": null,
+          "excerpt": "4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 6,
+          "chunk_id": "ll_1199cdf97334037b184baeda5bf1b646",
+          "article_number": 34,
+          "clause_number": 5,
+          "point_label": null,
+          "excerpt": "5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 7,
+          "chunk_id": "ll_b89c1d53396256a4d945a0dbee6c1b4b",
+          "article_number": 34,
+          "clause_number": 6,
+          "point_label": null,
+          "excerpt": "6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 8,
+          "chunk_id": "ll_890db25ee9854dcdf4eaca66c3b2880d",
+          "article_number": 34,
+          "clause_number": 7,
+          "point_label": null,
+          "excerpt": "7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 9,
+          "chunk_id": "ll_1e77f0b627b0d024c97ecc8758cb8201",
+          "article_number": 34,
+          "clause_number": 8,
+          "point_label": null,
+          "excerpt": "8. Người lao động bị xử lý kỷ luật sa thải.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 10,
+          "chunk_id": "ll_908006b059cbf6422269d281c9a426ad",
+          "article_number": 34,
+          "clause_number": 9,
+          "point_label": null,
+          "excerpt": "9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 11,
+          "chunk_id": "ll_b269f9ee3f3fa848dcbf4e0267701fec",
+          "article_number": 34,
+          "clause_number": 10,
+          "point_label": null,
+          "excerpt": "10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 12,
+          "chunk_id": "ll_a78dd14cc5e598d481ce8fa21cb96742",
+          "article_number": 34,
+          "clause_number": 11,
+          "point_label": null,
+          "excerpt": "11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 13,
+          "chunk_id": "ll_bec71ffaf5eceb34b42e96a70ba059d4",
+          "article_number": 34,
+          "clause_number": 12,
+          "point_label": null,
+          "excerpt": "12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 14,
+          "chunk_id": "ll_ac3443e401d1e610baca5259d4db6fcd",
+          "article_number": 34,
+          "clause_number": 13,
+          "point_label": null,
+          "excerpt": "13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 15,
+          "chunk_id": "ll_38d57834b19e5e40f7722772826c883d",
+          "article_number": 43,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người sử dụng lao động hiện tại và người sử dụng lao động kế tiếp có trách nhiệm thực hiện phương án sử dụng lao động đã được thông qua.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 16,
+          "chunk_id": "ll_813322864fda8e33463a84df154d530e",
+          "article_number": 43,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Người lao động bị thôi việc thì được nhận trợ cấp mất việc làm theo quy định tại Điều 47 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-03",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-04",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-05",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-06",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-07",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-08",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-09",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-10",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-11",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-12",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-13",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-14",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-15",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-16",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 21478.39893499986,
+      "client_elapsed_ms": 21515.147,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "contains:Điều 44": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-003",
+      "run_index": 2,
+      "request_id": "adf944b0-d423-4555-b585-34af446a73a5",
+      "question": "Điều 34 và Điều 43 quy định gì?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        "get_article",
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 34
+        },
+        {
+          "article_number": 43
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Điều 34:\n- 1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.\n- 2. Đã hoàn thành công việc theo hợp đồng lao động.\n- 3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.\n- 4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.\n- 5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.\n- 6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.\n- 7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.\n- 8. Người lao động bị xử lý kỷ luật sa thải.\n- 9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.\n- 10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.\n- 11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.\n- 12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.\n- 13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.\n\nĐiều 43:\n- 1. Trong trường hợp chia, tách, hợp nhất, sáp nhập; bán, cho thuê, chuyển đổi loại hình doanh nghiệp; chuyển nhượng quyền sở hữu, quyền sử dụng tài sản của doanh nghiệp, hợp tác xã mà ảnh hưởng đến việc làm của nhiều người lao động thì người sử dụng lao động phải xây dựng phương án sử dụng lao động theo quy định tại Điều 44 của Bộ luật này.\n- 2. Người sử dụng lao động hiện tại và người sử dụng lao động kế tiếp có trách nhiệm thực hiện phương án sử dụng lao động đã được thông qua.\n- 3. Người lao động bị thôi việc thì được nhận trợ cấp mất việc làm theo quy định tại Điều 47 của Bộ luật này.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_58b7dfddf9d10dd216e7e56a9b94665b",
+          "article_number": 34,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_b659a9ce80f0b48750e7b8d4308ac8e1",
+          "article_number": 43,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Trong trường hợp chia, tách, hợp nhất, sáp nhập; bán, cho thuê, chuyển đổi loại hình doanh nghiệp; chuyển nhượng quyền sở hữu, quyền sử dụng tài sản của doanh nghiệp, hợp tác xã mà ảnh hưởng đến việc làm của nhiều người lao động thì người sử dụng lao động phải xây dựng phương án sử dụng lao động theo quy định tại Điều 44 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 3,
+          "chunk_id": "ll_e6cf85494c7d7983c4772842965ab114",
+          "article_number": 34,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Đã hoàn thành công việc theo hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 4,
+          "chunk_id": "ll_175c1f555aa2add5bd99608d0fe59945",
+          "article_number": 34,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 5,
+          "chunk_id": "ll_e5b17107dac59b19f4dc7bc77998e4aa",
+          "article_number": 34,
+          "clause_number": 4,
+          "point_label": null,
+          "excerpt": "4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 6,
+          "chunk_id": "ll_1199cdf97334037b184baeda5bf1b646",
+          "article_number": 34,
+          "clause_number": 5,
+          "point_label": null,
+          "excerpt": "5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 7,
+          "chunk_id": "ll_b89c1d53396256a4d945a0dbee6c1b4b",
+          "article_number": 34,
+          "clause_number": 6,
+          "point_label": null,
+          "excerpt": "6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 8,
+          "chunk_id": "ll_890db25ee9854dcdf4eaca66c3b2880d",
+          "article_number": 34,
+          "clause_number": 7,
+          "point_label": null,
+          "excerpt": "7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 9,
+          "chunk_id": "ll_1e77f0b627b0d024c97ecc8758cb8201",
+          "article_number": 34,
+          "clause_number": 8,
+          "point_label": null,
+          "excerpt": "8. Người lao động bị xử lý kỷ luật sa thải.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 10,
+          "chunk_id": "ll_908006b059cbf6422269d281c9a426ad",
+          "article_number": 34,
+          "clause_number": 9,
+          "point_label": null,
+          "excerpt": "9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 11,
+          "chunk_id": "ll_b269f9ee3f3fa848dcbf4e0267701fec",
+          "article_number": 34,
+          "clause_number": 10,
+          "point_label": null,
+          "excerpt": "10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 12,
+          "chunk_id": "ll_a78dd14cc5e598d481ce8fa21cb96742",
+          "article_number": 34,
+          "clause_number": 11,
+          "point_label": null,
+          "excerpt": "11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 13,
+          "chunk_id": "ll_bec71ffaf5eceb34b42e96a70ba059d4",
+          "article_number": 34,
+          "clause_number": 12,
+          "point_label": null,
+          "excerpt": "12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 14,
+          "chunk_id": "ll_ac3443e401d1e610baca5259d4db6fcd",
+          "article_number": 34,
+          "clause_number": 13,
+          "point_label": null,
+          "excerpt": "13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 15,
+          "chunk_id": "ll_38d57834b19e5e40f7722772826c883d",
+          "article_number": 43,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người sử dụng lao động hiện tại và người sử dụng lao động kế tiếp có trách nhiệm thực hiện phương án sử dụng lao động đã được thông qua.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 16,
+          "chunk_id": "ll_813322864fda8e33463a84df154d530e",
+          "article_number": 43,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Người lao động bị thôi việc thì được nhận trợ cấp mất việc làm theo quy định tại Điều 47 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-03",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-04",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-05",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-06",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-07",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-08",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-09",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-10",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-11",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-12",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-13",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-14",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-15",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-16",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 22358.74060299966,
+      "client_elapsed_ms": 22399.126,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "contains:Điều 44": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-003",
+      "run_index": 3,
+      "request_id": "ff253a8d-9b4e-46fc-9d4c-61b8fa1bf00b",
+      "question": "Điều 34 và Điều 43 quy định gì?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        "get_article",
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 34
+        },
+        {
+          "article_number": 43
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Điều 34:\n- 1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.\n- 2. Đã hoàn thành công việc theo hợp đồng lao động.\n- 3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.\n- 4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.\n- 5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.\n- 6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.\n- 7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.\n- 8. Người lao động bị xử lý kỷ luật sa thải.\n- 9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.\n- 10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.\n- 11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.\n- 12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.\n- 13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.\n\nĐiều 43:\n- 1. Trong trường hợp chia, tách, hợp nhất, sáp nhập; bán, cho thuê, chuyển đổi loại hình doanh nghiệp; chuyển nhượng quyền sở hữu, quyền sử dụng tài sản của doanh nghiệp, hợp tác xã mà ảnh hưởng đến việc làm của nhiều người lao động thì người sử dụng lao động phải xây dựng phương án sử dụng lao động theo quy định tại Điều 44 của Bộ luật này.\n- 2. Người sử dụng lao động hiện tại và người sử dụng lao động kế tiếp có trách nhiệm thực hiện phương án sử dụng lao động đã được thông qua.\n- 3. Người lao động bị thôi việc thì được nhận trợ cấp mất việc làm theo quy định tại Điều 47 của Bộ luật này.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_58b7dfddf9d10dd216e7e56a9b94665b",
+          "article_number": 34,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_b659a9ce80f0b48750e7b8d4308ac8e1",
+          "article_number": 43,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Trong trường hợp chia, tách, hợp nhất, sáp nhập; bán, cho thuê, chuyển đổi loại hình doanh nghiệp; chuyển nhượng quyền sở hữu, quyền sử dụng tài sản của doanh nghiệp, hợp tác xã mà ảnh hưởng đến việc làm của nhiều người lao động thì người sử dụng lao động phải xây dựng phương án sử dụng lao động theo quy định tại Điều 44 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 3,
+          "chunk_id": "ll_e6cf85494c7d7983c4772842965ab114",
+          "article_number": 34,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Đã hoàn thành công việc theo hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 4,
+          "chunk_id": "ll_175c1f555aa2add5bd99608d0fe59945",
+          "article_number": 34,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 5,
+          "chunk_id": "ll_e5b17107dac59b19f4dc7bc77998e4aa",
+          "article_number": 34,
+          "clause_number": 4,
+          "point_label": null,
+          "excerpt": "4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 6,
+          "chunk_id": "ll_1199cdf97334037b184baeda5bf1b646",
+          "article_number": 34,
+          "clause_number": 5,
+          "point_label": null,
+          "excerpt": "5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 7,
+          "chunk_id": "ll_b89c1d53396256a4d945a0dbee6c1b4b",
+          "article_number": 34,
+          "clause_number": 6,
+          "point_label": null,
+          "excerpt": "6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 8,
+          "chunk_id": "ll_890db25ee9854dcdf4eaca66c3b2880d",
+          "article_number": 34,
+          "clause_number": 7,
+          "point_label": null,
+          "excerpt": "7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 9,
+          "chunk_id": "ll_1e77f0b627b0d024c97ecc8758cb8201",
+          "article_number": 34,
+          "clause_number": 8,
+          "point_label": null,
+          "excerpt": "8. Người lao động bị xử lý kỷ luật sa thải.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 10,
+          "chunk_id": "ll_908006b059cbf6422269d281c9a426ad",
+          "article_number": 34,
+          "clause_number": 9,
+          "point_label": null,
+          "excerpt": "9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 11,
+          "chunk_id": "ll_b269f9ee3f3fa848dcbf4e0267701fec",
+          "article_number": 34,
+          "clause_number": 10,
+          "point_label": null,
+          "excerpt": "10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 12,
+          "chunk_id": "ll_a78dd14cc5e598d481ce8fa21cb96742",
+          "article_number": 34,
+          "clause_number": 11,
+          "point_label": null,
+          "excerpt": "11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 13,
+          "chunk_id": "ll_bec71ffaf5eceb34b42e96a70ba059d4",
+          "article_number": 34,
+          "clause_number": 12,
+          "point_label": null,
+          "excerpt": "12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 14,
+          "chunk_id": "ll_ac3443e401d1e610baca5259d4db6fcd",
+          "article_number": 34,
+          "clause_number": 13,
+          "point_label": null,
+          "excerpt": "13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 15,
+          "chunk_id": "ll_38d57834b19e5e40f7722772826c883d",
+          "article_number": 43,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người sử dụng lao động hiện tại và người sử dụng lao động kế tiếp có trách nhiệm thực hiện phương án sử dụng lao động đã được thông qua.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 16,
+          "chunk_id": "ll_813322864fda8e33463a84df154d530e",
+          "article_number": 43,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Người lao động bị thôi việc thì được nhận trợ cấp mất việc làm theo quy định tại Điều 47 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-03",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-04",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-05",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-06",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-07",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-08",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-09",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-10",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-11",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-12",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-13",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-14",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-15",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-16",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 22404.88073100005,
+      "client_elapsed_ms": 22457.919,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "contains:Điều 44": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-006",
+      "run_index": 1,
+      "request_id": "6f8fa3df-6dd6-4dcd-955b-f52be723e9f9",
+      "question": "Điều 20, Điều 32, Điều 35 và Điều 54 quy định gì?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [],
+      "observed_tools": [],
+      "parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn đã yêu cầu quá nhiều điều luật cùng một lúc (4 điều). Vui lòng chọn tối đa 3 điều luật trong số các Điều 20, 32, 35, 54 để tôi có thể hỗ trợ bạn tốt nhất.",
+      "citations": [],
+      "verification": {
+        "status": "INSUFFICIENT_CONTEXT",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1601.0519849996854,
+      "client_elapsed_ms": 1640.067,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "reason": true,
+        "contains:tối đa 3": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-008",
+      "run_index": 1,
+      "request_id": "8c177db6-d071-48f7-9e5f-44814c156e11",
+      "question": "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        [
+          "get_article"
+        ],
+        [
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Người lao động khi đơn phương chấm dứt hợp đồng lao động phải báo trước cho người sử dụng lao động theo thời hạn quy định tùy loại hợp đồng, hoặc được quyền nghỉ việc không cần báo trước trong một số trường hợp đặc biệt.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-002",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-003",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-004",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 13383.539446000214,
+      "client_elapsed_ms": 13444.128,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-008",
+      "run_index": 2,
+      "request_id": "65e81d46-5e41-4417-905a-c323ab989ac9",
+      "question": "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        [
+          "get_article"
+        ],
+        [
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Người lao động khi đơn phương chấm dứt hợp đồng lao động phải tuân thủ thời hạn báo trước tùy theo loại hợp đồng, trừ một số trường hợp đặc biệt được nghỉ việc không cần báo trước.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-002",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-003",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-004",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 13572.543960000075,
+      "client_elapsed_ms": 13629.505,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-008",
+      "run_index": 3,
+      "request_id": "86f8b68c-e57e-45a3-9f4a-f679eada6b4b",
+      "question": "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        [
+          "get_article"
+        ],
+        [
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Người lao động đơn phương chấm dứt hợp đồng lao động phải báo trước cho người sử dụng lao động theo các thời hạn: ít nhất 45 ngày đối với hợp đồng không xác định thời hạn; ít nhất 30 ngày đối với hợp đồng xác định thời hạn từ 12 đến 36 tháng; và ít nhất 03 ngày làm việc đối với hợp đồng dưới 12 tháng. Đối với một số ngành nghề đặc thù, thời hạn báo trước thực hiện theo quy định của Chính phủ. Ngoài ra, người lao động có quyền nghỉ việc không cần báo trước trong các trường hợp cụ thể như bị ngược đãi, không được trả đủ lương, bị quấy rối tình dục hoặc các trường hợp đặc biệt khác theo quy định tại khoản 2 Điều 35.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-002",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-003",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-004",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-005",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 13853.7896429998,
+      "client_elapsed_ms": 13895.173,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-010",
+      "run_index": 1,
+      "request_id": "abc9868d-3c82-4917-b51b-18e5884ca8e6",
+      "question": "Quy định về hợp đồng xác định thời hạn?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        [
+          "get_article"
+        ],
+        [
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 20
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Hợp đồng lao động xác định thời hạn là hợp đồng mà hai bên xác định thời hạn và thời điểm chấm dứt hiệu lực trong thời gian không quá 36 tháng. Khi hợp đồng hết hạn mà người lao động vẫn tiếp tục làm việc, hai bên phải ký hợp đồng mới trong vòng 30 ngày. Nếu quá thời hạn này mà không ký mới, hợp đồng sẽ trở thành hợp đồng không xác định thời hạn. Nếu ký tiếp hợp đồng xác định thời hạn, hai bên chỉ được ký thêm 01 lần, sau đó nếu tiếp tục làm việc thì phải ký hợp đồng không xác định thời hạn (trừ một số trường hợp đặc biệt).",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_d0c5f537983c0aad635529f412e426f5",
+          "article_number": 20,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hợp đồng lao động phải được giao kết theo một trong các loại sau đây:\na) Hợp đồng lao động không xác định thời hạn là hợp đồng mà trong đó hai bên không xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng;\nb) Hợp đồng lao động xác định thời hạn là hợp đồng mà trong đó hai bên xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng trong thời gian không quá 36 tháng kể từ thời điểm có hiệu lực của hợp đồng.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_3496d03c125f3647e4b59d17ba1517aa",
+          "article_number": 20,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Khi hợp đồng lao động quy định tại điểm b khoản 1 Điều này hết hạn mà người lao động vẫn tiếp tục làm việc thì thực hiện như sau:\na) Trong thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn, hai bên phải ký kết hợp đồng lao động mới; trong thời gian chưa ký kết hợp đồng lao động mới thì quyền, nghĩa vụ và lợi ích của hai bên được thực hiện theo hợp đồng đã giao kết;\nb) Nếu hết thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn mà hai bên không ký kết hợp đồng lao động mới thì hợp đồng đã giao kết theo quy định tại điểm b khoản 1 Điều này trở thành hợp đồng lao động không xác định thời hạn;\nc) Trường hợp hai bên ký kết hợp đồng lao động mới là hợp đồng lao động xác định thời hạn thì cũng chỉ được ký thêm 01 lần, sau đó nếu người lao động vẫn tiếp tục làm việc thì phải ký kết hợp đồng lao động không xác định thời hạn, trừ hợp đồng lao động đối với người được thuê làm giám đốc trong doanh nghiệp có vốn nhà nước và trường hợp quy định tại khoản 1 Điều 149, khoản 2 Điều 151 và khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-002",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-003",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-004",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 13394.103607000034,
+      "client_elapsed_ms": 13448.019,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "excludes:ốm đau": true,
+        "excludes:điều trị": true,
+        "excludes:bệnh tật": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-010",
+      "run_index": 2,
+      "request_id": "204a99cd-6d12-4ab4-bed3-f79fe7acf6d2",
+      "question": "Quy định về hợp đồng xác định thời hạn?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        [
+          "get_article"
+        ],
+        [
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 20
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Hợp đồng lao động xác định thời hạn là hợp đồng mà hai bên xác định thời hạn và thời điểm chấm dứt hiệu lực trong thời gian không quá 36 tháng. Khi hợp đồng hết hạn mà người lao động vẫn tiếp tục làm việc, hai bên phải ký hợp đồng mới trong vòng 30 ngày. Nếu quá thời hạn này mà không ký mới, hợp đồng sẽ trở thành hợp đồng không xác định thời hạn. Nếu ký tiếp hợp đồng xác định thời hạn, hai bên chỉ được ký thêm 01 lần, sau đó nếu tiếp tục làm việc thì phải ký hợp đồng không xác định thời hạn (trừ một số trường hợp đặc biệt).",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_d0c5f537983c0aad635529f412e426f5",
+          "article_number": 20,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hợp đồng lao động phải được giao kết theo một trong các loại sau đây:\na) Hợp đồng lao động không xác định thời hạn là hợp đồng mà trong đó hai bên không xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng;\nb) Hợp đồng lao động xác định thời hạn là hợp đồng mà trong đó hai bên xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng trong thời gian không quá 36 tháng kể từ thời điểm có hiệu lực của hợp đồng.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_3496d03c125f3647e4b59d17ba1517aa",
+          "article_number": 20,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Khi hợp đồng lao động quy định tại điểm b khoản 1 Điều này hết hạn mà người lao động vẫn tiếp tục làm việc thì thực hiện như sau:\na) Trong thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn, hai bên phải ký kết hợp đồng lao động mới; trong thời gian chưa ký kết hợp đồng lao động mới thì quyền, nghĩa vụ và lợi ích của hai bên được thực hiện theo hợp đồng đã giao kết;\nb) Nếu hết thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn mà hai bên không ký kết hợp đồng lao động mới thì hợp đồng đã giao kết theo quy định tại điểm b khoản 1 Điều này trở thành hợp đồng lao động không xác định thời hạn;\nc) Trường hợp hai bên ký kết hợp đồng lao động mới là hợp đồng lao động xác định thời hạn thì cũng chỉ được ký thêm 01 lần, sau đó nếu người lao động vẫn tiếp tục làm việc thì phải ký kết hợp đồng lao động không xác định thời hạn, trừ hợp đồng lao động đối với người được thuê làm giám đốc trong doanh nghiệp có vốn nhà nước và trường hợp quy định tại khoản 1 Điều 149, khoản 2 Điều 151 và khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-002",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-003",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-004",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 12976.754290000372,
+      "client_elapsed_ms": 13018.049,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "excludes:ốm đau": true,
+        "excludes:điều trị": true,
+        "excludes:bệnh tật": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-010",
+      "run_index": 3,
+      "request_id": "62007ed6-bb58-489c-9cb8-56ab5ba8a78b",
+      "question": "Quy định về hợp đồng xác định thời hạn?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        [
+          "get_article"
+        ],
+        [
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 20
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Hợp đồng lao động xác định thời hạn là loại hợp đồng mà hai bên xác định thời hạn và thời điểm chấm dứt hiệu lực trong thời gian không quá 36 tháng kể từ ngày có hiệu lực. Khi hợp đồng hết hạn mà người lao động vẫn tiếp tục làm việc, hai bên phải ký hợp đồng mới trong vòng 30 ngày. Nếu quá thời hạn này mà không ký mới, hợp đồng sẽ trở thành hợp đồng không xác định thời hạn. Nếu ký tiếp hợp đồng xác định thời hạn, hai bên chỉ được ký thêm 01 lần, sau đó nếu người lao động tiếp tục làm việc thì phải ký hợp đồng không xác định thời hạn (trừ một số trường hợp đặc biệt theo quy định).",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_d0c5f537983c0aad635529f412e426f5",
+          "article_number": 20,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hợp đồng lao động phải được giao kết theo một trong các loại sau đây:\na) Hợp đồng lao động không xác định thời hạn là hợp đồng mà trong đó hai bên không xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng;\nb) Hợp đồng lao động xác định thời hạn là hợp đồng mà trong đó hai bên xác định thời hạn, thời điểm chấm dứt hiệu lực của hợp đồng trong thời gian không quá 36 tháng kể từ thời điểm có hiệu lực của hợp đồng.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_3496d03c125f3647e4b59d17ba1517aa",
+          "article_number": 20,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Khi hợp đồng lao động quy định tại điểm b khoản 1 Điều này hết hạn mà người lao động vẫn tiếp tục làm việc thì thực hiện như sau:\na) Trong thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn, hai bên phải ký kết hợp đồng lao động mới; trong thời gian chưa ký kết hợp đồng lao động mới thì quyền, nghĩa vụ và lợi ích của hai bên được thực hiện theo hợp đồng đã giao kết;\nb) Nếu hết thời hạn 30 ngày kể từ ngày hợp đồng lao động hết hạn mà hai bên không ký kết hợp đồng lao động mới thì hợp đồng đã giao kết theo quy định tại điểm b khoản 1 Điều này trở thành hợp đồng lao động không xác định thời hạn;\nc) Trường hợp hai bên ký kết hợp đồng lao động mới là hợp đồng lao động xác định thời hạn thì cũng chỉ được ký thêm 01 lần, sau đó nếu người lao động vẫn tiếp tục làm việc thì phải ký kết hợp đồng lao động không xác định thời hạn, trừ hợp đồng lao động đối với người được thuê làm giám đốc trong doanh nghiệp có vốn nhà nước và trường hợp quy định tại khoản 1 Điều 149, khoản 2 Điều 151 và khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-002",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-003",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-004",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 13204.087681000146,
+      "client_elapsed_ms": 13253.187,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "excludes:ốm đau": true,
+        "excludes:điều trị": true,
+        "excludes:bệnh tật": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-011",
+      "run_index": 1,
+      "request_id": "de2130a1-0f43-4536-83d0-8ba836b75a36",
+      "question": "Tôi bị nợ lương thì có cần báo trước không, hợp đồng 24 tháng?",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "planned_tools": [
+        [
+          "calculate_notice_period",
+          "get_article"
+        ],
+        [
+          "calculate_notice_period",
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "contract_type": "FIXED_TERM_12_TO_36_MONTHS",
+          "special_case": "UNPAID_OR_LATE_WAGES"
+        },
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Khi bị người sử dụng lao động không trả đủ lương hoặc trả lương không đúng thời hạn, người lao động có quyền đơn phương chấm dứt hợp đồng lao động mà không cần báo trước, trừ trường hợp việc chậm trả lương thuộc ngoại lệ bất khả kháng quy định tại khoản 4 Điều 97 Bộ luật Lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 12939.73761899997,
+      "client_elapsed_ms": 12978.51,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "parameters:calculate_notice_period": true,
+        "contains:Điều 97": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-011",
+      "run_index": 2,
+      "request_id": "5558f6ab-88a2-45d0-a48a-bffdd632150a",
+      "question": "Tôi bị nợ lương thì có cần báo trước không, hợp đồng 24 tháng?",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "planned_tools": [
+        [
+          "calculate_notice_period",
+          "get_article"
+        ],
+        [
+          "calculate_notice_period",
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "contract_type": "FIXED_TERM_12_TO_36_MONTHS",
+          "special_case": "UNPAID_OR_LATE_WAGES"
+        },
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Khi bị người sử dụng lao động không trả đủ lương hoặc trả lương không đúng thời hạn, người lao động có quyền đơn phương chấm dứt hợp đồng lao động mà không cần báo trước, trừ trường hợp việc chậm trả lương thuộc ngoại lệ bất khả kháng quy định tại khoản 4 Điều 97 Bộ luật Lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 13830.662060999657,
+      "client_elapsed_ms": 13879.533,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "parameters:calculate_notice_period": true,
+        "contains:Điều 97": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-011",
+      "run_index": 3,
+      "request_id": "3695612f-f3b8-4109-abeb-bdd8fce640f7",
+      "question": "Tôi bị nợ lương thì có cần báo trước không, hợp đồng 24 tháng?",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "planned_tools": [
+        [
+          "calculate_notice_period",
+          "get_article"
+        ],
+        [
+          "calculate_notice_period",
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "contract_type": "FIXED_TERM_12_TO_36_MONTHS",
+          "special_case": "UNPAID_OR_LATE_WAGES"
+        },
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Khi bị người sử dụng lao động không trả đủ lương hoặc trả lương không đúng thời hạn, người lao động có quyền đơn phương chấm dứt hợp đồng lao động mà không cần báo trước, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật Lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 13416.704012000082,
+      "client_elapsed_ms": 13470.56,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "parameters:calculate_notice_period": true,
+        "contains:Điều 97": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-012",
+      "run_index": 1,
+      "request_id": "e03c7049-50db-4c92-89ea-1722a925464a",
+      "question": "Quấy rối tình dục tại nơi làm việc có cần báo trước và căn cứ?",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "planned_tools": [
+        [
+          "calculate_notice_period",
+          "get_article"
+        ],
+        [
+          "calculate_notice_period",
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "special_case": "WORKPLACE_SEXUAL_HARASSMENT"
+        },
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Khi bị quấy rối tình dục tại nơi làm việc, người lao động có quyền đơn phương chấm dứt hợp đồng lao động mà không cần phải báo trước cho người sử dụng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 12230.167420999805,
+      "client_elapsed_ms": 12283.63,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "parameters:calculate_notice_period": true,
+        "excludes:sa thải người quấy rối": true,
+        "excludes:hình thức xử lý kỷ luật": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-012",
+      "run_index": 2,
+      "request_id": "50eb5f6e-3281-4834-a121-ab5c67abe0f4",
+      "question": "Quấy rối tình dục tại nơi làm việc có cần báo trước và căn cứ?",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "planned_tools": [
+        [
+          "calculate_notice_period",
+          "get_article"
+        ],
+        [
+          "calculate_notice_period",
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "special_case": "WORKPLACE_SEXUAL_HARASSMENT"
+        },
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Khi bị quấy rối tình dục tại nơi làm việc, người lao động có quyền đơn phương chấm dứt hợp đồng lao động mà không cần phải báo trước cho người sử dụng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 12301.675577999958,
+      "client_elapsed_ms": 12365.971,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "parameters:calculate_notice_period": true,
+        "excludes:sa thải người quấy rối": true,
+        "excludes:hình thức xử lý kỷ luật": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-012",
+      "run_index": 3,
+      "request_id": "8685fc35-1f98-464c-bb1d-885ca86c045c",
+      "question": "Quấy rối tình dục tại nơi làm việc có cần báo trước và căn cứ?",
+      "route": "RETRIEVAL_AND_CALCULATOR",
+      "planned_tools": [
+        [
+          "calculate_notice_period",
+          "get_article"
+        ],
+        [
+          "calculate_notice_period",
+          "search_labor_law"
+        ]
+      ],
+      "observed_tools": [
+        "calculate_notice_period",
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "special_case": "WORKPLACE_SEXUAL_HARASSMENT"
+        },
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "Khi bị quấy rối tình dục tại nơi làm việc, người lao động có quyền đơn phương chấm dứt hợp đồng lao động mà không cần phải báo trước cho người sử dụng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-001",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 12602.688487999785,
+      "client_elapsed_ms": 12642.348,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "parameters:calculate_notice_period": true,
+        "excludes:sa thải người quấy rối": true,
+        "excludes:hình thức xử lý kỷ luật": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-015",
+      "run_index": 1,
+      "request_id": "fa683007-a7c4-453b-aa13-f2b326cf404c",
+      "question": "Điều 34 quy định gì?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 34
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.\n\n2. Đã hoàn thành công việc theo hợp đồng lao động.\n\n3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.\n\n4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.\n\n5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.\n\n6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.\n\n7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.\n\n8. Người lao động bị xử lý kỷ luật sa thải.\n\n9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.\n\n10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.\n\n11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.\n\n12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.\n\n13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_58b7dfddf9d10dd216e7e56a9b94665b",
+          "article_number": 34,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_e6cf85494c7d7983c4772842965ab114",
+          "article_number": 34,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Đã hoàn thành công việc theo hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 3,
+          "chunk_id": "ll_175c1f555aa2add5bd99608d0fe59945",
+          "article_number": 34,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 4,
+          "chunk_id": "ll_e5b17107dac59b19f4dc7bc77998e4aa",
+          "article_number": 34,
+          "clause_number": 4,
+          "point_label": null,
+          "excerpt": "4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 5,
+          "chunk_id": "ll_1199cdf97334037b184baeda5bf1b646",
+          "article_number": 34,
+          "clause_number": 5,
+          "point_label": null,
+          "excerpt": "5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 6,
+          "chunk_id": "ll_b89c1d53396256a4d945a0dbee6c1b4b",
+          "article_number": 34,
+          "clause_number": 6,
+          "point_label": null,
+          "excerpt": "6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 7,
+          "chunk_id": "ll_890db25ee9854dcdf4eaca66c3b2880d",
+          "article_number": 34,
+          "clause_number": 7,
+          "point_label": null,
+          "excerpt": "7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 8,
+          "chunk_id": "ll_1e77f0b627b0d024c97ecc8758cb8201",
+          "article_number": 34,
+          "clause_number": 8,
+          "point_label": null,
+          "excerpt": "8. Người lao động bị xử lý kỷ luật sa thải.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 9,
+          "chunk_id": "ll_908006b059cbf6422269d281c9a426ad",
+          "article_number": 34,
+          "clause_number": 9,
+          "point_label": null,
+          "excerpt": "9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 10,
+          "chunk_id": "ll_b269f9ee3f3fa848dcbf4e0267701fec",
+          "article_number": 34,
+          "clause_number": 10,
+          "point_label": null,
+          "excerpt": "10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 11,
+          "chunk_id": "ll_a78dd14cc5e598d481ce8fa21cb96742",
+          "article_number": 34,
+          "clause_number": 11,
+          "point_label": null,
+          "excerpt": "11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 12,
+          "chunk_id": "ll_bec71ffaf5eceb34b42e96a70ba059d4",
+          "article_number": 34,
+          "clause_number": 12,
+          "point_label": null,
+          "excerpt": "12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 13,
+          "chunk_id": "ll_ac3443e401d1e610baca5259d4db6fcd",
+          "article_number": 34,
+          "clause_number": 13,
+          "point_label": null,
+          "excerpt": "13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-03",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-04",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-05",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-06",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-07",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-08",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-09",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-10",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-11",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-12",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-13",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 15755.402479000168,
+      "client_elapsed_ms": 15794.287,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-015",
+      "run_index": 2,
+      "request_id": "715da808-e4e2-4502-97e3-8896eb8ca3b8",
+      "question": "Điều 34 quy định gì?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 34
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.\n\n2. Đã hoàn thành công việc theo hợp đồng lao động.\n\n3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.\n\n4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.\n\n5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.\n\n6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.\n\n7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.\n\n8. Người lao động bị xử lý kỷ luật sa thải.\n\n9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.\n\n10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.\n\n11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.\n\n12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.\n\n13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_58b7dfddf9d10dd216e7e56a9b94665b",
+          "article_number": 34,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_e6cf85494c7d7983c4772842965ab114",
+          "article_number": 34,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Đã hoàn thành công việc theo hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 3,
+          "chunk_id": "ll_175c1f555aa2add5bd99608d0fe59945",
+          "article_number": 34,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 4,
+          "chunk_id": "ll_e5b17107dac59b19f4dc7bc77998e4aa",
+          "article_number": 34,
+          "clause_number": 4,
+          "point_label": null,
+          "excerpt": "4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 5,
+          "chunk_id": "ll_1199cdf97334037b184baeda5bf1b646",
+          "article_number": 34,
+          "clause_number": 5,
+          "point_label": null,
+          "excerpt": "5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 6,
+          "chunk_id": "ll_b89c1d53396256a4d945a0dbee6c1b4b",
+          "article_number": 34,
+          "clause_number": 6,
+          "point_label": null,
+          "excerpt": "6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 7,
+          "chunk_id": "ll_890db25ee9854dcdf4eaca66c3b2880d",
+          "article_number": 34,
+          "clause_number": 7,
+          "point_label": null,
+          "excerpt": "7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 8,
+          "chunk_id": "ll_1e77f0b627b0d024c97ecc8758cb8201",
+          "article_number": 34,
+          "clause_number": 8,
+          "point_label": null,
+          "excerpt": "8. Người lao động bị xử lý kỷ luật sa thải.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 9,
+          "chunk_id": "ll_908006b059cbf6422269d281c9a426ad",
+          "article_number": 34,
+          "clause_number": 9,
+          "point_label": null,
+          "excerpt": "9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 10,
+          "chunk_id": "ll_b269f9ee3f3fa848dcbf4e0267701fec",
+          "article_number": 34,
+          "clause_number": 10,
+          "point_label": null,
+          "excerpt": "10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 11,
+          "chunk_id": "ll_a78dd14cc5e598d481ce8fa21cb96742",
+          "article_number": 34,
+          "clause_number": 11,
+          "point_label": null,
+          "excerpt": "11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 12,
+          "chunk_id": "ll_bec71ffaf5eceb34b42e96a70ba059d4",
+          "article_number": 34,
+          "clause_number": 12,
+          "point_label": null,
+          "excerpt": "12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 13,
+          "chunk_id": "ll_ac3443e401d1e610baca5259d4db6fcd",
+          "article_number": 34,
+          "clause_number": 13,
+          "point_label": null,
+          "excerpt": "13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-03",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-04",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-05",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-06",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-07",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-08",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-09",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-10",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-11",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-12",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-13",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 15721.601997000107,
+      "client_elapsed_ms": 15767.783,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-015",
+      "run_index": 3,
+      "request_id": "fff7c194-b15c-4829-b963-649339acaacd",
+      "question": "Điều 34 quy định gì?",
+      "route": "RETRIEVAL_ONLY",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "parameters": [
+        {
+          "article_number": 34
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.\n\n2. Đã hoàn thành công việc theo hợp đồng lao động.\n\n3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.\n\n4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.\n\n5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.\n\n6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.\n\n7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.\n\n8. Người lao động bị xử lý kỷ luật sa thải.\n\n9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.\n\n10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.\n\n11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.\n\n12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.\n\n13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_58b7dfddf9d10dd216e7e56a9b94665b",
+          "article_number": 34,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Hết hạn hợp đồng lao động, trừ trường hợp quy định tại khoản 4 Điều 177 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_e6cf85494c7d7983c4772842965ab114",
+          "article_number": 34,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Đã hoàn thành công việc theo hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 3,
+          "chunk_id": "ll_175c1f555aa2add5bd99608d0fe59945",
+          "article_number": 34,
+          "clause_number": 3,
+          "point_label": null,
+          "excerpt": "3. Hai bên thỏa thuận chấm dứt hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 4,
+          "chunk_id": "ll_e5b17107dac59b19f4dc7bc77998e4aa",
+          "article_number": 34,
+          "clause_number": 4,
+          "point_label": null,
+          "excerpt": "4. Người lao động bị kết án phạt tù nhưng không được hưởng án treo hoặc không thuộc trường hợp được trả tự do theo quy định tại khoản 5 Điều 328 của Bộ luật Tố tụng hình sự, tử hình hoặc bị cấm làm công việc ghi trong hợp đồng lao động theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 5,
+          "chunk_id": "ll_1199cdf97334037b184baeda5bf1b646",
+          "article_number": 34,
+          "clause_number": 5,
+          "point_label": null,
+          "excerpt": "5. Người lao động là người nước ngoài làm việc tại Việt Nam bị trục xuất theo bản án, quyết định của Tòa án đã có hiệu lực pháp luật, quyết định của cơ quan nhà nước có thẩm quyền.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 6,
+          "chunk_id": "ll_b89c1d53396256a4d945a0dbee6c1b4b",
+          "article_number": 34,
+          "clause_number": 6,
+          "point_label": null,
+          "excerpt": "6. Người lao động chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 7,
+          "chunk_id": "ll_890db25ee9854dcdf4eaca66c3b2880d",
+          "article_number": 34,
+          "clause_number": 7,
+          "point_label": null,
+          "excerpt": "7. Người sử dụng lao động là cá nhân chết; bị Tòa án tuyên bố mất năng lực hành vi dân sự, mất tích hoặc đã chết. Người sử dụng lao động không phải là cá nhân chấm dứt hoạt động hoặc bị cơ quan chuyên môn về đăng ký kinh doanh thuộc Ủy ban nhân dân cấp tỉnh ra thông báo không có người đại diện theo pháp luật, người được ủy quyền thực hiện quyền và nghĩa vụ của người đại diện theo pháp luật.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 8,
+          "chunk_id": "ll_1e77f0b627b0d024c97ecc8758cb8201",
+          "article_number": 34,
+          "clause_number": 8,
+          "point_label": null,
+          "excerpt": "8. Người lao động bị xử lý kỷ luật sa thải.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 9,
+          "chunk_id": "ll_908006b059cbf6422269d281c9a426ad",
+          "article_number": 34,
+          "clause_number": 9,
+          "point_label": null,
+          "excerpt": "9. Người lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 35 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 10,
+          "chunk_id": "ll_b269f9ee3f3fa848dcbf4e0267701fec",
+          "article_number": 34,
+          "clause_number": 10,
+          "point_label": null,
+          "excerpt": "10. Người sử dụng lao động đơn phương chấm dứt hợp đồng lao động theo quy định tại Điều 36 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 11,
+          "chunk_id": "ll_a78dd14cc5e598d481ce8fa21cb96742",
+          "article_number": 34,
+          "clause_number": 11,
+          "point_label": null,
+          "excerpt": "11. Người sử dụng lao động cho người lao động thôi việc theo quy định tại Điều 42 và Điều 43 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 12,
+          "chunk_id": "ll_bec71ffaf5eceb34b42e96a70ba059d4",
+          "article_number": 34,
+          "clause_number": 12,
+          "point_label": null,
+          "excerpt": "12. Giấy phép lao động hết hiệu lực đối với người lao động là người nước ngoài làm việc tại Việt Nam theo quy định tại Điều 156 của Bộ luật này.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 13,
+          "chunk_id": "ll_ac3443e401d1e610baca5259d4db6fcd",
+          "article_number": 34,
+          "clause_number": 13,
+          "point_label": null,
+          "excerpt": "13. Trường hợp thỏa thuận nội dung thử việc ghi trong hợp đồng lao động mà thử việc không đạt yêu cầu hoặc một bên hủy bỏ thỏa thuận thử việc.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-03",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-04",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-05",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-06",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-07",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-08",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-09",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-10",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-11",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-12",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-13",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 15846.980470999824,
+      "client_elapsed_ms": 15932.761,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "original_review_id": "W12-019",
+      "run_index": 1,
+      "request_id": "d8c317a2-03e9-4e7d-bdf0-09cc16d8c84f",
+      "question": "Tôi cần tính thời hạn hợp đồng",
+      "route": "CALCULATOR_ONLY",
+      "planned_tools": [],
+      "observed_tools": [],
+      "parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Vui lòng cho biết loại hợp đồng lao động của bạn là hợp đồng xác định thời hạn (từ 12 đến 36 tháng) hay hợp đồng không xác định thời hạn để tôi có thể hỗ trợ tính toán chính xác.",
+      "citations": [],
+      "verification": {
+        "status": "INSUFFICIENT_CONTEXT",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1516.5395079998234,
+      "client_elapsed_ms": 1550.75,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "tools": true,
+        "reason": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    }
+  ]
+}

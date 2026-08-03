@@ -17,7 +17,10 @@ from vietnamese_labor_law_assistant.guardrails.models import (
 )
 from vietnamese_labor_law_assistant.guardrails.policy import guarded_answer
 from vietnamese_labor_law_assistant.guardrails.service import CitationGuardrailService
-from vietnamese_labor_law_assistant.guardrails.similarity import BgeM3SemanticScorer
+from vietnamese_labor_law_assistant.guardrails.similarity import (
+    BgeM3SemanticScorer,
+    TokenCosineScorer,
+)
 from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalSourceRegistry
 
 SOURCE = Path("data/processed/labor_law_clauses.jsonl")
@@ -265,6 +268,33 @@ def test_parser_and_hard_failure_prevent_judge_override() -> None:
     assert malformed.claims[0].reason_codes == [ReasonCode.MALFORMED_CITATION]
     assert missing.claims[0].reason_codes == [ReasonCode.CITATION_NOT_FOUND]
     assert judge.calls == 0
+
+
+def test_source_cross_reference_must_be_preserved_exactly() -> None:
+    chunk_id = "ll_b659a9ce80f0b48750e7b8d4308ac8e1"
+    source = CanonicalSourceRegistry(SOURCE).get(chunk_id)
+    assert source is not None
+    guardrail = CitationGuardrailService(CanonicalSourceRegistry(SOURCE), TokenCosineScorer())
+    result = guardrail.verify(
+        [
+            AtomicClaim(
+                claim_id="wrong-reference",
+                text="Phương án sử dụng lao động được xây dựng theo quy định tại Điều 42.",
+                cited_context_ids=[chunk_id],
+                parse_inline_references=False,
+                target_article_number=43,
+            )
+        ],
+        [
+            EvidenceContext(
+                chunk_id=source.chunk_id,
+                article_number=source.article_number,
+                clause_number=source.clause_number,
+                content=source.content,
+            )
+        ],
+    )
+    assert result.status is VerificationStatus.UNSUPPORTED
 
 
 def test_partial_policy_reconstructs_claims_without_original_answer() -> None:

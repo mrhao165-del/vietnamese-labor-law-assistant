@@ -1,0 +1,126 @@
+{
+  "status": "PASS",
+  "head_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+  "working_tree_initially_clean": true,
+  "environment": {
+    "repository_root": "D:/Study/Code/Python/LLM_RAG_MCP/vietnamese-labor-law-assistant",
+    "branch": "main",
+    "platform": "Windows 10.0.19045 x86_64",
+    "timezone": "Asia/Saigon",
+    "started_at": "2026-07-30T13:48:30.5677535+07:00",
+    "python": "3.11.15",
+    "uv": "0.10.11",
+    "node": "24.15.0",
+    "npm": "11.12.1",
+    "docker": "29.6.1",
+    "docker_compose": "v5.3.0",
+    "llm_provider": "gemini_openai_compatible",
+    "llm_model": "gemini-3.1-flash-lite",
+    "embedding_model": "BAAI/bge-m3",
+    "reranker_model": "BAAI/bge-reranker-v2-m3",
+    "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+    "credential_configured": true,
+    "secret_values_recorded": false
+  },
+  "checks": [
+    {
+      "name": "initial git status and git diff --check",
+      "status": "PASS",
+      "command": "git status --short --branch; git diff --check",
+      "evidence_path": "docs/releases/week12_preflight.md",
+      "note": "Initial working tree was clean on main."
+    },
+    {
+      "name": "canonical backend quality gate",
+      "status": "PASS",
+      "command": "python .agents/skills/project-quality-gate/scripts/run_project_quality_gate.py",
+      "evidence_path": ".agents/skills/project-quality-gate/scripts/run_project_quality_gate.py",
+      "note": "uv lock, Ruff format/lint, Pyright, 319 tests, 86.56% coverage, and two production MCP stdio demos passed."
+    },
+    {
+      "name": "Week 1-11 offline regression and provenance",
+      "status": "PASS",
+      "command": "uv run pytest --cov=vietnamese_labor_law_assistant",
+      "evidence_path": "tests",
+      "note": "Full suite includes frozen ingestion/provenance, Week 6-10, MCP protocol, Agent, guardrail, API, and repository checks."
+    },
+    {
+      "name": "Week 9 Agent evidence verifier",
+      "status": "PASS",
+      "command": "uv run python scripts/verify_week9_agent.py",
+      "evidence_path": "evaluation/results/week9_agent_metrics.json",
+      "note": "40-case offline contract benchmark verified."
+    },
+    {
+      "name": "Week 10 guardrail evidence verifier",
+      "status": "PASS",
+      "command": "uv run python scripts/verify_week10_guardrail.py",
+      "evidence_path": "evaluation/results/week10_guardrail_metrics.json",
+      "note": "40 cases and 37/37 provenance checks verified."
+    },
+    {
+      "name": "frozen dataset, corpus, split, and selected config",
+      "status": "PASS",
+      "command": "Get-FileHash ... -Algorithm SHA256; full provenance tests",
+      "evidence_path": "evaluation/results/week6_locked_config_verification.json",
+      "note": "Dataset 19440059..., corpus 62d4f98b..., split FROZEN, selected config unchanged."
+    },
+    {
+      "name": "protected artefact and runtime-artifact scan",
+      "status": "PASS",
+      "command": "python .agents/skills/protected-artifact-guard/scripts/scan_protected_diff.py",
+      "evidence_path": ".agents/skills/protected-artifact-guard/scripts/scan_protected_diff.py",
+      "note": "Initial scan CLEAR; final scan is required after Week 12 changes."
+    },
+    {
+      "name": "frontend lockfile install, typecheck, lint, and build",
+      "status": "PASS",
+      "command": "npm ci; npm run typecheck; npm run lint; npm run build",
+      "evidence_path": "frontend/package-lock.json",
+      "note": "Vite production build completed; frontend/dist remains ignored and will be removed after verification."
+    },
+    {
+      "name": "frontend production dependency audit",
+      "status": "PASS",
+      "command": "npm audit --omit dev --audit-level high",
+      "evidence_path": "frontend/package-lock.json",
+      "note": "0 production vulnerabilities."
+    },
+    {
+      "name": "Docker Compose config and clean CPU-only build",
+      "status": "PASS",
+      "command": "docker compose --env-file .env config --quiet; docker compose --env-file .env build --no-cache",
+      "evidence_path": "compose.yaml",
+      "note": "API/index-bootstrap/frontend images built without using a GPU profile."
+    },
+    {
+      "name": "Compose startup and public endpoints",
+      "status": "PASS",
+      "command": "docker compose --env-file .env up -d --wait; endpoint HTTP probes",
+      "evidence_path": "compose.yaml",
+      "note": "Services healthy; /health, /ready, /, SPA fallback, and /openapi.json returned HTTP 200."
+    },
+    {
+      "name": "Week 11 live Agent smoke",
+      "status": "PASS",
+      "command": "uv run python scripts/run_week11_live_smoke.py --timeout 180",
+      "evidence_path": "tests/end_to_end/fixtures/week11_live_smoke_cases.json",
+      "note": "11/11 operational runs passed with canonical citations."
+    },
+    {
+      "name": "bounded multi-article live smoke",
+      "status": "PASS",
+      "command": "uv run python scripts/run_week11_live_smoke.py --fixtures tests/end_to_end/fixtures/multi_article_live_cases.json --timeout 180",
+      "evidence_path": "tests/end_to_end/fixtures/multi_article_live_cases.json",
+      "note": "11/11 runs passed, including mixed valid/missing and clarification paths."
+    },
+    {
+      "name": "SQLite persistence across API restart",
+      "status": "PASS",
+      "command": "POST conversation; docker compose restart api; GET conversations; DELETE probe",
+      "evidence_path": "docs/week11.md",
+      "note": "Probe conversation was found after API restart and then deleted."
+    }
+  ],
+  "blockers": []
+}

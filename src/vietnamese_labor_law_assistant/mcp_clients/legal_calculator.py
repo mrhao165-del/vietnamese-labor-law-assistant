@@ -64,7 +64,7 @@ class LegalCalculatorMcpClient:
     async def calculate_notice_period(
         self,
         session: ClientSession,
-        contract_type: str,
+        contract_type: str | None = None,
         special_case: str = "NONE",
         employee_role: str = "STANDARD",
     ) -> ToolResponse[NoticePeriodResult]:

@@ -66,6 +66,8 @@ class ChatResponse(BaseModel):
     answer_text: str
     verification_code: str | None = None
     user_facing_message: str | None = None
+    router_decision: str | None = None
+    planned_tools: list[str] = Field(default_factory=list)
     route: str | None = None
     final_status: str
     citations: list[CitationResponse] = Field(default_factory=list)
