@@ -2,3 +2,8 @@ data/evaluation/week10_guardrail_cases.jsonl text eol=lf
 evaluation/results/week10_guardrail_*.json text eol=lf
 evaluation/results/week10_guardrail_*.jsonl text eol=lf
 evaluation/results/week10_guardrail_*.md text eol=lf
+
+# Frozen checksum evidence below must be stored and checked out byte-for-byte.
+# Do not normalize line endings: historical SHA-256 values include exact EOL bytes.
+data/evaluation/labor_law_eval_v1.jsonl -text
+docs/week1_manual_validation.csv -text
