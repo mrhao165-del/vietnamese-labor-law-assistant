@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from textwrap import wrap
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont, UnidentifiedImageError
 
 BACKGROUND = "#f7f8fb"
 INK = "#172033"
@@ -18,6 +20,201 @@ TEAL = "#0f766e"
 AMBER = "#b45309"
 RED = "#b91c1c"
 WHITE = "#ffffff"
+
+EXPECTED_ASSETS = {
+    "architecture.png": (1800, 1050),
+    "rag-pipeline.png": (1800, 820),
+    "agent-graph.png": (1800, 1100),
+    "evaluation-chart.png": (1600, 900),
+}
+BENCHMARK_TIERS = ("V1_DENSE", "V2_HYBRID", "V3_HYBRID_RERANKER")
+BENCHMARK_METRICS = ("hit_rate_at_1", "mrr", "recall_at_5")
+
+
+@dataclass(frozen=True)
+class DecodedImage:
+    raw_sha256: str
+    canonical_sha256: str
+    file_size: int
+    format: str
+    size: tuple[int, int]
+    mode: str
+    rgb_bytes: bytes
+
+
+@dataclass(frozen=True)
+class ImageComparison:
+    committed: DecodedImage
+    generated: DecodedImage
+    changed_pixel_count: int | None
+    difference_bbox: tuple[int, int, int, int] | None
+    max_per_channel_difference: int | None
+    mean_absolute_channel_difference: float | None
+
+    @property
+    def matches(self) -> bool:
+        return (
+            self.committed.format == self.generated.format
+            and self.committed.size == self.generated.size
+            and self.committed.rgb_bytes == self.generated.rgb_bytes
+        )
+
+    @property
+    def classification(self) -> str:
+        if self.matches and self.committed.raw_sha256 != self.generated.raw_sha256:
+            return "PNG_ENCODING_ONLY"
+        if self.matches:
+            return "EXACT_MATCH"
+        return "MATERIAL_PIXEL_DIFFERENCE"
+
+
+def _canonical_digest(decoded: DecodedImage) -> str:
+    width, height = decoded.size
+    payload = b"".join(
+        (
+            decoded.format.encode("ascii"),
+            b"\0",
+            width.to_bytes(8, "big"),
+            height.to_bytes(8, "big"),
+            b"RGB\0",
+            decoded.rgb_bytes,
+        )
+    )
+    return hashlib.sha256(payload).hexdigest()
+
+
+def decode_image(path: Path) -> DecodedImage:
+    """Decode a PNG and retain both transport and canonical pixel evidence."""
+
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise ValueError(f"missing or unreadable image: {path}") from exc
+    if not raw:
+        raise ValueError(f"empty image: {path}")
+    try:
+        with Image.open(path) as image:
+            image.load()
+            if image.format != "PNG":
+                raise ValueError(f"expected PNG image: {path}")
+            rgb_bytes = image.convert("RGB").tobytes()
+            decoded = DecodedImage(
+                raw_sha256=hashlib.sha256(raw).hexdigest(),
+                canonical_sha256="",
+                file_size=len(raw),
+                format=image.format,
+                size=image.size,
+                mode=image.mode,
+                rgb_bytes=rgb_bytes,
+            )
+    except (OSError, UnidentifiedImageError) as exc:
+        raise ValueError(f"corrupt or undecodable PNG: {path}") from exc
+    return DecodedImage(
+        raw_sha256=decoded.raw_sha256,
+        canonical_sha256=_canonical_digest(decoded),
+        file_size=decoded.file_size,
+        format=decoded.format,
+        size=decoded.size,
+        mode=decoded.mode,
+        rgb_bytes=decoded.rgb_bytes,
+    )
+
+
+def canonical_image_digest(path: Path) -> str:
+    """Hash PNG identity, dimensions, normalized RGB mode, and exact pixels."""
+
+    return decode_image(path).canonical_sha256
+
+
+def compare_images(committed_path: Path, generated_path: Path) -> ImageComparison:
+    committed = decode_image(committed_path)
+    generated = decode_image(generated_path)
+    if committed.size != generated.size:
+        return ImageComparison(committed, generated, None, None, None, None)
+
+    difference = ImageChops.difference(
+        Image.frombytes("RGB", committed.size, committed.rgb_bytes),
+        Image.frombytes("RGB", generated.size, generated.rgb_bytes),
+    )
+    difference_bytes = difference.tobytes()
+    changed_pixel_count = sum(
+        any(difference_bytes[offset : offset + 3]) for offset in range(0, len(difference_bytes), 3)
+    )
+    return ImageComparison(
+        committed=committed,
+        generated=generated,
+        changed_pixel_count=changed_pixel_count,
+        difference_bbox=difference.getbbox(),
+        max_per_channel_difference=max(difference_bytes, default=0),
+        mean_absolute_channel_difference=(
+            sum(difference_bytes) / len(difference_bytes) if difference_bytes else 0.0
+        ),
+    )
+
+
+def load_benchmark_values(benchmark_path: Path) -> dict[str, dict[str, float]]:
+    try:
+        summary = json.loads(benchmark_path.read_text(encoding="utf-8"))
+        rows = summary["rows"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        raise ValueError(f"invalid benchmark source: {benchmark_path}") from exc
+
+    values: dict[str, dict[str, float]] = {}
+    for tier in BENCHMARK_TIERS:
+        values[tier] = {}
+        for metric in BENCHMARK_METRICS:
+            matches = [
+                row
+                for row in rows
+                if row.get("tier") == tier
+                and row.get("split") == "DEV"
+                and row.get("metric") == metric
+            ]
+            if len(matches) != 1:
+                raise ValueError(f"benchmark must contain exactly one DEV {tier}/{metric} row")
+            value = matches[0].get("value")
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise ValueError(f"benchmark DEV {tier}/{metric} must have a numeric value")
+            values[tier][metric] = float(value)
+    return values
+
+
+def validate_asset_directory(output_dir: Path) -> None:
+    actual_names = {path.name for path in output_dir.glob("*.png")}
+    expected_names = set(EXPECTED_ASSETS)
+    if actual_names != expected_names:
+        missing = sorted(expected_names - actual_names)
+        unexpected = sorted(actual_names - expected_names)
+        raise ValueError(f"portfolio PNG set mismatch; missing={missing}, unexpected={unexpected}")
+    for name, expected_size in EXPECTED_ASSETS.items():
+        decoded = decode_image(output_dir / name)
+        if decoded.size != expected_size or decoded.mode != "RGB":
+            raise ValueError(
+                f"invalid portfolio asset contract for {name}: "
+                f"size={decoded.size}, mode={decoded.mode}"
+            )
+
+
+def _print_comparison(name: str, comparison: ImageComparison, classification: str) -> None:
+    committed = comparison.committed
+    generated = comparison.generated
+    print(
+        f"- {name}:\n"
+        f"  raw SHA committed/generated: "
+        f"{committed.raw_sha256} / {generated.raw_sha256}\n"
+        f"  canonical pixel SHA committed/generated: "
+        f"{committed.canonical_sha256} / {generated.canonical_sha256}\n"
+        f"  file size committed/generated: "
+        f"{committed.file_size} / {generated.file_size}\n"
+        f"  dimensions committed/generated: {committed.size} / {generated.size}\n"
+        f"  mode committed/generated: {committed.mode} / {generated.mode}\n"
+        f"  changed pixels: {comparison.changed_pixel_count}\n"
+        f"  difference bbox: {comparison.difference_bbox}\n"
+        f"  maximum per-channel difference: {comparison.max_per_channel_difference}\n"
+        f"  mean absolute channel difference: "
+        f"{comparison.mean_absolute_channel_difference}\n"
+        f"  classification: {classification}"
+    )
 
 
 def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -185,20 +382,7 @@ def agent_graph(path: Path) -> None:
 
 
 def evaluation_chart(path: Path, benchmark_path: Path) -> None:
-    summary = json.loads(benchmark_path.read_text(encoding="utf-8"))
-    rows = summary["rows"]
-    tiers = ("V1_DENSE", "V2_HYBRID", "V3_HYBRID_RERANKER")
-    values = {
-        tier: {
-            metric: next(
-                row["value"]
-                for row in rows
-                if row["tier"] == tier and row["split"] == "DEV" and row["metric"] == metric
-            )
-            for metric in ("hit_rate_at_1", "mrr", "recall_at_5")
-        }
-        for tier in tiers
-    }
+    values = load_benchmark_values(benchmark_path)
     image, draw = canvas(1600, 900)
     title(draw, "Portfolio retrieval benchmark", "Checksum-aligned DEV metrics; higher is better")
     left, top, bottom, right = 160, 220, 760, 1510
@@ -212,7 +396,7 @@ def evaluation_chart(path: Path, benchmark_path: Path) -> None:
     labels = ("Hit@1", "MRR", "Recall@5")
     group_width = 370
     bar_width = 82
-    for tier_index, tier in enumerate(tiers):
+    for tier_index, tier in enumerate(BENCHMARK_TIERS):
         center = 380 + tier_index * group_width
         for metric_index, (metric, _label, color) in enumerate(
             zip(("hit_rate_at_1", "mrr", "recall_at_5"), labels, colors, strict=True)
@@ -247,20 +431,57 @@ def main() -> None:
     if args.check:
         with tempfile.TemporaryDirectory() as temporary:
             generated = Path(temporary)
-            generate(generated, benchmark_path)
-            mismatches = [
-                name
-                for name in (
-                    "architecture.png",
-                    "rag-pipeline.png",
-                    "agent-graph.png",
-                    "evaluation-chart.png",
-                )
-                if not (output_dir / name).exists()
-                or (output_dir / name).read_bytes() != (generated / name).read_bytes()
-            ]
-            if mismatches:
-                raise SystemExit(f"asset regeneration mismatch: {', '.join(mismatches)}")
+            try:
+                load_benchmark_values(benchmark_path)
+                generate(generated, benchmark_path)
+                validate_asset_directory(generated)
+            except ValueError as exc:
+                raise SystemExit(f"portfolio asset contract failure: {exc}") from exc
+
+            contract_error: str | None = None
+            try:
+                validate_asset_directory(output_dir)
+            except ValueError as exc:
+                contract_error = str(exc)
+
+            mismatches: list[tuple[str, ImageComparison]] = []
+            invalid_images: list[tuple[str, str]] = []
+            for name in EXPECTED_ASSETS:
+                try:
+                    comparison = compare_images(output_dir / name, generated / name)
+                except ValueError as exc:
+                    invalid_images.append((name, str(exc)))
+                    continue
+                if not comparison.matches:
+                    mismatches.append((name, comparison))
+                elif (
+                    comparison.committed.size != EXPECTED_ASSETS[name]
+                    or comparison.committed.mode != "RGB"
+                ):
+                    mismatches.append((name, comparison))
+            if contract_error or mismatches or invalid_images:
+                print("portfolio asset check failure:")
+                if contract_error:
+                    print(f"contract: {contract_error}")
+                for name, comparison in mismatches:
+                    classification = (
+                        comparison.classification
+                        if not comparison.matches
+                        else "MATERIAL_PIXEL_DIFFERENCE"
+                    )
+                    _print_comparison(name, comparison, classification)
+                for name, error in invalid_images:
+                    print(
+                        f"- {name}:\n"
+                        f"  raw SHA committed/generated: unavailable\n"
+                        f"  canonical pixel SHA committed/generated: unavailable\n"
+                        f"  file size and mode: unavailable\n"
+                        f"  changed pixels: unavailable\n"
+                        f"  difference bbox: unavailable\n"
+                        f"  classification: MATERIAL_PIXEL_DIFFERENCE\n"
+                        f"  error: {error}"
+                    )
+                raise SystemExit(1)
         print("PASS: portfolio assets are reproducible")
         return
     generate(output_dir, benchmark_path)
