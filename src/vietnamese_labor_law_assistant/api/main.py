@@ -234,10 +234,12 @@ def create_app(
             citations = []
         verification = verification_for(result)
         warnings = list(verification.warnings) if verification else []
-        answer_text = public_answer(result.answer, result.verification)
+        answer_text = public_answer(result.answer, result.verification, result.status.value)
         machine_code = verification_code(result.verification)
         user_facing_message = answer_text if answer_text != result.answer else None
         metadata = {
+            "router_decision": result.router_decision,
+            "planned_tools": [item.value for item in result.planned_tools],
             "route": result.intent.value if result.intent else None,
             "final_status": result.status.value,
             "citations": [item.model_dump(mode="json") for item in citations],
@@ -262,6 +264,8 @@ def create_app(
             answer_text=answer_text,
             verification_code=machine_code,
             user_facing_message=user_facing_message,
+            router_decision=result.router_decision,
+            planned_tools=metadata["planned_tools"],
             route=metadata["route"],
             final_status=result.status.value,
             citations=citations,

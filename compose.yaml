@@ -42,6 +42,9 @@ services:
       LLM_TIMEOUT_SECONDS: "180"
       AGENT_TOOL_TIMEOUT_SECONDS: "120"
       AGENT_WORKFLOW_TIMEOUT_SECONDS: "300"
+      GUARDRAIL_SEMANTIC_MAX_CONTEXTS: "20"
+      GUARDRAIL_MAX_CLAIMS: "20"
+      GUARDRAIL_MAX_CITATIONS_PER_CLAIM: "20"
     depends_on:
       qdrant-index-bootstrap:
         condition: service_completed_successfully

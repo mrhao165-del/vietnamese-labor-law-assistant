@@ -1,0 +1,45 @@
+{
+  "summary": {
+    "schema_version": "1.1",
+    "classification": "operational_smoke_fixture_not_frozen_benchmark",
+    "runs": 1,
+    "passed": 1,
+    "failed": 0
+  },
+  "attempts": [
+    {
+      "fixture_id": "week11-clarification-required",
+      "source": "week9:w9-019",
+      "request_id": "fb0f8bbe-e159-4e7d-bb86-2c5ee8e5c7a6",
+      "http_status": 200,
+      "workflow_status": "CLARIFICATION_REQUIRED",
+      "route": "RETRIEVAL_ONLY",
+      "tools": [],
+      "article_arguments": [],
+      "call_ids": [],
+      "trace_count": 0,
+      "verification": "CLARIFICATION_REQUIRED",
+      "reason_code": "CLARIFICATION_REQUIRED",
+      "citation_count": 0,
+      "citations_by_article": {},
+      "warnings": [],
+      "canonical_citation_validity": true,
+      "latency_ms": 2786.7772440004046,
+      "checks": {
+        "http_200": true,
+        "route": true,
+        "final_status": true,
+        "verification": true,
+        "tools": true,
+        "minimum_citations": true,
+        "maximum_citations": true,
+        "canonical_citations": true,
+        "public_answer": true,
+        "safe_envelope": true
+      },
+      "result": "PASS",
+      "run_index": 1,
+      "client_elapsed_ms": 2815.969
+    }
+  ]
+}

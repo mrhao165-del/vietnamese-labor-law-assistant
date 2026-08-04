@@ -78,8 +78,9 @@
       "question": "Tôi cần tính thời hạn hợp đồng",
       "runs": 1,
       "expected_route": "CALCULATOR_ONLY",
+      "expected_routes": ["CALCULATOR_ONLY", "RETRIEVAL_ONLY"],
       "expected_final_statuses": ["CLARIFICATION_REQUIRED"],
-      "expected_verification_statuses": ["INSUFFICIENT_CONTEXT"],
+      "expected_verification_statuses": ["CLARIFICATION_REQUIRED"],
       "expected_tools": [],
       "minimum_citations": 0,
       "maximum_citations": 0

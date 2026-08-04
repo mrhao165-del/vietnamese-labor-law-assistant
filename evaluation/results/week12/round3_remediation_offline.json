@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "classification": "OFFLINE_DETERMINISTIC_CONTRACT_VERIFICATION",
+  "generated_at": "2026-08-03T21:13:00.8164347+07:00",
+  "source_head": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+  "command": ".venv\\Scripts\\python.exe -m pytest tests\\unit\\agent tests\\unit\\api\\test_public_mapper.py tests\\unit\\calculator tests\\unit\\guardrails tests\\integration\\test_week11_chat_api.py -o addopts= --basetemp=.pytest-tmp-round3-targeted",
+  "tests": {
+    "collected": 154,
+    "passed": 154,
+    "failed": 0,
+    "errors": 0,
+    "warnings": 1,
+    "elapsed_seconds": 9.92,
+    "warning_summary": [
+      "Starlette TestClient reports a deprecation warning for its current httpx integration."
+    ]
+  },
+  "affected_cases": [
+    {
+      "parent_round2_review_id": "W12-R2-006",
+      "result": "PASS",
+      "checks": [
+        "over-limit request retains RETRIEVAL_ONLY execution route",
+        "outcome is CLARIFICATION_REQUIRED",
+        "verification status is CLARIFICATION_REQUIRED",
+        "configured maximum of three articles is explained",
+        "planned and observed tools are empty",
+        "valid no-claim clarification bypasses legal-claim verification"
+      ]
+    },
+    {
+      "parent_round2_review_id": "W12-R2-008",
+      "result": "PASS",
+      "checks": [
+        "general notice overview uses RETRIEVAL_ONLY and get_article(35)",
+        "calculator is not called",
+        "answer contains 45 days, 30 days, and 03 working days",
+        "special-industry duration is deferred to Government regulation",
+        "Article 35(2) no-notice circumstances are included",
+        "Article 35 clauses 1 and 2 are cited",
+        "bounded source projection is guardrail verified"
+      ]
+    },
+    {
+      "parent_round2_review_id": "W12-R2-019",
+      "result": "PASS",
+      "checks": [
+        "ambiguous duration intent produces CLARIFICATION_REQUIRED",
+        "calendar duration asks for start and end dates",
+        "notice calculation asks for under-12, 12-to-36, or indefinite facts",
+        "Article 35(2) circumstance is requested",
+        "contract classification is offered as a separate goal",
+        "no fixed-term definition is restricted to 12-to-36 months",
+        "planned and observed tools are empty"
+      ]
+    }
+  ],
+  "generic_alternatives": [
+    {
+      "behavior": "general_notice_overview",
+      "questions": [
+        "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+        "Các thời hạn báo trước khi nghỉ việc là gì?",
+        "Muốn nghỉ việc thì báo trước mấy ngày?"
+      ],
+      "result": "PASS"
+    },
+    {
+      "behavior": "ambiguous_contract_duration",
+      "questions": [
+        "Tính thời hạn hợp đồng giúp tôi.",
+        "Hợp đồng của tôi kéo dài bao lâu?",
+        "Tính số ngày của hợp đồng."
+      ],
+      "result": "PASS"
+    },
+    {
+      "behavior": "personalized_notice_missing_parameters",
+      "questions": [
+        "Tôi muốn biết mình phải báo trước bao lâu",
+        "Tính thời gian cần báo trước."
+      ],
+      "result": "PASS"
+    }
+  ],
+  "public_mapping": {
+    "CLARIFICATION_REQUIRED": "PASS",
+    "INSUFFICIENT_CONTEXT": "PASS",
+    "ARTICLE_NOT_FOUND": "PASS",
+    "OUT_OF_SCOPE": "PASS",
+    "UNSUPPORTED": "PASS",
+    "OUTPUT_INVALID": "PASS"
+  },
+  "no_case_specific_production_branch": true,
+  "latency": {
+    "classification": "NOT_LIVE_LLM_LATENCY",
+    "reported_as_metric": false,
+    "note": "Pytest elapsed time is test-run duration only."
+  }
+}

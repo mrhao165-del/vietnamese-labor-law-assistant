@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "release_ready_for_final_validation": true,
+  "blank_packet": {
+    "path": "evaluation/review/week12_manual_review_round3.csv",
+    "sha256": "1ef276184bd9b3b5697e132ce96d5fc445b90fac7b76f9ce717faad8a99b038d"
+  },
+  "reviewed_packet": {
+    "path": "evaluation/review/week12_manual_review_round3_reviewed.csv",
+    "sha256": "ebb9dcff6a6b39ea9b11862f8f7b1542bc3694dff9c233b6c20790a1487e4c0a"
+  },
+  "ai_assisted_packet": {
+    "path": "evaluation/review/week12_manual_review_round3_ai_pre_review.csv",
+    "present": false,
+    "sha256": null,
+    "validation": "NOT_APPLICABLE"
+  },
+  "archive": {
+    "path": "evaluation/review/archive/round3/week12_manual_review_round3_reviewed.csv",
+    "sha256": "ebb9dcff6a6b39ea9b11862f8f7b1542bc3694dff9c233b6c20790a1487e4c0a",
+    "matches_reviewed_packet": true
+  },
+  "row_count": 3,
+  "unique_id_count": 3,
+  "case_ids": [
+    "W12-R3-006",
+    "W12-R3-008",
+    "W12-R3-019"
+  ],
+  "decision_counts": {
+    "PASS": 3,
+    "FAIL": 0,
+    "NEEDS_DISCUSSION": 0
+  },
+  "reviewer_metadata": {
+    "reviewer_name_complete": true,
+    "reviewer_role_complete": true,
+    "reviewed_at_complete_and_iso8601": true,
+    "evidence_note_complete": true
+  },
+  "immutable_fields": {
+    "common_non_reviewer_columns_match_blank_packet": true,
+    "route_outcome_tools_citations_verification_warnings_provenance_unchanged": true,
+    "root_cause_fix_summary_and_previous_human_evidence_unchanged": true,
+    "reviewer_fields_only_mutable_common_columns": true,
+    "result": "PASS"
+  },
+  "blockers": []
+}

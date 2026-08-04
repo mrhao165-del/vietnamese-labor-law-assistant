@@ -1,0 +1,17 @@
+flowchart TD
+    I[Input validation] --> R[Structured routing]
+    R -->|retrieval| RT[MCP retrieval]
+    R -->|calculator| CA[MCP calculator]
+    R -->|combined| CO[Calculator then retrieval]
+    R -->|out of scope| OO[Safe refusal]
+    R -->|missing parameters / over limit| CL[Clarification]
+    RT --> A[Answer generation]
+    CA --> A
+    CO --> A
+    A --> V[Citation + semantic verification]
+    V -->|supported| S[Return cited answer]
+    V -->|unsupported / insufficient| F[Fail closed]
+    OO --> E[Final response]
+    CL --> E
+    S --> E
+    F --> E

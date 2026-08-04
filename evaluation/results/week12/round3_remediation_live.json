@@ -1,0 +1,1703 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP",
+  "generated_at": "2026-08-03T14:38:19.714236+00:00",
+  "attempt_count": 27,
+  "passed": 27,
+  "failed": 0,
+  "attempts": [
+    {
+      "case_id": "round3-006-primary",
+      "parent_round2_review_id": "W12-R2-006",
+      "original_review_id": "W12-006",
+      "run_index": 1,
+      "request_id": "7bb4478e-98de-4319-9be8-8a12c5c7e08d",
+      "question": "Điều 20, Điều 32, Điều 35 và Điều 54 quy định gì?",
+      "router_decision": "CLARIFY_ARTICLE_LIMIT",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn đã yêu cầu 4 điều luật. Hệ thống hỗ trợ tối đa 3 điều luật trong một yêu cầu. Vui lòng chọn hoặc chia danh sách để mỗi yêu cầu có tối đa 3 điều luật.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 2766.5987279999626,
+      "client_elapsed_ms": 2837.705,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:tối đa 3": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-006-primary",
+      "parent_round2_review_id": "W12-R2-006",
+      "original_review_id": "W12-006",
+      "run_index": 2,
+      "request_id": "58c8d07a-54aa-4ab4-9174-5c294904664f",
+      "question": "Điều 20, Điều 32, Điều 35 và Điều 54 quy định gì?",
+      "router_decision": "CLARIFY_ARTICLE_LIMIT",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn đã yêu cầu 4 điều luật. Hệ thống hỗ trợ tối đa 3 điều luật trong một yêu cầu. Vui lòng chọn hoặc chia danh sách để mỗi yêu cầu có tối đa 3 điều luật.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 2140.1145970000925,
+      "client_elapsed_ms": 2167.983,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:tối đa 3": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-006-primary",
+      "parent_round2_review_id": "W12-R2-006",
+      "original_review_id": "W12-006",
+      "run_index": 3,
+      "request_id": "2474651b-3608-4dcf-9bd8-7114cc8ded69",
+      "question": "Điều 20, Điều 32, Điều 35 và Điều 54 quy định gì?",
+      "router_decision": "CLARIFY_ARTICLE_LIMIT",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn đã yêu cầu 4 điều luật. Hệ thống hỗ trợ tối đa 3 điều luật trong một yêu cầu. Vui lòng chọn hoặc chia danh sách để mỗi yêu cầu có tối đa 3 điều luật.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1667.6052479999726,
+      "client_elapsed_ms": 1698.399,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:tối đa 3": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-006-alternative-1",
+      "parent_round2_review_id": "W12-R2-006",
+      "original_review_id": "W12-006",
+      "run_index": 1,
+      "request_id": "21570cb4-4200-4c30-be09-4009de05039f",
+      "question": "Cho tôi biết nội dung Điều 20, Điều 32, Điều 35 và Điều 54.",
+      "router_decision": "CLARIFY_ARTICLE_LIMIT",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn đã yêu cầu 4 điều luật. Hệ thống hỗ trợ tối đa 3 điều luật trong một yêu cầu. Vui lòng chọn hoặc chia danh sách để mỗi yêu cầu có tối đa 3 điều luật.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1863.633499999878,
+      "client_elapsed_ms": 1886.863,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:tối đa 3": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-006-alternative-1",
+      "parent_round2_review_id": "W12-R2-006",
+      "original_review_id": "W12-006",
+      "run_index": 2,
+      "request_id": "50a43ca0-355b-48ea-b7f8-53daeaafb69a",
+      "question": "Cho tôi biết nội dung Điều 20, Điều 32, Điều 35 và Điều 54.",
+      "router_decision": "CLARIFY_ARTICLE_LIMIT",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn đã yêu cầu 4 điều luật. Hệ thống hỗ trợ tối đa 3 điều luật trong một yêu cầu. Vui lòng chọn hoặc chia danh sách để mỗi yêu cầu có tối đa 3 điều luật.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1879.5589979999932,
+      "client_elapsed_ms": 1903.762,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:tối đa 3": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-006-alternative-1",
+      "parent_round2_review_id": "W12-R2-006",
+      "original_review_id": "W12-006",
+      "run_index": 3,
+      "request_id": "735fb648-f7f8-41b8-b622-27cdff3e843a",
+      "question": "Cho tôi biết nội dung Điều 20, Điều 32, Điều 35 và Điều 54.",
+      "router_decision": "CLARIFY_ARTICLE_LIMIT",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn đã yêu cầu 4 điều luật. Hệ thống hỗ trợ tối đa 3 điều luật trong một yêu cầu. Vui lòng chọn hoặc chia danh sách để mỗi yêu cầu có tối đa 3 điều luật.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1635.350143000096,
+      "client_elapsed_ms": 1685.356,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:tối đa 3": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-006-alternative-2",
+      "parent_round2_review_id": "W12-R2-006",
+      "original_review_id": "W12-006",
+      "run_index": 1,
+      "request_id": "dada001e-6369-43a2-9bc7-f0593c6d6861",
+      "question": "Tóm tắt các Điều 20, 32, 35, 54 của Bộ luật Lao động.",
+      "router_decision": "CLARIFY_ARTICLE_LIMIT",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn đã yêu cầu 4 điều luật. Hệ thống hỗ trợ tối đa 3 điều luật trong một yêu cầu. Vui lòng chọn hoặc chia danh sách để mỗi yêu cầu có tối đa 3 điều luật.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1958.4757610000452,
+      "client_elapsed_ms": 1992.976,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:tối đa 3": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-006-alternative-2",
+      "parent_round2_review_id": "W12-R2-006",
+      "original_review_id": "W12-006",
+      "run_index": 2,
+      "request_id": "2f223586-c35c-40fe-9114-ab6bfd2b3223",
+      "question": "Tóm tắt các Điều 20, 32, 35, 54 của Bộ luật Lao động.",
+      "router_decision": "CLARIFY_ARTICLE_LIMIT",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn đã yêu cầu 4 điều luật. Hệ thống hỗ trợ tối đa 3 điều luật trong một yêu cầu. Vui lòng chọn hoặc chia danh sách để mỗi yêu cầu có tối đa 3 điều luật.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1963.2814429999144,
+      "client_elapsed_ms": 1984.553,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:tối đa 3": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-006-alternative-2",
+      "parent_round2_review_id": "W12-R2-006",
+      "original_review_id": "W12-006",
+      "run_index": 3,
+      "request_id": "1cdf9119-6165-4b31-a967-51b0f6fc5855",
+      "question": "Tóm tắt các Điều 20, 32, 35, 54 của Bộ luật Lao động.",
+      "router_decision": "CLARIFY_ARTICLE_LIMIT",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn đã yêu cầu 4 điều luật. Hệ thống hỗ trợ tối đa 3 điều luật trong một yêu cầu. Vui lòng chọn hoặc chia danh sách để mỗi yêu cầu có tối đa 3 điều luật.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 4044.831298999952,
+      "client_elapsed_ms": 4066.14,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:tối đa 3": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-008-primary",
+      "parent_round2_review_id": "W12-R2-008",
+      "original_review_id": "W12-008",
+      "run_index": 1,
+      "request_id": "9ac8ae85-40f5-4aa7-b547-81d7ba5fc19b",
+      "question": "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+      "router_decision": "NOTICE_FRAMEWORK_OVERVIEW",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "WORKFLOW_VALID",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "sanitized_parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n\n2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 17744.414484999877,
+      "client_elapsed_ms": 17791.296,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true,
+        "contains:45 ngày": true,
+        "contains:30 ngày": true,
+        "contains:03 ngày làm việc": true,
+        "contains:quy định của Chính phủ": true,
+        "contains:không cần báo trước": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-008-primary",
+      "parent_round2_review_id": "W12-R2-008",
+      "original_review_id": "W12-008",
+      "run_index": 2,
+      "request_id": "d9636ecf-cba7-4fde-a889-d2eb9326e254",
+      "question": "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+      "router_decision": "NOTICE_FRAMEWORK_OVERVIEW",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "WORKFLOW_VALID",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "sanitized_parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n\n2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 10695.771295999975,
+      "client_elapsed_ms": 10759.631,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true,
+        "contains:45 ngày": true,
+        "contains:30 ngày": true,
+        "contains:03 ngày làm việc": true,
+        "contains:quy định của Chính phủ": true,
+        "contains:không cần báo trước": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-008-primary",
+      "parent_round2_review_id": "W12-R2-008",
+      "original_review_id": "W12-008",
+      "run_index": 3,
+      "request_id": "4606b327-a28b-4d57-9246-c169c8910866",
+      "question": "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+      "router_decision": "NOTICE_FRAMEWORK_OVERVIEW",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "WORKFLOW_VALID",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "sanitized_parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n\n2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 10845.449486000007,
+      "client_elapsed_ms": 10881.317,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true,
+        "contains:45 ngày": true,
+        "contains:30 ngày": true,
+        "contains:03 ngày làm việc": true,
+        "contains:quy định của Chính phủ": true,
+        "contains:không cần báo trước": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-008-alternative-1",
+      "parent_round2_review_id": "W12-R2-008",
+      "original_review_id": "W12-008",
+      "run_index": 1,
+      "request_id": "3b0730e4-f43f-4657-b3ad-8cd71dc25e8a",
+      "question": "Các thời hạn báo trước khi nghỉ việc là gì?",
+      "router_decision": "NOTICE_FRAMEWORK_OVERVIEW",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "WORKFLOW_VALID",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "sanitized_parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n\n2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 11514.558877000127,
+      "client_elapsed_ms": 11566.079,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true,
+        "contains:45 ngày": true,
+        "contains:30 ngày": true,
+        "contains:03 ngày làm việc": true,
+        "contains:quy định của Chính phủ": true,
+        "contains:không cần báo trước": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-008-alternative-1",
+      "parent_round2_review_id": "W12-R2-008",
+      "original_review_id": "W12-008",
+      "run_index": 2,
+      "request_id": "31d346a3-3ecf-4454-ad85-bf7720996fc3",
+      "question": "Các thời hạn báo trước khi nghỉ việc là gì?",
+      "router_decision": "NOTICE_FRAMEWORK_OVERVIEW",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "WORKFLOW_VALID",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "sanitized_parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n\n2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 11998.528890999978,
+      "client_elapsed_ms": 12045.333,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true,
+        "contains:45 ngày": true,
+        "contains:30 ngày": true,
+        "contains:03 ngày làm việc": true,
+        "contains:quy định của Chính phủ": true,
+        "contains:không cần báo trước": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-008-alternative-1",
+      "parent_round2_review_id": "W12-R2-008",
+      "original_review_id": "W12-008",
+      "run_index": 3,
+      "request_id": "e7549674-da09-4f30-bb99-bde1de7ca370",
+      "question": "Các thời hạn báo trước khi nghỉ việc là gì?",
+      "router_decision": "NOTICE_FRAMEWORK_OVERVIEW",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "WORKFLOW_VALID",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "sanitized_parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n\n2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 11940.255783000111,
+      "client_elapsed_ms": 11983.865,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true,
+        "contains:45 ngày": true,
+        "contains:30 ngày": true,
+        "contains:03 ngày làm việc": true,
+        "contains:quy định của Chính phủ": true,
+        "contains:không cần báo trước": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-008-alternative-2",
+      "parent_round2_review_id": "W12-R2-008",
+      "original_review_id": "W12-008",
+      "run_index": 1,
+      "request_id": "bf403440-5323-437e-a882-e65afba7c048",
+      "question": "Muốn nghỉ việc thì báo trước mấy ngày?",
+      "router_decision": "NOTICE_FRAMEWORK_OVERVIEW",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "WORKFLOW_VALID",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "sanitized_parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n\n2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 11605.497991999982,
+      "client_elapsed_ms": 11897.226,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true,
+        "contains:45 ngày": true,
+        "contains:30 ngày": true,
+        "contains:03 ngày làm việc": true,
+        "contains:quy định của Chính phủ": true,
+        "contains:không cần báo trước": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-008-alternative-2",
+      "parent_round2_review_id": "W12-R2-008",
+      "original_review_id": "W12-008",
+      "run_index": 2,
+      "request_id": "e853f14f-b4d8-4038-a62b-cabb99fc9e0e",
+      "question": "Muốn nghỉ việc thì báo trước mấy ngày?",
+      "router_decision": "NOTICE_FRAMEWORK_OVERVIEW",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "WORKFLOW_VALID",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "sanitized_parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n\n2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 11432.497140999885,
+      "client_elapsed_ms": 11481.466,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true,
+        "contains:45 ngày": true,
+        "contains:30 ngày": true,
+        "contains:03 ngày làm việc": true,
+        "contains:quy định của Chính phủ": true,
+        "contains:không cần báo trước": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-008-alternative-2",
+      "parent_round2_review_id": "W12-R2-008",
+      "original_review_id": "W12-008",
+      "run_index": 3,
+      "request_id": "6f673f4d-4a92-4fbe-87fb-96326d81922f",
+      "question": "Muốn nghỉ việc thì báo trước mấy ngày?",
+      "router_decision": "NOTICE_FRAMEWORK_OVERVIEW",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "WORKFLOW_VALID",
+      "planned_tools": [
+        "get_article"
+      ],
+      "observed_tools": [
+        "get_article"
+      ],
+      "sanitized_parameters": [
+        {
+          "article_number": 35
+        }
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "answer": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.\n\n2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+      "citations": [
+        {
+          "index": 1,
+          "chunk_id": "ll_6af59ba448952c1c927978713d34d984",
+          "article_number": 35,
+          "clause_number": 1,
+          "point_label": null,
+          "excerpt": "1. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động nhưng phải báo trước cho người sử dụng lao động như sau:\na) Ít nhất 45 ngày nếu làm việc theo hợp đồng lao động không xác định thời hạn;\nb) Ít nhất 30 ngày nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn từ 12 tháng đến 36 tháng;\nc) Ít nhất 03 ngày làm việc nếu làm việc theo hợp đồng lao động xác định thời hạn có thời hạn dưới 12 tháng;\nd) Đối với một số ngành, nghề, công việc đặc thù thì thời hạn báo trước được thực hiện theo quy định của Chính phủ.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        },
+        {
+          "index": 2,
+          "chunk_id": "ll_610e9077fc973dabc980978eb3f3da54",
+          "article_number": 35,
+          "clause_number": 2,
+          "point_label": null,
+          "excerpt": "2. Người lao động có quyền đơn phương chấm dứt hợp đồng lao động không cần báo trước trong trường hợp sau đây:\na) Không được bố trí theo đúng công việc, địa điểm làm việc hoặc không được bảo đảm điều kiện làm việc theo thỏa thuận, trừ trường hợp quy định tại Điều 29 của Bộ luật này;\nb) Không được trả đủ lương hoặc trả lương không đúng thời hạn, trừ trường hợp quy định tại khoản 4 Điều 97 của Bộ luật này;\nc) Bị người sử dụng lao động ngược đãi, đánh đập hoặc có lời nói, hành vi nhục mạ, hành vi làm ảnh hưởng đến sức khỏe, nhân phẩm, danh dự; bị cưỡng bức lao động;\nd) Bị quấy rối tình dục tại nơi làm việc;\nđ) Lao động nữ mang thai phải nghỉ việc theo quy định tại khoản 1 Điều 138 của Bộ luật này;\ne) Đủ tuổi nghỉ hưu theo quy định tại Điều 169 của Bộ luật này, trừ trường hợp các bên có thỏa thuận khác;\ng) Người sử dụng lao động cung cấp thông tin không trung thực theo quy định tại khoản 1 Điều 16 của Bộ luật này làm ảnh hưởng đến việc thực hiện hợp đồng lao động.",
+          "document_name": "labor_law",
+          "source_file": "data/raw/labor_law.docx"
+        }
+      ],
+      "verification": {
+        "status": "SUPPORTED",
+        "warnings": [],
+        "checks": [
+          {
+            "label": "AGENT-CLM-SOURCE-01",
+            "passed": true
+          },
+          {
+            "label": "AGENT-CLM-SOURCE-02",
+            "passed": true
+          }
+        ]
+      },
+      "verification_code": "SUPPORTED",
+      "warnings": [],
+      "latency_ms": 11426.962785999876,
+      "client_elapsed_ms": 11470.547,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "citation_article_coverage": true,
+        "clause_coverage": true,
+        "contains:45 ngày": true,
+        "contains:30 ngày": true,
+        "contains:03 ngày làm việc": true,
+        "contains:quy định của Chính phủ": true,
+        "contains:không cần báo trước": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-019-primary",
+      "parent_round2_review_id": "W12-R2-019",
+      "original_review_id": "W12-019",
+      "run_index": 1,
+      "request_id": "462c8042-0012-441b-8a43-79a0d6448d3b",
+      "question": "Tôi cần tính thời hạn hợp đồng",
+      "router_decision": "CLARIFY_CONTRACT_DURATION_PURPOSE",
+      "route": "CALCULATOR_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn muốn (1) tính số ngày/tháng của hợp đồng, (2) xác định thời gian báo trước khi nghỉ việc, hay (3) phân loại hợp đồng? Nếu chọn (1), vui lòng cung cấp ngày bắt đầu và ngày kết thúc. Nếu chọn (2), vui lòng cho biết hợp đồng có thời hạn dưới 12 tháng, từ 12 đến 36 tháng, hay không xác định thời hạn, đồng thời cho biết có hoàn cảnh nào thuộc nhóm không cần báo trước tại khoản 2 Điều 35 hay không. Nếu chọn (3), vui lòng cung cấp điều khoản về thời hạn và thời điểm chấm dứt của hợp đồng.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 2575.7832770000277,
+      "client_elapsed_ms": 2597.792,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:ngày bắt đầu": true,
+        "contains:ngày kết thúc": true,
+        "contains:thời gian báo trước": true,
+        "contains:phân loại hợp đồng": true,
+        "contains:dưới 12 tháng": true,
+        "contains:12 đến 36 tháng": true,
+        "contains:không xác định thời hạn": true,
+        "excludes:xác định thời hạn (từ 12 đến 36 tháng)": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-019-primary",
+      "parent_round2_review_id": "W12-R2-019",
+      "original_review_id": "W12-019",
+      "run_index": 2,
+      "request_id": "31f11cb1-5f24-4fbb-9bff-f67f06fa46b9",
+      "question": "Tôi cần tính thời hạn hợp đồng",
+      "router_decision": "CLARIFY_CONTRACT_DURATION_PURPOSE",
+      "route": "CALCULATOR_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn muốn (1) tính số ngày/tháng của hợp đồng, (2) xác định thời gian báo trước khi nghỉ việc, hay (3) phân loại hợp đồng? Nếu chọn (1), vui lòng cung cấp ngày bắt đầu và ngày kết thúc. Nếu chọn (2), vui lòng cho biết hợp đồng có thời hạn dưới 12 tháng, từ 12 đến 36 tháng, hay không xác định thời hạn, đồng thời cho biết có hoàn cảnh nào thuộc nhóm không cần báo trước tại khoản 2 Điều 35 hay không. Nếu chọn (3), vui lòng cung cấp điều khoản về thời hạn và thời điểm chấm dứt của hợp đồng.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 2018.2850399999097,
+      "client_elapsed_ms": 2060.294,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:ngày bắt đầu": true,
+        "contains:ngày kết thúc": true,
+        "contains:thời gian báo trước": true,
+        "contains:phân loại hợp đồng": true,
+        "contains:dưới 12 tháng": true,
+        "contains:12 đến 36 tháng": true,
+        "contains:không xác định thời hạn": true,
+        "excludes:xác định thời hạn (từ 12 đến 36 tháng)": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-019-primary",
+      "parent_round2_review_id": "W12-R2-019",
+      "original_review_id": "W12-019",
+      "run_index": 3,
+      "request_id": "93a91ca1-193d-4fcc-80f8-ec3f1ff22c10",
+      "question": "Tôi cần tính thời hạn hợp đồng",
+      "router_decision": "CLARIFY_CONTRACT_DURATION_PURPOSE",
+      "route": "CALCULATOR_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn muốn (1) tính số ngày/tháng của hợp đồng, (2) xác định thời gian báo trước khi nghỉ việc, hay (3) phân loại hợp đồng? Nếu chọn (1), vui lòng cung cấp ngày bắt đầu và ngày kết thúc. Nếu chọn (2), vui lòng cho biết hợp đồng có thời hạn dưới 12 tháng, từ 12 đến 36 tháng, hay không xác định thời hạn, đồng thời cho biết có hoàn cảnh nào thuộc nhóm không cần báo trước tại khoản 2 Điều 35 hay không. Nếu chọn (3), vui lòng cung cấp điều khoản về thời hạn và thời điểm chấm dứt của hợp đồng.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 2316.4711479998914,
+      "client_elapsed_ms": 2365.444,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:ngày bắt đầu": true,
+        "contains:ngày kết thúc": true,
+        "contains:thời gian báo trước": true,
+        "contains:phân loại hợp đồng": true,
+        "contains:dưới 12 tháng": true,
+        "contains:12 đến 36 tháng": true,
+        "contains:không xác định thời hạn": true,
+        "excludes:xác định thời hạn (từ 12 đến 36 tháng)": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-019-alternative-1",
+      "parent_round2_review_id": "W12-R2-019",
+      "original_review_id": "W12-019",
+      "run_index": 1,
+      "request_id": "1eaa9b42-4ed1-4c17-82f4-1aa85d31b9ff",
+      "question": "Hợp đồng của tôi kéo dài bao lâu?",
+      "router_decision": "CLARIFY_CONTRACT_DURATION_PURPOSE",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn muốn (1) tính số ngày/tháng của hợp đồng, (2) xác định thời gian báo trước khi nghỉ việc, hay (3) phân loại hợp đồng? Nếu chọn (1), vui lòng cung cấp ngày bắt đầu và ngày kết thúc. Nếu chọn (2), vui lòng cho biết hợp đồng có thời hạn dưới 12 tháng, từ 12 đến 36 tháng, hay không xác định thời hạn, đồng thời cho biết có hoàn cảnh nào thuộc nhóm không cần báo trước tại khoản 2 Điều 35 hay không. Nếu chọn (3), vui lòng cung cấp điều khoản về thời hạn và thời điểm chấm dứt của hợp đồng.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 2817.1905359999982,
+      "client_elapsed_ms": 2847.567,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:ngày bắt đầu": true,
+        "contains:ngày kết thúc": true,
+        "contains:thời gian báo trước": true,
+        "contains:phân loại hợp đồng": true,
+        "contains:dưới 12 tháng": true,
+        "contains:12 đến 36 tháng": true,
+        "contains:không xác định thời hạn": true,
+        "excludes:xác định thời hạn (từ 12 đến 36 tháng)": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-019-alternative-1",
+      "parent_round2_review_id": "W12-R2-019",
+      "original_review_id": "W12-019",
+      "run_index": 2,
+      "request_id": "e400afde-8f37-4f84-9141-cf3601aebd80",
+      "question": "Hợp đồng của tôi kéo dài bao lâu?",
+      "router_decision": "CLARIFY_CONTRACT_DURATION_PURPOSE",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn muốn (1) tính số ngày/tháng của hợp đồng, (2) xác định thời gian báo trước khi nghỉ việc, hay (3) phân loại hợp đồng? Nếu chọn (1), vui lòng cung cấp ngày bắt đầu và ngày kết thúc. Nếu chọn (2), vui lòng cho biết hợp đồng có thời hạn dưới 12 tháng, từ 12 đến 36 tháng, hay không xác định thời hạn, đồng thời cho biết có hoàn cảnh nào thuộc nhóm không cần báo trước tại khoản 2 Điều 35 hay không. Nếu chọn (3), vui lòng cung cấp điều khoản về thời hạn và thời điểm chấm dứt của hợp đồng.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1935.334335999869,
+      "client_elapsed_ms": 1975.762,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:ngày bắt đầu": true,
+        "contains:ngày kết thúc": true,
+        "contains:thời gian báo trước": true,
+        "contains:phân loại hợp đồng": true,
+        "contains:dưới 12 tháng": true,
+        "contains:12 đến 36 tháng": true,
+        "contains:không xác định thời hạn": true,
+        "excludes:xác định thời hạn (từ 12 đến 36 tháng)": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-019-alternative-1",
+      "parent_round2_review_id": "W12-R2-019",
+      "original_review_id": "W12-019",
+      "run_index": 3,
+      "request_id": "a87984b3-39fd-4f14-8fc0-b33cd98185ef",
+      "question": "Hợp đồng của tôi kéo dài bao lâu?",
+      "router_decision": "CLARIFY_CONTRACT_DURATION_PURPOSE",
+      "route": "RETRIEVAL_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn muốn (1) tính số ngày/tháng của hợp đồng, (2) xác định thời gian báo trước khi nghỉ việc, hay (3) phân loại hợp đồng? Nếu chọn (1), vui lòng cung cấp ngày bắt đầu và ngày kết thúc. Nếu chọn (2), vui lòng cho biết hợp đồng có thời hạn dưới 12 tháng, từ 12 đến 36 tháng, hay không xác định thời hạn, đồng thời cho biết có hoàn cảnh nào thuộc nhóm không cần báo trước tại khoản 2 Điều 35 hay không. Nếu chọn (3), vui lòng cung cấp điều khoản về thời hạn và thời điểm chấm dứt của hợp đồng.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1724.237932999813,
+      "client_elapsed_ms": 1770.44,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:ngày bắt đầu": true,
+        "contains:ngày kết thúc": true,
+        "contains:thời gian báo trước": true,
+        "contains:phân loại hợp đồng": true,
+        "contains:dưới 12 tháng": true,
+        "contains:12 đến 36 tháng": true,
+        "contains:không xác định thời hạn": true,
+        "excludes:xác định thời hạn (từ 12 đến 36 tháng)": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-019-alternative-2",
+      "parent_round2_review_id": "W12-R2-019",
+      "original_review_id": "W12-019",
+      "run_index": 1,
+      "request_id": "ac7f7a6c-7608-4547-8332-31a7f23a24bb",
+      "question": "Tính số ngày của hợp đồng.",
+      "router_decision": "CLARIFY_CONTRACT_DURATION_PURPOSE",
+      "route": "CALCULATOR_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn muốn (1) tính số ngày/tháng của hợp đồng, (2) xác định thời gian báo trước khi nghỉ việc, hay (3) phân loại hợp đồng? Nếu chọn (1), vui lòng cung cấp ngày bắt đầu và ngày kết thúc. Nếu chọn (2), vui lòng cho biết hợp đồng có thời hạn dưới 12 tháng, từ 12 đến 36 tháng, hay không xác định thời hạn, đồng thời cho biết có hoàn cảnh nào thuộc nhóm không cần báo trước tại khoản 2 Điều 35 hay không. Nếu chọn (3), vui lòng cung cấp điều khoản về thời hạn và thời điểm chấm dứt của hợp đồng.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1856.9864710000274,
+      "client_elapsed_ms": 1880.471,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:ngày bắt đầu": true,
+        "contains:ngày kết thúc": true,
+        "contains:thời gian báo trước": true,
+        "contains:phân loại hợp đồng": true,
+        "contains:dưới 12 tháng": true,
+        "contains:12 đến 36 tháng": true,
+        "contains:không xác định thời hạn": true,
+        "excludes:xác định thời hạn (từ 12 đến 36 tháng)": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-019-alternative-2",
+      "parent_round2_review_id": "W12-R2-019",
+      "original_review_id": "W12-019",
+      "run_index": 2,
+      "request_id": "b301b92d-023d-483d-a98a-19210d79edfd",
+      "question": "Tính số ngày của hợp đồng.",
+      "router_decision": "CLARIFY_CONTRACT_DURATION_PURPOSE",
+      "route": "CALCULATOR_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn muốn (1) tính số ngày/tháng của hợp đồng, (2) xác định thời gian báo trước khi nghỉ việc, hay (3) phân loại hợp đồng? Nếu chọn (1), vui lòng cung cấp ngày bắt đầu và ngày kết thúc. Nếu chọn (2), vui lòng cho biết hợp đồng có thời hạn dưới 12 tháng, từ 12 đến 36 tháng, hay không xác định thời hạn, đồng thời cho biết có hoàn cảnh nào thuộc nhóm không cần báo trước tại khoản 2 Điều 35 hay không. Nếu chọn (3), vui lòng cung cấp điều khoản về thời hạn và thời điểm chấm dứt của hợp đồng.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1924.2137230000935,
+      "client_elapsed_ms": 1960.434,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:ngày bắt đầu": true,
+        "contains:ngày kết thúc": true,
+        "contains:thời gian báo trước": true,
+        "contains:phân loại hợp đồng": true,
+        "contains:dưới 12 tháng": true,
+        "contains:12 đến 36 tháng": true,
+        "contains:không xác định thời hạn": true,
+        "excludes:xác định thời hạn (từ 12 đến 36 tháng)": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    },
+    {
+      "case_id": "round3-019-alternative-2",
+      "parent_round2_review_id": "W12-R2-019",
+      "original_review_id": "W12-019",
+      "run_index": 3,
+      "request_id": "b134cda2-b501-49ff-9b30-2e2ef29c26b7",
+      "question": "Tính số ngày của hợp đồng.",
+      "router_decision": "CLARIFY_CONTRACT_DURATION_PURPOSE",
+      "route": "CALCULATOR_ONLY",
+      "outcome_status": "CLARIFICATION_REQUIRED",
+      "planned_tools": [],
+      "observed_tools": [],
+      "sanitized_parameters": [],
+      "final_status": "CLARIFICATION_REQUIRED",
+      "answer": "Bạn muốn (1) tính số ngày/tháng của hợp đồng, (2) xác định thời gian báo trước khi nghỉ việc, hay (3) phân loại hợp đồng? Nếu chọn (1), vui lòng cung cấp ngày bắt đầu và ngày kết thúc. Nếu chọn (2), vui lòng cho biết hợp đồng có thời hạn dưới 12 tháng, từ 12 đến 36 tháng, hay không xác định thời hạn, đồng thời cho biết có hoàn cảnh nào thuộc nhóm không cần báo trước tại khoản 2 Điều 35 hay không. Nếu chọn (3), vui lòng cung cấp điều khoản về thời hạn và thời điểm chấm dứt của hợp đồng.",
+      "citations": [],
+      "verification": {
+        "status": "CLARIFICATION_REQUIRED",
+        "warnings": [],
+        "checks": []
+      },
+      "verification_code": "CLARIFICATION_REQUIRED",
+      "warnings": [],
+      "latency_ms": 1851.6307380000399,
+      "client_elapsed_ms": 1872.5,
+      "checks": {
+        "route": true,
+        "status": true,
+        "canonical_citations": true,
+        "safe_answer": true,
+        "router_decision": true,
+        "planned_tools": true,
+        "verification_status": true,
+        "tools": true,
+        "reason": true,
+        "contains:ngày bắt đầu": true,
+        "contains:ngày kết thúc": true,
+        "contains:thời gian báo trước": true,
+        "contains:phân loại hợp đồng": true,
+        "contains:dưới 12 tháng": true,
+        "contains:12 đến 36 tháng": true,
+        "contains:không xác định thời hạn": true,
+        "excludes:xác định thời hạn (từ 12 đến 36 tháng)": true
+      },
+      "result": "PASS",
+      "pass_fail_reason": "all checks passed",
+      "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+      "runtime_configuration": {
+        "deployment": "DOCKER_COMPOSE_CPU",
+        "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+        "guardrail_context_limit": 20
+      }
+    }
+  ]
+}

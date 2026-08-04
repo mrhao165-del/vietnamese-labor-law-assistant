@@ -9,6 +9,7 @@ from vietnamese_labor_law_assistant.calculator.enums import (
     ContractType,
     DurationUnit,
     EmployeeRole,
+    NoticeOutcome,
     NoticeSpecialCase,
     RuleSupportStatus,
 )
@@ -31,6 +32,7 @@ def test_standard_notice_rules_are_source_mapped(
 ) -> None:
     result = calculate_notice_period(NoticePeriodInput(contract_type=contract_type))
     assert result.notice_required and result.notice_days == days and result.unit == unit
+    assert result.rule_id is not None
     assert result.rule_id.startswith("NOTICE_ART35_1")
     assert result.legal_basis[0].article == 35
     assert result.legal_basis[0].clause == 1
@@ -60,6 +62,44 @@ def test_each_article_35_no_notice_case_maps_its_own_point(
     assert result.unit == DurationUnit.NO_NOTICE
     assert result.legal_basis[0].clause == 2
     assert result.legal_basis[0].point == point
+    assert result.outcome in {
+        NoticeOutcome.NO_NOTICE_EXCEPTION,
+        NoticeOutcome.EXCEPTION_REQUIRING_CLARIFICATION,
+    }
+
+
+def test_unpaid_wages_override_contract_notice_and_preserve_article_97_exception() -> None:
+    result = calculate_notice_period(
+        NoticePeriodInput(
+            contract_type=ContractType.FIXED_TERM_12_TO_36_MONTHS,
+            special_case=NoticeSpecialCase.UNPAID_OR_LATE_WAGES,
+        )
+    )
+    assert result.notice_required is False
+    assert result.notice_days == 0
+    assert result.outcome is NoticeOutcome.EXCEPTION_REQUIRING_CLARIFICATION
+    assert [(basis.article, basis.clause, basis.point) for basis in result.legal_basis] == [
+        (35, 2, "b"),
+        (97, 4, None),
+    ]
+
+
+def test_no_notice_special_case_does_not_require_contract_type() -> None:
+    result = calculate_notice_period(
+        NoticePeriodInput(special_case=NoticeSpecialCase.WORKPLACE_SEXUAL_HARASSMENT)
+    )
+    assert result.contract_type is None
+    assert result.notice_required is False
+    assert result.outcome is NoticeOutcome.NO_NOTICE_EXCEPTION
+    assert result.legal_basis[0].point == "d"
+
+
+def test_missing_standard_notice_information_returns_structured_outcome() -> None:
+    result = calculate_notice_period(NoticePeriodInput())
+    assert result.outcome is NoticeOutcome.INSUFFICIENT_INFORMATION
+    assert result.notice_required is None
+    assert result.notice_days is None
+    assert result.legal_basis == ()
 
 
 def test_special_occupation_requires_external_regulation_without_guessing_days() -> None:

@@ -47,8 +47,8 @@ class GuardrailSemanticScorer:
         self,
         provider: EmbeddingProvider,
         *,
-        max_claims: int = 12,
-        max_contexts: int = 10,
+        max_claims: int = 20,
+        max_contexts: int = 20,
         max_text_characters: int = 12000,
         batch_size: int = 4,
     ) -> None:

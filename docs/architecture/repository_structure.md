@@ -156,3 +156,25 @@ route/tool/argument invariants; there is no keyword-routing fallback. Guardrail 
 canonical clause-level `point_labels`, so an explicit point can be validated inside a clause chunk
 without changing the canonical source. BGE lifecycle, batching, timeout, and warm-up remain in the
 retrieval/guardrail bounded areas rather than request handlers or scripts.
+
+## Week 12 portfolio and release structure
+
+```text
+src/vietnamese_labor_law_assistant/evaluation/week12_portfolio.py
+tests/unit/evaluation/test_week12_portfolio.py
+scripts/generate_week12_portfolio.py
+scripts/generate_week12_manual_review_packet.py
+scripts/generate_portfolio_assets.py
+scripts/validate_week12_release.py
+evaluation/results/week12/          # new release evidence only
+evaluation/review/                  # unreviewed 24-case packet
+docs/evaluation/                    # portfolio methodology/report
+docs/diagrams/ and docs/images/     # reproducible sources and PNGs
+docs/releases/                      # preparation, checklist, and manual handoff
+.github/workflows/ci.yml
+```
+
+Week 12 aggregation lives in the existing `evaluation` bounded area and only reads prior evidence.
+Scripts remain thin generation/verification adapters. No retrieval, calculator, guardrail, or legal
+business rule moved into a script. Pillow is development-only and remains absent from the runtime
+Docker sync (`--no-dev`).

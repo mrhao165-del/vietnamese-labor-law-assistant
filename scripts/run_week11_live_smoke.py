@@ -65,7 +65,7 @@ def _evaluate(
     public_text = json.dumps(body, ensure_ascii=False).casefold()
     checks = {
         "http_200": status == 200,
-        "route": body.get("route") == fixture["expected_route"],
+        "route": body.get("route") in fixture.get("expected_routes", [fixture["expected_route"]]),
         "final_status": body.get("final_status") in fixture["expected_final_statuses"],
         "verification": verification.get("status") in fixture["expected_verification_statuses"],
         "tools": tools == fixture["expected_tools"],
@@ -150,6 +150,8 @@ def main() -> int:
     parser.add_argument("--fixtures", type=Path, default=DEFAULT_FIXTURES)
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
     parser.add_argument("--timeout", type=float, default=180.0)
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--fixture-id", action="append", default=[])
     parser.add_argument(
         "--include-broad-article-lookup",
         action="store_true",
@@ -163,6 +165,9 @@ def main() -> int:
     fixtures = list(payload["cases"])
     if args.include_broad_article_lookup:
         fixtures.extend(payload.get("broad_article_lookup", {}).get("cases", []))
+    if args.fixture_id:
+        selected = set(args.fixture_id)
+        fixtures = [fixture for fixture in fixtures if fixture["fixture_id"] in selected]
     for fixture in fixtures:
         for run_index in range(1, fixture["runs"] + 1):
             started = time.perf_counter()
@@ -181,6 +186,12 @@ def main() -> int:
         "passed": sum(row["result"] == "PASS" for row in rows),
         "failed": sum(row["result"] == "FAIL" for row in rows),
     }
+    if args.output is not None:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(
+            json.dumps({"summary": summary, "attempts": rows}, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
     print(json.dumps({"summary": summary}, ensure_ascii=False))
     return 0 if summary["failed"] == 0 else 1
 

@@ -57,6 +57,39 @@ def _git_output(root: Path, *args: str) -> str:
     return completed.stdout
 
 
+def _git_bytes(root: Path, object_name: str) -> bytes | None:
+    completed = subprocess.run(
+        ("git", "show", object_name),
+        cwd=root,
+        check=False,
+        shell=False,
+        capture_output=True,
+    )
+    return completed.stdout if completed.returncode == 0 else None
+
+
+def _normalized_line_endings(value: bytes) -> bytes:
+    return value.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
+def _is_authorized_byte_preservation(root: Path, path: str) -> bool:
+    """Allow exact-path ``-text`` staging only when normalized bytes equal HEAD."""
+    attribute = _git_output(root, "check-attr", "text", "--", path).strip()
+    if not attribute.endswith(": text: unset"):
+        return False
+    head = _git_bytes(root, f"HEAD:{path}")
+    index = _git_bytes(root, f":{path}")
+    candidate = root / path
+    if head is None or index is None or not candidate.is_file():
+        return False
+    worktree = candidate.read_bytes()
+    normalized_head = _normalized_line_endings(head)
+    return (
+        _normalized_line_endings(index) == normalized_head
+        and _normalized_line_endings(worktree) == normalized_head
+    )
+
+
 def _is_ignored(root: Path, path: str) -> bool:
     return (
         subprocess.run(
@@ -177,7 +210,11 @@ def main() -> int:
         _git_output(root, "diff", "--cached", "--unified=0"),
     )
     added = tuple(line for diff in diffs for line in _added_lines(diff))
-    protected_paths = sorted(path for path in paths if path.startswith(PROTECTED_PREFIXES))
+    changed_protected = sorted(path for path in paths if path.startswith(PROTECTED_PREFIXES))
+    byte_preserved_paths = [
+        path for path in changed_protected if _is_authorized_byte_preservation(root, path)
+    ]
+    protected_paths = [path for path in changed_protected if path not in byte_preserved_paths]
     locked_config = _locked_config_added_lines(root, cached=False) + _locked_config_added_lines(
         root, cached=True
     )
@@ -197,6 +234,7 @@ def main() -> int:
             else "CLEAR"
         ),
         "protected_paths": protected_paths,
+        "byte_preserved_protected_paths": byte_preserved_paths,
         "locked_config_added_lines": locked_config,
         "test_quality_added_lines": test_quality,
         "coverage_reductions": coverage_reductions,

@@ -13,6 +13,7 @@ from .enums import (
     ContractType,
     DurationUnit,
     EmployeeRole,
+    NoticeOutcome,
     NoticeSpecialCase,
     RuleSupportStatus,
 )
@@ -43,7 +44,7 @@ class NoticePeriodInput(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    contract_type: ContractType
+    contract_type: ContractType | None = None
     special_case: NoticeSpecialCase = NoticeSpecialCase.NONE
     employee_role: EmployeeRole = EmployeeRole.STANDARD
 
@@ -82,14 +83,15 @@ class NoticePeriodResult(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     scope: str = "employee_unilateral_termination"
-    contract_type: ContractType
+    contract_type: ContractType | None
     special_case: NoticeSpecialCase
     employee_role: EmployeeRole
-    notice_required: bool
+    outcome: NoticeOutcome
+    notice_required: bool | None
     notice_days: int | None = Field(default=None, ge=0)
     unit: DurationUnit
     support_status: RuleSupportStatus
-    rule_id: str
+    rule_id: str | None
     legal_basis: tuple[LegalBasis, ...]
     assumptions: tuple[str, ...] = ()
     warning: str = DISCLAIMER

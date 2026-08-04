@@ -112,3 +112,45 @@ def test_public_mapper_hides_internal_fail_closed_answer() -> None:
         "INSUFFICIENT_VERIFIED_EVIDENCE", {"verification": verification}
     )
     assert content != "INSUFFICIENT_VERIFIED_EVIDENCE"
+
+
+@pytest.mark.parametrize(
+    ("workflow_status", "reason"),
+    [
+        (WorkflowStatus.CLARIFICATION_REQUIRED, "CLARIFICATION_REQUIRED"),
+        (WorkflowStatus.INSUFFICIENT_CONTEXT, "ARTICLE_NOT_FOUND"),
+        (WorkflowStatus.WORKFLOW_VALID, "UNSUPPORTED"),
+        (WorkflowStatus.OUTPUT_INVALID, "OUTPUT_INVALID"),
+    ],
+)
+def test_public_failures_have_distinct_safe_messages(
+    workflow_status: WorkflowStatus, reason: str
+) -> None:
+    answer = public_answer(
+        "INSUFFICIENT_VERIFIED_EVIDENCE",
+        {"status": "UNSUPPORTED", "reason": reason},
+        workflow_status,
+    )
+    assert answer != "INSUFFICIENT_VERIFIED_EVIDENCE"
+    assert len(answer) > 20
+
+
+def test_public_mapping_distinguishes_all_terminal_outcomes() -> None:
+    reasons = [
+        "CLARIFICATION_REQUIRED",
+        "INSUFFICIENT_CONTEXT",
+        "ARTICLE_NOT_FOUND",
+        "OUT_OF_SCOPE",
+        "UNSUPPORTED",
+        "OUTPUT_INVALID",
+    ]
+    messages = {
+        reason: public_answer(
+            "INSUFFICIENT_VERIFIED_EVIDENCE",
+            {"status": reason, "reason": reason},
+            reason,
+        )
+        for reason in reasons
+    }
+    assert len(set(messages.values())) == len(messages)
+    assert all(value != "INSUFFICIENT_VERIFIED_EVIDENCE" for value in messages.values())

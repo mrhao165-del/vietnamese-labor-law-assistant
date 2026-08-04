@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "status": "ANALYSIS_COMPLETE_IMPLEMENTATION_NOT_APPLIED",
+  "source_review": {
+    "path": "evaluation/review/week12_manual_review_round2_reviewed.csv",
+    "sha256": "9677b52f67d26ca7c05cfda72c8dd19b4218c4adb99e1b75d9e28a6c603f35ad",
+    "archive_path": "evaluation/review/archive/round2/week12_manual_review_round2_reviewed.csv",
+    "archive_checksum_matches": true
+  },
+  "frozen_inputs": {
+    "corpus_sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
+    "evaluation_dataset_sha256": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+    "split_manifest_sha256": "08ceada3bb4a6bbd7c6a00ae0e007e8027d59acc5d0e63a563c2169f1cf5d5bd",
+    "selected_retrieval_config": "R2_H2_C10_O5_L512_B1",
+    "guardrail_thresholds": {"lower": 0.35, "high": 0.75},
+    "legal_provenance": {
+      "article_20_clause_1_point_b": "SUPPORTED",
+      "article_35_clause_1": "SUPPORTED",
+      "article_35_clause_2": "SUPPORTED"
+    }
+  },
+  "cases": [
+    {
+      "round2_review_id": "W12-R2-006",
+      "original_round1_review_id": "W12-006",
+      "question": "Điều 20, Điều 32, Điều 35 và Điều 54 quy định gì?",
+      "human_decision": "NEEDS_DISCUSSION",
+      "human_evidence_note": "Đã tự đối chiếu độc lập và đồng ý rằng trường hợp này chưa đủ cơ sở để kết luận PASS hoặc FAIL; cần trao đổi thêm về contract kỹ thuật của hệ thống. Căn cứ: Không phải lỗi nội dung Bộ luật; đây là contract Agent/UX về giới hạn tối đa 3 Điều mỗi yêu cầu. Đánh giá nội dung: Câu trả lời công khai đã làm đúng hành vi mong muốn: nêu rõ người dùng hỏi 4 Điều, yêu cầu chọn tối đa 3 Điều và không gọi tool. Đánh giá kỹ thuật: Tuy nhiên corrected_route vẫn là RETRIEVAL_ONLY và corrected_verification vẫn là INSUFFICIENT_CONTEXT, trong khi root cause/fix summary yêu cầu giữ và ánh xạ riêng CLARIFICATION_REQUIRED. Evidence kỹ thuật hiện không hoàn toàn khớp mô tả remediation. Kết luận xem xét: Hào cần kiểm tra public API status/trace. Chỉ PASS nếu thiết kế chuẩn của repository cho phép clarification được biểu diễn dưới RETRIEVAL_ONLY + zero tools; nếu contract bắt buộc CLARIFICATION_REQUIRED thì nên FAIL. Ghi chú: Nội dung người dùng nhìn thấy đã đúng, nhưng metadata route/verification cần được xác nhận trước khi đóng lỗi.",
+      "current_route": "RETRIEVAL_ONLY",
+      "current_outcome": "CLARIFICATION_REQUIRED",
+      "current_verification": {"status": "INSUFFICIENT_CONTEXT", "reason": "CLARIFICATION_REQUIRED"},
+      "planned_tools": [],
+      "observed_tools": [],
+      "answer": "Bạn đã yêu cầu quá nhiều điều luật cùng một lúc (4 điều). Vui lòng chọn tối đa 3 điều luật trong số các Điều 20, 32, 35, 54 để tôi có thể hỗ trợ bạn tốt nhất.",
+      "citations": [],
+      "root_cause": "The orchestration outcome is already CLARIFICATION_REQUIRED, but the no-claim guardrail handoff labels verification as INSUFFICIENT_CONTEXT.",
+      "affected_modules": ["agent/service.py", "api/public_mapper.py", "frontend/src/api/types.ts", "frontend/src/api/verification.ts"],
+      "generic_correction": "Preserve route separately, emit CLARIFICATION_REQUIRED as outcome and verification, retain concrete text, and execute zero tools.",
+      "regression_risk": "Existing insufficient-context and persisted-message mappings must remain distinct and backward compatible."
+    },
+    {
+      "round2_review_id": "W12-R2-008",
+      "original_round1_review_id": "W12-008",
+      "question": "Người lao động nghỉ việc phải báo trước bao lâu theo luật?",
+      "human_decision": "FAIL",
+      "human_evidence_note": "Đã tự đối chiếu độc lập với Bộ luật Lao động hợp nhất và xác nhận FAIL theo nội dung và căn cứ đã nêu trong phần AI pre-review. Căn cứ: Điều 35 khoản 1 điểm a-d và khoản 2. Đánh giá nội dung: Câu hỏi hỏi trực tiếp 'phải báo trước bao lâu', nhưng câu trả lời chỉ nói chung rằng thời hạn tùy loại hợp đồng. Nó không nêu các mốc ít nhất 45 ngày, 30 ngày, 03 ngày làm việc, nhánh ngành/nghề đặc thù hoặc các trường hợp không cần báo trước. Đánh giá kỹ thuật: Route RETRIEVAL_ONLY, get_article và hai citation Điều 35 là phù hợp; lỗi còn lại nằm ở độ đầy đủ của phần sinh câu trả lời, dù verification báo SUPPORTED. Kết luận xem xét: Nên đánh FAIL. Câu trả lời tổng quan phải trình bày ma trận 45/30/03 ngày và ngoại lệ, sau đó có thể hỏi loại hợp đồng để tính trường hợp cụ thể. Ghi chú: Remediation mới chỉ khôi phục retrieval/citation, chưa thực sự trả lời câu hỏi 'bao lâu'.",
+      "current_route": "RETRIEVAL_ONLY",
+      "current_outcome": "WORKFLOW_VALID",
+      "current_verification": {"status": "SUPPORTED"},
+      "planned_tools": ["get_article"],
+      "observed_tools": ["get_article"],
+      "answer": "Người lao động khi đơn phương chấm dứt hợp đồng lao động phải báo trước cho người sử dụng lao động theo thời hạn quy định tùy loại hợp đồng, hoặc được quyền nghỉ việc không cần báo trước trong một số trường hợp đặc biệt.",
+      "citations": ["ll_6af59ba448952c1c927978713d34d984", "ll_610e9077fc973dabc980978eb3f3da54"],
+      "root_cause": "The generated overview cited both source chunks but omitted the material 45/30/03-day matrix; membership and semantic support do not measure answer completeness.",
+      "affected_modules": ["agent/routing.py", "agent/service.py", "tests/unit/agent"],
+      "generic_correction": "Classify non-personalized framework questions as legal overviews and use complete bounded Article source projection before claim verification.",
+      "regression_risk": "The overview projection must remain canonical, bounded, cited, guardrail-verified, and excluded from personalized calculations."
+    },
+    {
+      "round2_review_id": "W12-R2-019",
+      "original_round1_review_id": "W12-019",
+      "question": "Tôi cần tính thời hạn hợp đồng",
+      "human_decision": "FAIL",
+      "human_evidence_note": "Đã tự đối chiếu độc lập với Bộ luật Lao động hợp nhất và xác nhận FAIL theo nội dung và căn cứ đã nêu trong phần AI pre-review. Căn cứ: Điểm b khoản 1 Điều 20: hợp đồng xác định thời hạn có thời hạn không quá 36 tháng; không bị giới hạn chỉ từ 12 đến 36 tháng. Đánh giá nội dung: Câu hỏi vẫn mơ hồ về 'thời hạn hợp đồng', nhưng clarification mới chưa đủ. Nó mô tả hợp đồng xác định thời hạn là 'từ 12 đến 36 tháng', bỏ mất hợp đồng dưới 12 tháng, trái với Điều 20. Nó cũng chưa hỏi ngày bắt đầu/kết thúc hoặc làm rõ người dùng muốn tính thời hạn hợp đồng hay thời hạn báo trước. Đánh giá kỹ thuật: Zero tool call là hợp lý khi thiếu dữ liệu. Tuy nhiên corrected_route là CALCULATOR_ONLY và verification vẫn INSUFFICIENT_CONTEXT, chưa thể hiện rõ trạng thái CLARIFICATION_REQUIRED. Kết luận xem xét: Nên đánh FAIL. Cần hỏi rõ mục tiêu tính toán; nếu tính báo trước thì yêu cầu thời hạn thực tế của hợp đồng gồm dưới 12 tháng, 12-36 tháng hoặc không xác định thời hạn; nếu tính thời gian hợp đồng thì yêu cầu ngày bắt đầu và ngày kết thúc. Ghi chú: Đây vừa là lỗi pháp lý ở cách phân loại hợp đồng, vừa là lỗi thiếu tham số trong câu hỏi làm rõ.",
+      "current_route": "CALCULATOR_ONLY",
+      "current_outcome": "CLARIFICATION_REQUIRED",
+      "current_verification": {"status": "INSUFFICIENT_CONTEXT", "reason": "CLARIFICATION_REQUIRED"},
+      "planned_tools": [],
+      "observed_tools": [],
+      "answer": "Vui lòng cho biết loại hợp đồng lao động của bạn là hợp đồng xác định thời hạn (từ 12 đến 36 tháng) hay hợp đồng không xác định thời hạn để tôi có thể hỗ trợ tính toán chính xác.",
+      "citations": [],
+      "root_cause": "The router collapses three possible duration intents into one missing-parameter calculator path and generates an inaccurate clarification; verification then mislabels it insufficient context.",
+      "affected_modules": ["agent/routing.py", "agent/service.py", "api/public_mapper.py", "frontend/src/api/types.ts", "frontend/src/api/verification.ts"],
+      "generic_correction": "Use a stable ambiguous-duration operation, separate calendar duration, notice, and classification in a concrete zero-tool clarification, and emit explicit clarification verification.",
+      "regression_risk": "Explicit valid calendar-duration and personalized notice requests must retain their existing calculator execution paths."
+    }
+  ],
+  "architecture": {
+    "route": "Existing AgentIntent remains the finite execution path.",
+    "outcome": "WorkflowStatus.CLARIFICATION_REQUIRED is distinct from route and missing evidence.",
+    "verification": "Valid no-claim clarification uses CLARIFICATION_REQUIRED without invoking the legal-claim guardrail.",
+    "tool_behavior": "Clarification always has an empty plan and zero observed calls.",
+    "boundaries": "Routing selects clarification; orchestration enforces tools; calculator owns legal rules; guardrail verifies legal claims; API maps public status."
+  }
+}

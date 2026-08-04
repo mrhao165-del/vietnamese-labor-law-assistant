@@ -26,6 +26,13 @@ from vietnamese_labor_law_assistant.guardrails.source_registry import CanonicalS
 from vietnamese_labor_law_assistant.mcp_clients.legal_calculator import LegalCalculatorMcpClient
 from vietnamese_labor_law_assistant.mcp_clients.legal_retrieval import LegalRetrievalMcpClient
 
+from .clarifications import (
+    ARTICLE_LIMIT_OPERATION,
+    NOTICE_FRAMEWORK_OVERVIEW_OPERATION,
+    article_limit_clarification,
+    clarification_for,
+    referenced_article_numbers,
+)
 from .enums import AgentIntent, ToolName, WorkflowStatus
 from .errors import (
     AgentError,
@@ -46,6 +53,7 @@ from .models import (
     AgentResult,
     AgentState,
     PlannedToolCall,
+    RouterOutput,
     ToolTrace,
 )
 from .policies import AgentPolicy
@@ -146,6 +154,8 @@ class AgentService:
             request_id=request_id,
             question=str(completed.get("normalized_question") or question).strip(),
             intent=completed.get("intent"),
+            router_decision=completed.get("router_decision"),
+            planned_tools=[ToolName(item) for item in completed.get("planned_tools", [])],
             status=WorkflowStatus(
                 completed.get("route_status") or WorkflowStatus.OUTPUT_INVALID.value
             ),
@@ -183,9 +193,12 @@ class AgentService:
         try:
             normalized_question = str(state.get("normalized_question") or "")
             output = await self.router.classify(normalized_question)
+            explicit_articles = referenced_article_numbers(normalized_question)
+            output = self._align_explicit_article_plan(output, explicit_articles)
             update: dict[str, Any] = {
                 "intent": output.intent.value,
                 "router_output": output.model_dump(mode="json"),
+                "router_decision": output.requested_operation,
                 "tool_plan": [call.model_dump(mode="json") for call in output.tool_plan],
                 "planned_tools": [tool.value for tool in output.planned_tools],
                 "missing_parameters": output.missing_parameters,
@@ -209,26 +222,38 @@ class AgentService:
             )
             article_count = sum(call.tool_name is ToolName.GET_ARTICLE for call in output.tool_plan)
             plan_exceeds_budget = len(output.tool_plan) > self.policy.max_tool_calls
-            if self.policy.article_limit_exceeded(article_count) or plan_exceeds_budget:
+            if (
+                self.policy.article_limit_exceeded(article_count)
+                or self.policy.article_limit_exceeded(len(explicit_articles))
+                or plan_exceeds_budget
+            ):
+                clarification = article_limit_clarification(
+                    max(article_count, len(explicit_articles)),
+                    self.policy.max_articles_per_request,
+                )
                 update.update(
                     {
                         "route_status": WorkflowStatus.CLARIFICATION_REQUIRED.value,
+                        "router_output": {
+                            **(update.get("router_output") or {}),
+                            "requested_operation": ARTICLE_LIMIT_OPERATION,
+                            "requires_clarification": True,
+                            "clarification_question": clarification,
+                        },
+                        "router_decision": ARTICLE_LIMIT_OPERATION,
                         "tool_plan": [],
                         "planned_tools": [],
-                        "clarification_question": (
-                            "Vui lòng giảm số Điều cần tra cứu trong một yêu cầu "
-                            f"xuống tối đa {self.policy.max_articles_per_request} "
-                            "và trong ngân sách công cụ hiện có."
-                        ),
+                        "clarification_question": clarification,
+                        "final_answer": clarification,
                     }
                 )
             elif output.requires_clarification or output.missing_parameters:
+                clarification = clarification_for(output)
                 update.update(
                     {
                         "route_status": WorkflowStatus.CLARIFICATION_REQUIRED.value,
-                        "clarification_question": output.clarification_question
-                        or "Vui lòng cung cấp các tham số còn thiếu: "
-                        + ", ".join(output.missing_parameters),
+                        "clarification_question": clarification,
+                        "final_answer": clarification,
                     }
                 )
             elif output.intent is AgentIntent.OUT_OF_SCOPE:
@@ -445,6 +470,16 @@ class AgentService:
             return {"final_answer": "Không tìm thấy context phù hợp để trả lời an toàn."}
         if state.get("route_status") == WorkflowStatus.TOOL_ERROR.value:
             return {"final_answer": "Không thể hoàn tất một công cụ bắt buộc một cách an toàn."}
+        if self._requires_complete_source_overview(state):
+            overview = self._article_lookup_fallback(state)
+            if overview is not None:
+                return {
+                    "answer_draft": overview.model_dump(mode="json"),
+                    "final_answer": overview.answer,
+                    "citations": [
+                        {"chunk_id": chunk_id} for chunk_id in overview.citation_chunk_ids
+                    ],
+                }
         try:
             draft = await self.answer_generator.generate(
                 str(state.get("normalized_question") or ""),
@@ -463,6 +498,13 @@ class AgentService:
             claim_ids = {
                 chunk_id for claim in draft.claims for chunk_id in claim.citation_chunk_ids
             }
+            if self._is_complete_article_lookup(state) and not known_ids.issubset(claim_ids):
+                fallback = self._article_lookup_fallback(state)
+                if fallback is not None:
+                    draft = fallback
+                    claim_ids = {
+                        chunk_id for claim in draft.claims for chunk_id in claim.citation_chunk_ids
+                    }
             self._validate_claim_article_associations(draft, self._guardrail_evidence(state), state)
             if any(
                 chunk_id not in allowed_ids for chunk_id in draft.citation_chunk_ids
@@ -474,6 +516,15 @@ class AgentService:
                 "citations": [{"chunk_id": chunk_id} for chunk_id in draft.citation_chunk_ids],
             }
         except (AnswerGenerationError, WorkflowVerificationError):
+            fallback = self._article_lookup_fallback(state)
+            if fallback is not None:
+                return {
+                    "answer_draft": fallback.model_dump(mode="json"),
+                    "final_answer": fallback.answer,
+                    "citations": [
+                        {"chunk_id": chunk_id} for chunk_id in fallback.citation_chunk_ids
+                    ],
+                }
             return self._terminal_error(AnswerGenerationError("generation failed"))
 
     async def verify_workflow_output(self, state: AgentState) -> dict[str, Any]:
@@ -521,6 +572,22 @@ class AgentService:
         """Verify generated claims from MCP-produced evidence without another tool call."""
         if state.get("route_status") == WorkflowStatus.OUTPUT_INVALID.value:
             return {}
+        if state.get("route_status") == WorkflowStatus.CLARIFICATION_REQUIRED.value:
+            return {
+                "verification": {
+                    "status": "CLARIFICATION_REQUIRED",
+                    "reason": "CLARIFICATION_REQUIRED",
+                    "warnings": [],
+                    "claims": [],
+                }
+            }
+        if state.get("route_status") == WorkflowStatus.INSUFFICIENT_CONTEXT.value:
+            reason = (
+                "ARTICLE_NOT_FOUND"
+                if (state.get("retrieval_result") or {}).get("missing_targets")
+                else "INSUFFICIENT_CONTEXT"
+            )
+            return {"verification": {"status": "INSUFFICIENT_CONTEXT", "reason": reason}}
         settings = get_settings()
         if not settings.guardrail_enabled or self.guardrail_service is None:
             return {"verification": {"status": "DISABLED"}}
@@ -934,7 +1001,7 @@ class AgentService:
                     item_numbers.add(str(item.clause_number))
                 if missing_numbers.intersection(item_numbers):
                     candidates.append(item.chunk_id)
-            added = candidates[: max(0, 10 - len(cited))]
+            added = candidates[: max(0, 20 - len(cited))]
             if added:
                 additions[claim.claim_id] = added
                 cited.extend(added)
@@ -944,7 +1011,7 @@ class AgentService:
                 chunk_id for claim in enriched_claims for chunk_id in claim.citation_chunk_ids
             )
         )
-        if not additions or len(all_citations) > 10:
+        if not additions or len(all_citations) > 20:
             return draft
         self.logger.info(
             "agent_claim_citations_enriched",
@@ -1016,6 +1083,66 @@ class AgentService:
         chunk_ids = [claim.citation_chunk_ids[0] for claim in claims]
         return AgentAnswerDraft(
             answer="\n\n".join(answer_parts), citation_chunk_ids=chunk_ids, claims=claims
+        )
+
+    @staticmethod
+    def _is_complete_article_lookup(state: AgentState) -> bool:
+        planned_tools = state.get("planned_tools", [])
+        return bool(planned_tools) and all(
+            tool == ToolName.GET_ARTICLE.value for tool in planned_tools
+        )
+
+    @staticmethod
+    def _align_explicit_article_plan(
+        output: RouterOutput, explicit_articles: list[int]
+    ) -> RouterOutput:
+        """Prefer exact article tools when the question explicitly names legal articles."""
+
+        if not explicit_articles or output.requires_clarification:
+            return output
+        replace_search = output.intent is AgentIntent.RETRIEVAL_AND_CALCULATOR and any(
+            call.tool_name is ToolName.SEARCH_LABOR_LAW for call in output.tool_plan
+        )
+        if output.intent is not AgentIntent.OUT_OF_SCOPE and not replace_search:
+            return output
+        retained = [
+            call for call in output.tool_plan if call.tool_name is not ToolName.SEARCH_LABOR_LAW
+        ]
+        for article_number in explicit_articles:
+            retained.append(
+                PlannedToolCall(
+                    call_id=f"explicit-article-{article_number}",
+                    tool_name=ToolName.GET_ARTICLE,
+                    arguments={"article_number": article_number},
+                    sequence=len(retained) + 1,
+                    purpose="retrieve explicitly requested legal article",
+                )
+            )
+        intent = (
+            AgentIntent.RETRIEVAL_AND_CALCULATOR
+            if any(call.tool_name is ToolName.CALCULATE_NOTICE_PERIOD for call in retained)
+            else AgentIntent.RETRIEVAL_ONLY
+        )
+        data = output.model_dump(mode="python")
+        data.update(
+            {
+                "intent": intent,
+                "rationale_code": "EXPLICIT_ARTICLE_REFERENCE",
+                "requested_operation": "GET_EXPLICIT_ARTICLES",
+                "tool_plan": [call.model_dump(mode="python") for call in retained],
+                "planned_tools": [],
+                "out_of_scope_reason": None,
+            }
+        )
+        return RouterOutput.model_validate(data)
+
+    @staticmethod
+    def _requires_complete_source_overview(state: AgentState) -> bool:
+        router_output = state.get("router_output") or {}
+        return (
+            router_output.get("requested_operation") == NOTICE_FRAMEWORK_OVERVIEW_OPERATION
+            and state.get("intent") == AgentIntent.RETRIEVAL_ONLY.value
+            and AgentService._is_complete_article_lookup(state)
         )
 
     async def finalize(self, state: AgentState) -> dict[str, Any]:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 
 import structlog
@@ -18,6 +19,11 @@ from .models import (
 )
 from .similarity import BatchSemanticScorer, SemanticScorer, TokenCosineScorer
 from .source_registry import CanonicalSourceRegistry
+
+_DIRECT_CROSS_REFERENCE_PATTERN = re.compile(
+    r"\b(?:theo(?:\s+quy\s+định)?(?:\s+tại)?|tại)\s+Điều\s+(\d+)\b",
+    re.IGNORECASE,
+)
 
 
 class CitationGuardrailService:
@@ -145,6 +151,24 @@ class CitationGuardrailService:
                 reason_codes=[ReasonCode.CROSS_ARTICLE_CITATION_MISMATCH],
                 evidence_ids=[item.chunk_id for item in evidence],
             )
+        if not claim.parse_inline_references:
+            claim_cross_references = {
+                int(article) for article in _DIRECT_CROSS_REFERENCE_PATTERN.findall(claim.text)
+            }
+            if claim.target_article_number is not None:
+                claim_cross_references.discard(claim.target_article_number)
+            evidence_cross_references = {
+                int(article)
+                for item in evidence
+                for article in _DIRECT_CROSS_REFERENCE_PATTERN.findall(item.content)
+            }
+            if not claim_cross_references.issubset(evidence_cross_references):
+                return ClaimVerification(
+                    claim_id=claim.claim_id,
+                    status=VerificationStatus.UNSUPPORTED,
+                    reason_codes=[ReasonCode.LEGAL_REFERENCE_MISMATCH],
+                    evidence_ids=[item.chunk_id for item in evidence],
+                )
         references = list(
             {
                 (item.article, item.clause, item.point): item

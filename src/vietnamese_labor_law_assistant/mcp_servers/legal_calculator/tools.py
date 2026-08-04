@@ -48,7 +48,7 @@ class LegalCalculatorToolAdapter:
 
     def calculate_notice_period(
         self,
-        contract_type: object,
+        contract_type: object = None,
         special_case: object = "NONE",
         employee_role: object = "STANDARD",
     ) -> ToolResponse[NoticePeriodResult]:
@@ -68,7 +68,7 @@ class LegalCalculatorToolAdapter:
             tool_name,
             request_id,
             {
-                "contract_type": payload.contract_type.value,
+                "contract_type": payload.contract_type.value if payload.contract_type else None,
                 "special_case": payload.special_case.value,
                 "employee_role": payload.employee_role.value,
             },

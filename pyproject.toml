@@ -1,7 +1,7 @@
 [project]
 name = "vietnamese-labor-law-assistant"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0"
+description = "Source-grounded Vietnamese labor-law information assistant"
 readme = "README.md"
 authors = [
     { name = "mrhao165-del", email = "mr.hao165@gmail.com" }
@@ -41,6 +41,7 @@ torch = { index = "pytorch-cpu" }
 
 [dependency-groups]
 dev = [
+    "pillow>=12.3.0",
     "pre-commit>=4.6.0",
     "pyright>=1.1.411",
     "pytest>=9.1.1",

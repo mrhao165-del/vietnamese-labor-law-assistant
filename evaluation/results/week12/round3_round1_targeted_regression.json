@@ -1,0 +1,149 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP",
+  "generated_at": "2026-08-03T14:55:19.779175+00:00",
+  "case_count": 6,
+  "passed": 6,
+  "failed": 0,
+  "attempts": [
+    {
+      "review_id": "W12-009",
+      "question_id": "w9-005",
+      "run_index": 1,
+      "request_id": "b82b1664-9ecd-4b5d-8362-5f182dd6a60b",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_clause"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 1,
+      "latency_ms": 17878.28006499967,
+      "client_elapsed_ms": 17956.089,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-009",
+      "question_id": "w9-005",
+      "run_index": 2,
+      "request_id": "6a2c848f-4da5-4353-8a92-3a7fa14098e9",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_clause"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 1,
+      "latency_ms": 10216.050824999911,
+      "client_elapsed_ms": 10272.349,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-009",
+      "question_id": "w9-005",
+      "run_index": 3,
+      "request_id": "1e89c5c2-f06f-42cc-a7b8-24b3fe457bb0",
+      "route": "RETRIEVAL_ONLY",
+      "observed_tools": [
+        "get_clause"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 1,
+      "latency_ms": 11296.817808000014,
+      "client_elapsed_ms": 11342.309,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-018",
+      "question_id": "week11-calculator-positive",
+      "run_index": 1,
+      "request_id": "4a06d2be-50f1-4f95-9607-25c8148a78df",
+      "route": "CALCULATOR_ONLY",
+      "observed_tools": [
+        "calculate_notice_period"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 1,
+      "latency_ms": 5463.288081999963,
+      "client_elapsed_ms": 5502.525,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-018",
+      "question_id": "week11-calculator-positive",
+      "run_index": 2,
+      "request_id": "6510bb1e-5af3-44c8-90ba-ed05ea758d21",
+      "route": "CALCULATOR_ONLY",
+      "observed_tools": [
+        "calculate_notice_period"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 1,
+      "latency_ms": 5418.435532999865,
+      "client_elapsed_ms": 5485.874,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    },
+    {
+      "review_id": "W12-018",
+      "question_id": "week11-calculator-positive",
+      "run_index": 3,
+      "request_id": "4418cd4a-94de-460c-9254-80d7c0f4b138",
+      "route": "CALCULATOR_ONLY",
+      "observed_tools": [
+        "calculate_notice_period"
+      ],
+      "final_status": "WORKFLOW_VALID",
+      "verification_code": "SUPPORTED",
+      "citation_count": 1,
+      "latency_ms": 5358.540872000049,
+      "client_elapsed_ms": 5415.698,
+      "checks": {
+        "route": true,
+        "tools": true,
+        "canonical_citations": true,
+        "article_coverage": true,
+        "safe_answer": true
+      },
+      "result": "PASS"
+    }
+  ]
+}

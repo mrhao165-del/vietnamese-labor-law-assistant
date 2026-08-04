@@ -111,6 +111,45 @@ def test_chat_workflow_failure_does_not_persist_fallback_answer(client_factory: 
     assert "traceback" not in response.text.lower()
 
 
+def test_chat_preserves_explicit_clarification_outcome(client_factory: Any) -> None:
+    result = AgentResult(
+        request_id="clarification-request",
+        question="ignored",
+        intent=AgentIntent.CALCULATOR_ONLY,
+        router_decision="CLARIFY_CONTRACT_DURATION_PURPOSE",
+        status=WorkflowStatus.CLARIFICATION_REQUIRED,
+        answer="Vui lòng chọn mục tiêu tính toán và cung cấp thông tin tương ứng.",
+        disclaimer="d",
+        citations=[],
+        clarification_question=(
+            "Vui lòng chọn mục tiêu tính toán và cung cấp thông tin tương ứng."
+        ),
+        tool_trace=[],
+        workflow_verification={"status": "PASS"},
+        verification={
+            "status": "CLARIFICATION_REQUIRED",
+            "reason": "CLARIFICATION_REQUIRED",
+            "claims": [],
+            "warnings": [],
+        },
+        latency_ms=2,
+    )
+    client, repository, _ = client_factory(result)
+    with client:
+        response = client.post("/api/v1/chat", json={"question": "Tính thời hạn hợp đồng"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["route"] == "CALCULATOR_ONLY"
+    assert body["router_decision"] == "CLARIFY_CONTRACT_DURATION_PURPOSE"
+    assert body["planned_tools"] == []
+    assert body["final_status"] == "CLARIFICATION_REQUIRED"
+    assert body["verification_code"] == "CLARIFICATION_REQUIRED"
+    assert body["verification"]["status"] == "CLARIFICATION_REQUIRED"
+    assert body["tool_trace"] == [] and body["citations"] == []
+    assert body["answer_text"] == result.answer
+    assert repository.messages(body["conversation_id"])[1]["content"] == result.answer
+
+
 def test_chat_internal_failure_and_validation_have_safe_envelopes(client_factory: Any) -> None:
     client, _, _ = client_factory(RuntimeError("OPENAI_API_KEY=secret traceback"))
     with client:

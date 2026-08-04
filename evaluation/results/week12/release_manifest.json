@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "generated_at": "2026-07-30T07:43:57.668648+00:00",
+  "source_commit": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "python_version": "3.11.15",
+  "corpus": {
+    "path": "data/processed/labor_law_clauses.jsonl",
+    "sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3"
+  },
+  "evaluation_dataset": {
+    "path": "data/evaluation/labor_law_eval_v1.jsonl",
+    "sha256": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+    "manifest_path": "data/evaluation/labor_law_eval_v1_manifest.json",
+    "manifest_sha256": "08ceada3bb4a6bbd7c6a00ae0e007e8027d59acc5d0e63a563c2169f1cf5d5bd",
+    "split_status": "FROZEN",
+    "total_questions": 60,
+    "dev_questions": 42,
+    "test_questions": 18
+  },
+  "retrieval": {
+    "selected_config": "R2_H2_C10_O5_L512_B1",
+    "dense_model": "BAAI/bge-m3",
+    "lexical_tokenizer": "underthesea",
+    "lexical_index": "BM25S",
+    "fusion": "Reciprocal Rank Fusion (rrf_k=60)",
+    "reranker": "BAAI/bge-reranker-v2-m3",
+    "candidate_k": 10,
+    "output_k": 5,
+    "reranker_max_length": 512,
+    "reranker_batch_size": 1
+  },
+  "agent": {
+    "workflow": "finite LangGraph",
+    "mcp_transport": "project-owned stdio child processes",
+    "llm_provider": "gemini_openai_compatible",
+    "llm_model": "gemini-3.1-flash-lite"
+  },
+  "guardrail": {
+    "semantic_model": "BAAI/bge-m3",
+    "lower_threshold": 0.35,
+    "high_threshold": 0.75,
+    "llm_judge_enabled": false,
+    "fail_closed": true
+  },
+  "lockfiles": {
+    "uv.lock": "f7ad9e404480f51e7aaf99e1995949ba65e952d6061bf51bf140dd29872580ca",
+    "frontend/package-lock.json": "e4f2e71b15db60f8e2f67820990d52bcd0fe985c7ac8ff53005a34a1a090c7d9",
+    "compose.yaml": "42fa75c3391572e2e2449ea8b6b3ae75feb948b81b1902a839c5b296fc8e9bd9"
+  },
+  "benchmark_runners": {
+    "portfolio": "week12-portfolio-v1",
+    "dense": "scripts/run_week2_current_dense_baseline.py",
+    "hybrid": "scripts/run_week4_current_retrieval_benchmark.py",
+    "reranker": "scripts/run_week5_current_reranker_benchmark.py",
+    "agent": "scripts/run_week9_agent_evaluation.py",
+    "guardrail": "scripts/run_week10_guardrail_evaluation.py"
+  },
+  "secrets_recorded": false
+}

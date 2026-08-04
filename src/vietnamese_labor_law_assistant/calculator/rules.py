@@ -18,6 +18,7 @@ from .models import LegalBasis, NoticePeriodInput
 SOURCE_CHUNK_ARTICLE_20 = "ll_d0c5f537983c0aad635529f412e426f5"
 SOURCE_CHUNK_ARTICLE_35_NOTICE = "ll_6af59ba448952c1c927978713d34d984"
 SOURCE_CHUNK_ARTICLE_35_NO_NOTICE = "ll_610e9077fc973dabc980978eb3f3da54"
+SOURCE_CHUNK_ARTICLE_97_WAGE_DELAY = "ll_637097a07e629f3154a38864853c6790"
 SOURCE_SNAPSHOT_DATE = "2026-07-10"
 
 STANDARD_NOTICE_WARNING = (
@@ -142,8 +143,24 @@ NOTICE_RULES: tuple[NoticeRule, ...] = (
         0,
         DurationUnit.NO_NOTICE,
         RuleSupportStatus.SUPPORTED,
-        (_basis(35, 2, "b", SOURCE_CHUNK_ARTICLE_35_NO_NOTICE),),
+        (
+            _basis(35, 2, "b", SOURCE_CHUNK_ARTICLE_35_NO_NOTICE),
+            LegalBasis(
+                document_id="labor_law",
+                document_name="labor_law",
+                article=97,
+                clause=4,
+                point=None,
+                source_chunk_id=SOURCE_CHUNK_ARTICLE_97_WAGE_DELAY,
+                source_label="labor_law.docx",
+                source_snapshot_date=SOURCE_SNAPSHOT_DATE,
+            ),
+        ),
         STANDARD_NOTICE_WARNING,
+        (
+            "Cần làm rõ liệu việc trả lương chậm có thuộc ngoại lệ bất khả kháng "
+            "tại khoản 4 Điều 97 hay không.",
+        ),
     ),
     NoticeRule(
         "NOTICE_ART35_2_C_MISTREATMENT_OR_FORCED_LABOR",
@@ -239,7 +256,13 @@ def select_notice_rule(payload: NoticePeriodInput) -> NoticeRule:
         if (
             rule.special_case == payload.special_case
             and rule.employee_role == payload.employee_role
-            and rule.contract_type in (None, payload.contract_type)
+            and (
+                rule.contract_type is None
+                or (
+                    payload.contract_type is not None
+                    and rule.contract_type == payload.contract_type
+                )
+            )
         ):
             return rule
     raise RuleNotFoundError("no notice-period rule matches the validated inputs")

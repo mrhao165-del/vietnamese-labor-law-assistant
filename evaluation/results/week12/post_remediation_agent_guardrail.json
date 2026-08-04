@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "generated_at": "2026-07-30T17:21:20.569132+00:00",
+  "scope": "POST_REMEDIATION_AGENT_GUARDRAIL_V4",
+  "sample_count": 23,
+  "split": "WEEK12_AFFECTED_REVIEW_CASES",
+  "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP",
+  "metrics": [
+    {
+      "metric": "route_tool_selection_accuracy",
+      "numerator": 23,
+      "denominator": 23,
+      "value": 1.0,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    },
+    {
+      "metric": "parameter_accuracy",
+      "numerator": 6,
+      "denominator": 6,
+      "value": 1.0,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    },
+    {
+      "metric": "tool_call_success_rate",
+      "numerator": 21,
+      "denominator": 21,
+      "value": 1.0,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    },
+    {
+      "metric": "clarification_accuracy",
+      "numerator": 2,
+      "denominator": 2,
+      "value": 1.0,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    },
+    {
+      "metric": "out_of_scope_accuracy",
+      "numerator": 0,
+      "denominator": 0,
+      "value": null,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    },
+    {
+      "metric": "insufficient_context_accuracy",
+      "numerator": 0,
+      "denominator": 0,
+      "value": null,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    },
+    {
+      "metric": "citation_existence",
+      "numerator": 21,
+      "denominator": 21,
+      "value": 1.0,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    },
+    {
+      "metric": "citation_validity",
+      "numerator": 21,
+      "denominator": 21,
+      "value": 1.0,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    },
+    {
+      "metric": "citation_support",
+      "numerator": 21,
+      "denominator": 21,
+      "value": 1.0,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    },
+    {
+      "metric": "timeout_rate",
+      "numerator": 0,
+      "denominator": 23,
+      "value": 0.0,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    },
+    {
+      "metric": "error_rate",
+      "numerator": 0,
+      "denominator": 23,
+      "value": 0.0,
+      "provenance": "LIVE_DOCKER_COMPOSE_CPU_PUBLIC_HTTP"
+    }
+  ],
+  "mean_latency_ms": 16613.365,
+  "p95_latency_ms": 33780.423,
+  "unsupported_metrics": {
+    "out_of_scope_accuracy": "NOT_EVALUATED: no affected case is out of scope",
+    "insufficient_context_accuracy": "NOT_EVALUATED: no affected case expects insufficient context"
+  },
+  "historical_results_modified": false
+}

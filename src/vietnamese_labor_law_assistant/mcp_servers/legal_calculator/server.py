@@ -55,8 +55,12 @@ def create_server(adapter: LegalCalculatorToolAdapter | None = None) -> FastMCP:
     @mcp.tool(name="calculate_notice_period", structured_output=True)
     def calculate_notice_period(
         contract_type: Annotated[
-            str, Field(json_schema_extra={"enum": [value.value for value in ContractType]})
-        ],
+            str | None,
+            Field(
+                default=None,
+                json_schema_extra={"enum": [value.value for value in ContractType]},
+            ),
+        ] = None,
         special_case: Annotated[
             str, Field(json_schema_extra={"enum": [value.value for value in NoticeSpecialCase]})
         ] = NoticeSpecialCase.NONE.value,

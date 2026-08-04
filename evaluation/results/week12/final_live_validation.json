@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "validated_at": "2026-08-03T23:46:36+07:00",
+  "provenance": {
+    "classification": "LIVE_DOCKER_CPU_LLM",
+    "source_head": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+    "source_branch": "fix/week12-review-remediation",
+    "working_tree": "UNCOMMITTED_RELEASE_CANDIDATE",
+    "selected_retrieval_config": "R2_H2_C10_O5_L512_B1"
+  },
+  "runtime": {
+    "compose_config": "PASS",
+    "clean_no_cache_build": "PASS",
+    "cpu_only": true,
+    "health": "PASS_HTTP_200",
+    "readiness": "PASS_HTTP_200_ALL_CHECKS_TRUE",
+    "frontend_root": "PASS_HTTP_200",
+    "spa_fallback": "PASS_HTTP_200",
+    "openapi": "PASS_HTTP_200",
+    "retrieval_mcp_stdio_demo": "PASS",
+    "calculator_mcp_stdio_demo": "PASS",
+    "sqlite_persistence": {
+      "status": "PASS",
+      "conversation_id": "8ad6cbd0-3702-4534-9073-31edff49c000",
+      "api_restart": true,
+      "initial_post_restart_response": "HTTP_502_DURING_STARTUP",
+      "ready_after_wait": true,
+      "record_found_after_ready": true
+    },
+    "clean_shutdown": "PASS",
+    "named_volumes_deleted": false
+  },
+  "matrices": [
+    {
+      "name": "week11_and_multi_article_smoke",
+      "path": "evaluation/results/week12/final_week11_live_smoke.json",
+      "sha256": "545199753bf6bc56b7ea6cb5a9e4c2d3cf81b6e407d6146a1e2686d203269b27",
+      "attempts": 27,
+      "passed": 27,
+      "failed": 0,
+      "mean_latency_ms": 12855.157,
+      "p95_latency_ms": 16523.185
+    },
+    {
+      "name": "round1_pass_regression",
+      "path": "evaluation/results/week12/final_round1_pass_regression.json",
+      "sha256": "4f51146f6c20b650ffa6cb056a1ea19c57474a628dfe9297f97a626bb610c18d",
+      "attempts": 15,
+      "passed": 15,
+      "failed": 0,
+      "mean_latency_ms": 12733.129,
+      "p95_latency_ms": 19231.132
+    },
+    {
+      "name": "round2_pass_regression",
+      "path": "evaluation/results/week12/final_round2_pass_regression.json",
+      "sha256": "dfa186d691f6451de2b61df1cc4d5f98e7c6fe905fe052c302041245beb9ca6a",
+      "attempts": 18,
+      "passed": 18,
+      "failed": 0,
+      "mean_latency_ms": 18997.407,
+      "p95_latency_ms": 34876.138
+    },
+    {
+      "name": "round3_targeted_matrix",
+      "path": "evaluation/results/week12/final_round3_targeted_matrix.json",
+      "sha256": "5ec6c42efcefd57dad85244c468b9ad578696d192b0c35cfe18058f9b91e538a",
+      "attempts": 27,
+      "passed": 27,
+      "failed": 0,
+      "mean_latency_ms": 4886.376,
+      "p95_latency_ms": 11262.263
+    }
+  ],
+  "aggregate": {
+    "attempts": 87,
+    "passed": 87,
+    "failed": 0,
+    "observed_tool_calls": 90,
+    "mean_latency_ms": 11631.858,
+    "p95_latency_ms": 25848.472,
+    "timeout_count": 0,
+    "error_count": 0
+  },
+  "latency_classification": "Real end-to-end Docker/LLM CPU latency; complex requests may take several or tens of seconds.",
+  "blockers": []
+}

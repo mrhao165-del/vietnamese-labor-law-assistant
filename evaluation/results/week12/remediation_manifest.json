@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "status": "REMEDIATION_COMPLETE_PENDING_HUMAN_REREVIEW",
+  "generated_at": "2026-07-30T17:21:20.569132+00:00",
+  "source_head": "3f659b6ad12235f8c804d14856c85cc4645cba34",
+  "selected_config": "R2_H2_C10_O5_L512_B1",
+  "corpus_sha256": "62d4f98ba376260231663c779824651f60b82c0f968244ace95e478d20dbbcd3",
+  "evaluation_dataset_sha256": "19440059cf4c31a487b30db10b6d5eb8bb781290d642936b1ba25e8eb0697110",
+  "split_manifest_sha256": "08ceada3bb4a6bbd7c6a00ae0e007e8027d59acc5d0e63a563c2169f1cf5d5bd",
+  "compose_sha256": "194256d45cb290c075da4cb01c1b3fe39fca3343cf592673d666926c8e355c80",
+  "guardrail_thresholds": {
+    "lower": 0.35,
+    "high": 0.75
+  },
+  "round1_packet_sha256": "2a03422784aa3586ace61f3ee9243bc2a27f6c6d3c29ee35848bbe542ca4a8f7",
+  "round2_packet_sha256": "0693636a9eff56c15e852276e19e918053773b54bee659654b0139dd485d3a45"
+}
