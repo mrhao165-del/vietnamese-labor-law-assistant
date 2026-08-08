@@ -337,7 +337,9 @@ artefacts are left in the worktree.
   clarification.
 - Clarification, out-of-scope, insufficient-context, unsupported, and output-invalid are distinct
   contracts and are not relabeled for a smoke test.
-- Video recording and release publication are Week 12 deliverables.
+- At the Week 11 milestone, video recording and release publication were planned for Week 12. The
+  project owner has since intentionally omitted a demo video from v1.0.0; release publication remains
+  a separate manual gate.
 
 ## Documentation verification commands
 

@@ -1,4 +1,7 @@
-# Demo shot list
+# Demo shot list (historical reference)
+
+> This list is retained for historical traceability. A demo video is intentionally omitted from
+> v1.0.0; use `ui_screenshot_checklist.md` to capture only genuine UI screenshots/GIF.
 
 | Shot | Real screen/action | Evidence to make visible |
 | --- | --- | --- |
@@ -17,4 +20,4 @@
 | 13 | Docker commands in README | Clone-to-run and external env-file handling |
 | 14 | Known limitations | No auth, snapshot, calculator scope, CPU-only, not legal advice |
 
-Capture screenshots/GIF/video only from this real sequence. Do not create mock UI evidence.
+Capture screenshots/GIF only from this real sequence. Do not create mock UI evidence or a demo video.

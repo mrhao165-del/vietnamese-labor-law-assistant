@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send, Paperclip } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 type Props = {
   onSend: (text: string) => void;
@@ -28,12 +28,6 @@ export function MessageInput({ onSend, disabled }: Props) {
     <div className="w-full bg-gradient-to-t from-surface-bright via-surface-bright to-transparent pt-md pb-md px-container-padding flex-none">
       <div className="max-w-chat-max-width mx-auto">
         <div className="flex items-end bg-surface-container-lowest border border-outline-variant hover:border-primary/40 focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/15 rounded-xl p-1.5 transition-all shadow-card-sm">
-          <button
-            className="p-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary rounded-lg transition-colors shrink-0"
-            aria-label="Đính kèm"
-          >
-            <Paperclip className="w-5 h-5" />
-          </button>
           <textarea
             ref={textareaRef}
             value={text}

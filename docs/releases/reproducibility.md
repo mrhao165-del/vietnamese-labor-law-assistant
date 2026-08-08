@@ -29,6 +29,10 @@ The generation scripts read source JSON rather than embedding benchmark numbers.
 contains a generation timestamp by design; benchmark JSON/CSV and images are deterministic from their
 inputs.
 
+The asset check reconstructs and pixel-compares the four deterministic portfolio diagrams. It permits
+only the documented genuine UI screenshot filenames in `docs/images/`; any other extra PNG still fails
+the asset-directory contract.
+
 Live Agent behavior additionally requires the provider/model identifiers recorded in the manifest, a
 valid private credential, network access, and the CPU-only Compose path. Credential values are never
 part of provenance.

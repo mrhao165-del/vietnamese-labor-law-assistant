@@ -1,5 +1,9 @@
 # Week 9 Agent Orchestration ADR
 
+> Historical milestone ADR. It records Week 9 scope, not the entire v1.0.0 system. The as-built
+> runtime keeps MCP on stdio; later work added React/Nginx, FastAPI/SQLite, Docker and Week 10
+> claim-level guardrails. See `design_evolution.md`.
+
 ## Decision
 
 Implement `src/vietnamese_labor_law_assistant/agent/` as a finite LangGraph StateGraph. It is an
@@ -57,4 +61,5 @@ keys, prompts, embeddings or full legal contexts.
 
 Week 9 verification checks route/tool agreement, allowlist, budget, MCP envelope/schema shape,
 retrieval citation IDs, calculator trace provenance and out-of-scope no-tool behavior. Week 10 owns
-claim decomposition and claim-level support; Week 11 owns UI, Docker, HTTP MCP and deployment.
+claim decomposition and claim-level support; Week 11 later delivered UI, Docker, HTTP Agent chat and
+deployment while retaining MCP stdio.

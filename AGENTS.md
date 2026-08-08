@@ -2,7 +2,7 @@
 
 ## 1. Project status
 
-The project has completed Week 6 Retrieval Engine, Week 7 MCP Legal Retrieval Server, and Week 8 MCP Legal Calculator Server. Week 9 has a finite LangGraph implementation over the project MCP clients, but must not be declared complete until the canonical quality gate and required runtime verification pass. Week 8 is a deterministic Article 20/35 Python rule engine wrapped by two stdio MCP tools; it is not an LLM legal-reasoning system. The selected retrieval configuration remains unchanged (see README). Claim-level citation-verification guardrails are not implemented; do not add placeholder implementations for them.
+The project has completed the Week 6 retrieval engine, Week 7 MCP Legal Retrieval Server, Week 8 MCP Legal Calculator Server, Week 9 finite LangGraph Agent, Week 10 claim-level citation guardrail, Week 11 browser/API/Docker delivery, and Week 12 technical/review remediation. The v1.0.0 portfolio uses the implemented React/Vite/Nginx -> FastAPI/SQLite -> finite LangGraph -> MCP stdio -> guardrail path. Week 8 remains a deterministic Article 20/35 Python rule engine wrapped by two stdio MCP tools; it is not an LLM legal-reasoning system. The selected retrieval configuration remains unchanged (see README).
 
 ## 2. Repository architecture
 
@@ -31,9 +31,10 @@ Production code lives only in `src/vietnamese_labor_law_assistant/`, the primary
 
 ## Week 9 verification status
 
-`WEEK9_COMPLETE`: the canonical quality gate, real Week 7 MCP runtime, Week 6?8 regressions,
+`WEEK9_COMPLETE`: the canonical quality gate, real Week 7 MCP runtime, Week 6–8 regressions,
 Week 9 targeted tests, and 40-case offline contract evaluation all passed on 2026-07-18. Claim-level
-citation verification remains deferred to Week 10.
+citation verification was subsequently delivered and verified in Week 10; do not replace it with
+placeholder behavior.
 
 
 ## 6. Protected files and generated artefacts

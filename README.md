@@ -59,6 +59,15 @@ Browser
 React replaced the earlier Streamlit direction and is the only current frontend. Docker was verified
 on CPU; GPU Docker support is not claimed.
 
+## Design evolution and as-built source of truth
+
+Earlier weekly documents record the scope and proposals that existed at that point in the project.
+They are preserved for traceability, but the as-built v1.0.0 runtime is React/Vite/TypeScript behind
+Nginx, FastAPI/SQLite, and project-owned MCP **stdio** child processes. Streamlit and network or
+Streamable HTTP MCP are not part of the implemented production path. See
+[design evolution](docs/architecture/design_evolution.md) for the boundary between historical
+planning and the current implementation.
+
 ## RAG pipeline
 
 ![RAG pipeline](docs/images/rag-pipeline.png)
@@ -91,7 +100,18 @@ The UI provides conversation navigation, message persistence, citation cards, ve
 sanitized tool traces, and feedback. The browser calls only FastAPI through Nginx. It never receives
 an API key or calls the LLM, Qdrant, or MCP directly.
 
-Screenshots/GIFs and the demo video are intentionally absent until captured from a real runtime.
+The required UI evidence was captured from a real local runtime and manually verified:
+
+![Chat response with citations](docs/images/ui-chat-citation.png)
+
+![Calculator result with tool trace](docs/images/ui-calculator-trace.png)
+
+![Fail-closed insufficient-context response](docs/images/ui-guardrail-or-clarification.png)
+
+Capture conditions and the exact scenarios are recorded in the
+[manual screenshot checklist](docs/releases/ui_screenshot_checklist.md). A demo video is
+**intentionally omitted from the v1.0.0 scope by the project owner**. This repository does not claim
+that a demo video exists.
 
 ## Technology stack
 
@@ -269,12 +289,13 @@ a documented release gate because it requires credentials, models, network acces
 - CPU Docker has evidence; GPU Docker does not.
 - Round-1, round-2, and round-3 human evidence is preserved. All three round-3 cases passed
   independent review; final technical validation also passed.
-- Screenshots/GIF, demo video, license choice, tag, and GitHub Release are manual actions after
-  technical/review completion.
+- The required genuine UI screenshots are complete. License choice, tag, and GitHub Release remain
+  manual actions after technical/review completion. The demo video is intentionally omitted from
+  v1.0.0 and is not a release requirement.
 
-## Demo scenarios
+## UI scenario coverage
 
-1. Ask what Article 35 says and inspect citations.
+1. Ask what Article 135 says and inspect citations.
 2. Ask the notice period for an indefinite contract.
 3. Ask the 24-month combined calculator-and-legal-basis question.
 4. Ask about traffic penalties and observe the out-of-scope refusal.
@@ -282,7 +303,9 @@ a documented release gate because it requires credentials, models, network acces
 6. Ask about two valid articles, then a valid/missing pair.
 7. Add feedback, reload, and confirm SQLite persistence.
 
-Use the [recording guide](docs/releases/demo_recording_guide.md) for the real 3–5 minute demo.
+The required evidence covers scenarios 1, 2, and 5 above. The
+[manual screenshot checklist](docs/releases/ui_screenshot_checklist.md) records the completed files.
+Do not create mock screenshots or record a video for this release.
 
 ## Reproducibility
 
@@ -294,15 +317,20 @@ archives, config, and guardrail thresholds without secrets. See
 
 ## Release status
 
-Current status is `WEEK12_TECHNICAL_AND_REVIEW_COMPLETE_MANUAL_RELEASE_ACTIONS_REQUIRED`. Independent
-round-3 review and final technical validation passed. License selection, genuine media, GitHub README
-rendering review, final commit/push and successful release-commit Actions, annotated tag, GitHub
-Release, and CV/LinkedIn updates remain manual. See the [release checklist](docs/releases/release_checklist.md).
+The Week 12 remediation PR has been merged into `main`, and the project owner confirms GitHub Actions
+are green. Independent round-3 review, final technical validation, and the final local release-prep
+gate passed. Remaining gates are GitHub README rendering review after the release-prep PR, an
+annotated tag, GitHub Release publication, and profile updates. The required three genuine UI
+screenshots are present in `docs/images/`. A demo video is intentionally omitted from v1.0.0. See the
+[release checklist](docs/releases/release_checklist.md) and the draft
+[v1.0.0 release notes](docs/releases/v1.0.0_release_notes.md), plus the
+[final readiness report](docs/releases/v1.0.0_final_readiness.md).
 
 ## License
 
-No repository license has been selected. Until the owner chooses and adds a `LICENSE`, no open-source
-license is asserted by this README.
+This repository is licensed under the [MIT License](LICENSE). The license does not replace the rights
+or terms that govern third-party dependencies, models, or the legal-source snapshot; see the
+acknowledgements and source attribution below.
 
 ## Acknowledgements and data attribution
 
