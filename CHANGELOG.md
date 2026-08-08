@@ -4,10 +4,17 @@ All notable changes to this portfolio are documented here.
 
 ## [Unreleased]
 
-- Week 12 technical work and independent review are complete. All three round-3 cases passed; the
-  final 87-attempt live CPU Docker evaluation passed. Genuine media, license selection, GitHub
-  rendering review, commit/push, release-commit Actions, annotated tag, GitHub Release, and profile
-  updates remain manual.
+- The Week 12 remediation PR was merged into `main`; the project owner confirms GitHub Actions are
+  green.
+- Release preparation removes non-functional attachment and dead-navigation controls. A frontend
+  browser-test framework is deferred to v1.1 because adding its dependencies would change the
+  checksum-locked package lockfile in the preserved Week 12 release manifest.
+- The repository is now MIT licensed. The final local release-prep quality gate passed, and the
+  portfolio-asset contract now permits only the documented real UI screenshot filenames alongside the
+  four deterministic generated diagrams.
+- The v1.0.0 demo video is intentionally omitted by the project owner. The three required genuine UI
+  screenshots are captured and verified, and the repository is now MIT licensed; GitHub README
+  rendering review, annotated tag, GitHub Release, and profile updates remain manual release actions.
 
 ## [1.0.0] - Unreleased portfolio release
 

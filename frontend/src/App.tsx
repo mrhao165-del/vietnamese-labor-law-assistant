@@ -12,13 +12,217 @@ import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 
 export default function App() {
-  const [conversations, setConversations] = useState<Conversation[]>([]); const [currentId, setCurrentId] = useState<string | null>(null); const [messages, setMessages] = useState<Message[]>([]); const [selected, setSelected] = useState<Message | null>(null); const [thinking, setThinking] = useState(false); const [sidebarOpen, setSidebarOpen] = useState(false); const [evidenceOpen, setEvidenceOpen] = useState(false); const [ready, setReady] = useState<boolean | null>(null); const [error, setError] = useState<string | null>(null); const endRef = useRef<HTMLDivElement>(null);
-  const loadConversations = useCallback(async () => { try { setConversations(await api.conversations()); } catch { setError('Không thể tải lịch sử hội thoại.'); } }, []);
-  const loadMessages = useCallback(async (id: string) => { try { const next = await api.messages(id); setMessages(next); setSelected([...next].reverse().find((item) => item.role === 'assistant') ?? null); } catch { setError('Không thể tải tin nhắn.'); } }, []);
-  useEffect(() => { void loadConversations(); api.readiness().then((item) => setReady(item.ready)).catch(() => setReady(false)); }, [loadConversations]); useEffect(() => { if (currentId) void loadMessages(currentId); else { setMessages([]); setSelected(null); } }, [currentId, loadMessages]); useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, thinking]);
-  const send = useCallback(async (question: string) => { if (thinking) return; setThinking(true); setError(null); try { const result = await api.chat(question, currentId ?? undefined); setCurrentId(result.conversation_id); await loadMessages(result.conversation_id); await loadConversations(); } catch (caught) { setError(caught instanceof ApiClientError ? caught.message : 'Không thể gửi câu hỏi.'); } finally { setThinking(false); } }, [currentId, loadConversations, loadMessages, thinking]);
-  const feedback = useCallback(async (messageId: string, value: 'up' | 'down') => { try { await api.feedback(messageId, value); setMessages((items) => items.map((item) => item.id === messageId ? { ...item, feedback: value } : item)); } catch { setError('Không thể lưu phản hồi.'); } }, []);
-  const deleteConversation = useCallback(async (id: string) => { if (!window.confirm('Xóa toàn bộ cuộc trò chuyện này?')) return; try { await api.deleteConversation(id); if (id === currentId) setCurrentId(null); await loadConversations(); } catch { setError('Không thể xóa cuộc trò chuyện.'); } }, [currentId, loadConversations]);
-  const citations: Citation[] = selected?.metadata.citations ?? []; const trace: ToolTrace[] = selected?.metadata.tool_trace ?? []; const verification: Verification | null = selected?.metadata.verification ?? null;
-  return <div className="flex h-full overflow-hidden bg-background"><div className="hidden lg:block"><Sidebar conversations={conversations} currentId={currentId} loading={false} onNewChat={() => setCurrentId(null)} onSelect={(id) => { setCurrentId(id); setSidebarOpen(false); }} onDelete={deleteConversation} /></div>{sidebarOpen && <div className="lg:hidden fixed inset-0 z-50"><button className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} aria-label="Đóng menu" /><div className="absolute inset-y-0 left-0"><Sidebar conversations={conversations} currentId={currentId} loading={false} onNewChat={() => { setCurrentId(null); setSidebarOpen(false); }} onSelect={(id) => { setCurrentId(id); setSidebarOpen(false); }} onDelete={deleteConversation} /><button className="absolute top-3 right-3" onClick={() => setSidebarOpen(false)} aria-label="Đóng"><X /></button></div></div>}<main className="flex-1 min-w-0 flex flex-col"><TopBar onMenuClick={() => setSidebarOpen(true)} onEvidenceClick={() => setEvidenceOpen(true)} hasCitations={citations.length > 0} ready={ready} />{error && <p role="alert" className="m-3 rounded bg-error-container p-2 text-sm text-on-error-container">{error}</p>}<div className="flex flex-1 min-h-0"><div className="flex-1 flex flex-col min-w-0">{messages.length ? <ChatView messages={messages} isThinking={thinking} onFeedback={feedback} onViewCitation={(message) => { setSelected(message); setEvidenceOpen(true); }} endRef={endRef} /> : <EmptyState onSuggestion={send} isThinking={thinking} />}<MessageInput onSend={send} disabled={thinking || ready === false} /></div><div className="hidden xl:flex"><EvidencePanel citations={citations} toolTrace={trace} verification={verification} hasConversation={messages.length > 0} /></div></div></main><MobileEvidenceSheet open={evidenceOpen} onClose={() => setEvidenceOpen(false)} citations={citations} toolTrace={trace} verification={verification} /></div>;
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentId, setCurrentId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [selected, setSelected] = useState<Message | null>(null);
+  const [thinking, setThinking] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const [ready, setReady] = useState<boolean | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  const loadConversations = useCallback(async () => {
+    try {
+      setConversations(await api.conversations());
+    } catch {
+      setError('Không thể tải lịch sử hội thoại.');
+    }
+  }, []);
+
+  const loadMessages = useCallback(async (id: string) => {
+    try {
+      const next = await api.messages(id);
+      setMessages(next);
+      setSelected([...next].reverse().find((item) => item.role === 'assistant') ?? null);
+    } catch {
+      setError('Không thể tải tin nhắn.');
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadConversations();
+    api
+      .readiness()
+      .then((item) => setReady(item.ready))
+      .catch(() => setReady(false));
+  }, [loadConversations]);
+
+  useEffect(() => {
+    if (currentId) {
+      void loadMessages(currentId);
+      return;
+    }
+    setMessages([]);
+    setSelected(null);
+  }, [currentId, loadMessages]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, thinking]);
+
+  const send = useCallback(
+    async (question: string) => {
+      if (thinking) {
+        return;
+      }
+
+      setThinking(true);
+      setError(null);
+      try {
+        const result = await api.chat(question, currentId ?? undefined);
+        setCurrentId(result.conversation_id);
+        await loadMessages(result.conversation_id);
+        await loadConversations();
+      } catch (caught) {
+        setError(caught instanceof ApiClientError ? caught.message : 'Không thể gửi câu hỏi.');
+      } finally {
+        setThinking(false);
+      }
+    },
+    [currentId, loadConversations, loadMessages, thinking],
+  );
+
+  const feedback = useCallback(async (messageId: string, value: 'up' | 'down') => {
+    try {
+      await api.feedback(messageId, value);
+      setMessages((items) =>
+        items.map((item) => (item.id === messageId ? { ...item, feedback: value } : item)),
+      );
+    } catch {
+      setError('Không thể lưu phản hồi.');
+    }
+  }, []);
+
+  const deleteConversation = useCallback(
+    async (id: string) => {
+      try {
+        await api.deleteConversation(id);
+        if (id === currentId) {
+          setCurrentId(null);
+        }
+        await loadConversations();
+      } catch {
+        setError('Không thể xóa cuộc trò chuyện.');
+      }
+    },
+    [currentId, loadConversations],
+  );
+
+  const startNewConversation = useCallback(() => {
+    setCurrentId(null);
+    setError(null);
+  }, []);
+
+  const selectConversation = useCallback((id: string) => {
+    setCurrentId(id);
+    setSidebarOpen(false);
+  }, []);
+
+  const citations: Citation[] = selected?.metadata.citations ?? [];
+  const trace: ToolTrace[] = selected?.metadata.tool_trace ?? [];
+  const verification: Verification | null = selected?.metadata.verification ?? null;
+
+  return (
+    <div className="flex h-full overflow-hidden bg-background">
+      <div className="hidden lg:block">
+        <Sidebar
+          conversations={conversations}
+          currentId={currentId}
+          loading={false}
+          onNewChat={startNewConversation}
+          onSelect={selectConversation}
+          onDelete={deleteConversation}
+        />
+      </div>
+
+      {sidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Đóng menu"
+          />
+          <div className="absolute inset-y-0 left-0">
+            <Sidebar
+              conversations={conversations}
+              currentId={currentId}
+              loading={false}
+              onNewChat={() => {
+                startNewConversation();
+                setSidebarOpen(false);
+              }}
+              onSelect={selectConversation}
+              onDelete={deleteConversation}
+            />
+            <button
+              type="button"
+              className="absolute top-3 right-3"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Đóng"
+            >
+              <X />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <main className="flex-1 min-w-0 flex flex-col">
+        <TopBar
+          onMenuClick={() => setSidebarOpen(true)}
+          onEvidenceClick={() => setEvidenceOpen(true)}
+          hasCitations={citations.length > 0}
+          ready={ready}
+        />
+
+        {error && (
+          <p
+            role="alert"
+            className="m-3 rounded bg-error-container p-2 text-sm text-on-error-container"
+          >
+            {error}
+          </p>
+        )}
+
+        <div className="flex flex-1 min-h-0">
+          <div className="flex-1 flex flex-col min-w-0">
+            {messages.length ? (
+              <ChatView
+                messages={messages}
+                isThinking={thinking}
+                onFeedback={feedback}
+                onViewCitation={(message) => {
+                  setSelected(message);
+                  setEvidenceOpen(true);
+                }}
+                endRef={endRef}
+              />
+            ) : (
+              <EmptyState onSuggestion={send} isThinking={thinking} />
+            )}
+            <MessageInput onSend={send} disabled={thinking || ready === false} />
+          </div>
+
+          <div className="hidden xl:flex">
+            <EvidencePanel
+              citations={citations}
+              toolTrace={trace}
+              verification={verification}
+              hasConversation={messages.length > 0}
+            />
+          </div>
+        </div>
+      </main>
+
+      <MobileEvidenceSheet
+        open={evidenceOpen}
+        onClose={() => setEvidenceOpen(false)}
+        citations={citations}
+        toolTrace={trace}
+        verification={verification}
+      />
+    </div>
+  );
 }

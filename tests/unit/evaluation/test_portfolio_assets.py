@@ -108,7 +108,15 @@ def test_asset_directory_requires_exact_expected_png_set(tmp_path: Path) -> None
     _save(tmp_path / "unexpected.png", Image.new("RGB", (1, 1), "white"))
 
     with pytest.raises(ValueError, match="PNG set mismatch"):
-        assets.validate_asset_directory(tmp_path)
+        assets.validate_asset_directory(tmp_path, allow_documentation_screenshots=True)
+
+
+def test_asset_directory_allows_documented_ui_screenshots(tmp_path: Path) -> None:
+    for name, size in assets.EXPECTED_ASSETS.items():
+        _save(tmp_path / name, Image.new("RGB", size, "white"))
+    _save(tmp_path / "ui-chat-citation.png", Image.new("RGB", (1, 1), "white"))
+
+    assets.validate_asset_directory(tmp_path, allow_documentation_screenshots=True)
 
 
 @pytest.mark.parametrize("mode", ["L", "RGBA"])
@@ -166,7 +174,7 @@ def test_benchmark_contract_rejects_non_numeric_metric(tmp_path: Path) -> None:
 def test_all_current_portfolio_assets_pass_canonical_check(tmp_path: Path) -> None:
     benchmark_path = ROOT / "evaluation/results/week12/benchmark_summary.json"
     values = assets.load_benchmark_values(benchmark_path)
-    assets.validate_asset_directory(ROOT / "docs/images")
+    assets.validate_asset_directory(ROOT / "docs/images", allow_documentation_screenshots=True)
     assets.generate(tmp_path, benchmark_path)
     assets.validate_asset_directory(tmp_path)
 

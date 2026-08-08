@@ -1,4 +1,8 @@
-# Real demo recording guide (3–5 minutes)
+# Real demo recording guide (historical reference)
+
+> This guide is retained as a historical planning reference only. The project owner intentionally
+> omitted a demo video from v1.0.0, so do not record, publish, or link a video for this release. Use
+> `ui_screenshot_checklist.md` for the active manual media task.
 
 Use the verified CPU-only runtime and a clean browser profile. Show the address bar and `/ready` so
 the recording is visibly tied to a real deployment. Never expose `.env`, provider keys, prompts,

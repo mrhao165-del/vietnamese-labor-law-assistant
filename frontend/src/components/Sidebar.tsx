@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, MessageCircle, History, HelpCircle, Info, ShieldCheck, Trash2, Scale } from 'lucide-react';
+import { Plus, MessageCircle, History, Trash2, Scale } from 'lucide-react';
 import type { Conversation } from '../api/types';
 
 type Props = {
@@ -82,27 +82,7 @@ export function Sidebar({ conversations, currentId, loading, onNewChat, onSelect
         )}
       </div>
 
-      {/* Static nav */}
-      <div className="mt-auto border-t border-outline-variant pt-sm flex flex-col gap-xs">
-        <NavIcon icon={<HelpCircle className="w-5 h-5" />} label="Hệ thống có thể làm gì?" />
-        <NavIcon icon={<Info className="w-5 h-5" />} label="Phạm vi dữ liệu" />
-        <NavIcon icon={<ShieldCheck className="w-5 h-5" />} label="Tuyên bố miễn trừ trách nhiệm" />
-        <NavIcon icon={<HelpCircle className="w-5 h-5" />} label="Phiên bản ứng dụng" />
-      </div>
     </nav>
-  );
-}
-
-function NavIcon({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <a
-      href="#"
-      onClick={(e) => e.preventDefault()}
-      className="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg font-label-md text-label-md transition-all"
-    >
-      {icon}
-      <span className="truncate">{label}</span>
-    </a>
   );
 }
 

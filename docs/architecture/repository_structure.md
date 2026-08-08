@@ -21,7 +21,7 @@ The installable code is isolated under `src/`, so imports exercised in tests and
 | `src/vietnamese_labor_law_assistant/mcp_clients/` | Reusable protocol clients for project-owned MCP servers. |
 | `src/vietnamese_labor_law_assistant/agent/` | Finite LangGraph orchestration, policies, typed state, safe errors, traces, and MCP client gateways. |
 | `src/vietnamese_labor_law_assistant/guardrails/` | Week 10 typed citations, canonical source registry, grounding, optional structured judge, aggregation, and fail-closed policy. |
-| `apps/` | Independent application entrypoints, principally a future frontend. |
+| `apps/` | Historical adapter convention; this directory is not present in the current tree. The implemented frontend is `frontend/`. |
 | `scripts/` | Thin operational CLIs: parse arguments, invoke the package, write artefacts, return an exit code. |
 | `tests/` | Tests mirroring production areas: `unit`, `integration`, and `end_to_end`. |
 | `data/` | Source data, processed artefacts, and evaluation datasets; never Python code. |
@@ -69,7 +69,11 @@ common   evaluation    common
 
 `api` is an HTTP adapter and wires services; it must not duplicate retrieval or generation algorithms. `generation` may consume retrieval contracts. `retrieval` may consume ingestion data contracts. `evaluation` may use package contracts and metrics, but benchmark artefacts remain outside the package. `common` stays small and cannot become a catch-all dependency sink.
 
-## Structural audit, 2026-07-14
+## Structural audit, 2026-07-14 (historical record)
+
+This section preserves the repository state and roadmap terminology from the audit date. It is not a
+description of the final v1.0.0 runtime: the current as-built path is documented in the README and
+`docs/architecture/design_evolution.md`.
 
 | Current path | Actual role | Correct layer | Action | Reason and impact |
 | --- | --- | --- | --- | --- |

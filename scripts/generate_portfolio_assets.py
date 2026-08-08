@@ -27,6 +27,14 @@ EXPECTED_ASSETS = {
     "agent-graph.png": (1800, 1100),
     "evaluation-chart.png": (1600, 900),
 }
+DOCUMENTATION_SCREENSHOT_ASSETS = frozenset(
+    {
+        "ui-chat-citation.png",
+        "ui-calculator-trace.png",
+        "ui-guardrail-or-clarification.png",
+        "ui-mobile-evidence.png",
+    }
+)
 BENCHMARK_TIERS = ("V1_DENSE", "V2_HYBRID", "V3_HYBRID_RERANKER")
 BENCHMARK_METRICS = ("hit_rate_at_1", "mrr", "recall_at_5")
 
@@ -179,12 +187,17 @@ def load_benchmark_values(benchmark_path: Path) -> dict[str, dict[str, float]]:
     return values
 
 
-def validate_asset_directory(output_dir: Path) -> None:
+def validate_asset_directory(
+    output_dir: Path, *, allow_documentation_screenshots: bool = False
+) -> None:
     actual_names = {path.name for path in output_dir.glob("*.png")}
     expected_names = set(EXPECTED_ASSETS)
-    if actual_names != expected_names:
-        missing = sorted(expected_names - actual_names)
-        unexpected = sorted(actual_names - expected_names)
+    allowed_extra_names = (
+        set(DOCUMENTATION_SCREENSHOT_ASSETS) if allow_documentation_screenshots else set()
+    )
+    missing = sorted(expected_names - actual_names)
+    unexpected = sorted(actual_names - expected_names - allowed_extra_names)
+    if missing or unexpected:
         raise ValueError(f"portfolio PNG set mismatch; missing={missing}, unexpected={unexpected}")
     for name, expected_size in EXPECTED_ASSETS.items():
         decoded = decode_image(output_dir / name)
@@ -440,7 +453,7 @@ def main() -> None:
 
             contract_error: str | None = None
             try:
-                validate_asset_directory(output_dir)
+                validate_asset_directory(output_dir, allow_documentation_screenshots=True)
             except ValueError as exc:
                 contract_error = str(exc)
 

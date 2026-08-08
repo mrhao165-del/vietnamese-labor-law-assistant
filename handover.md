@@ -1,489 +1,487 @@
 # Tài liệu bàn giao dự án
 
-Updated: 2026-07-21
+**Dự án:** Vietnamese Labor Law Assistant
+**Cập nhật:** 2026-08-08
+**Phạm vi tài liệu:** mã nguồn hiện tại, cấu hình, frontend, script vận hành, test và các artefact xác minh trong repository.
 
-Repository: `vietnamese-labor-law-assistant`
+## Trạng thái đọc nhanh
 
-## Bổ sung bàn giao — broad article lookup (2026-07-21)
+Đây là một trợ lý tra cứu thông tin Bộ luật Lao động Việt Nam theo hướng **source-grounded**. Hệ thống kết hợp tìm kiếm dense và lexical, reranker, các công cụ MCP chạy qua stdio, bộ quy tắc tính toán pháp lý xác định, Agent hữu hạn bằng LangGraph và guardrail kiểm tra trích dẫn. Người dùng cuối chỉ giao tiếp với FastAPI; trình duyệt không gọi trực tiếp Qdrant, MCP server hay LLM.
 
-Smoke cũ chỉ chứng minh Điều 35. Audit read-only qua production `get_article` đã kiểm tra toàn bộ
-220 Điều trong canonical corpus: 220/220 truy xuất được, không có chunk thiếu, chunk thuộc Điều
-sai, hoặc chunk ID ngoài canonical registry. Vì vậy không rebuild Qdrant, không đổi locked
-retrieval configuration, và không sửa canonical source.
-
-Root cause ở Agent evidence projection. Điều 34 có 13 chunks hợp lệ trong khi semantic scorer có
-bound 10 contexts; Agent hiện ưu tiên contexts được claim cite rồi áp bound hiện hữu. Điều 43 chứa
-tham chiếu chéo trong chính nội dung nguồn; structured citation IDs vẫn bắt buộc, nhưng Agent claims
-không còn xem tham chiếu chéo đó là citation trực tiếp mới. Với claim số học, chỉ chunk canonical đã
-retrieval và chứa literal number mới có thể bổ sung citation; final guardrail vẫn quyết định.
-
-Operational fixture có group `broad_article_lookup` cho Điều 20, 34, 35, 36, 43, 97, 105, 113, 138,
-169. Live run 27/27 PASS; Điều 34/35/43 mỗi điều PASS 3 lần liên tiếp. Generic fallback chỉ project
-bounded source text từ cùng MCP result và bắt buộc pass guardrail lần hai: không hard-code article,
-không lower threshold, không fake citation.
-
-Compose mặc định đọc `.env` cạnh source. Khi clone smoke không được copy secret vào clone, đặt
-`APP_ENV_FILE` thành absolute external env path và dùng cùng path với `docker compose --env-file`.
-Đây chỉ là chọn service env file; Docker build context vẫn exclude `.env`, cache và runtime artifacts.
-Docker CPU services đặt `HF_HUB_DISABLE_XET=1`: vẫn dùng BGE-M3 và mounted runtime cache, nhưng
-tránh Xet downloader tiêu thụ bộ nhớ lớn khi clone first-startup cache trống.
+Trạng thái kỹ thuật hiện tại là **Week 12 đã merge vào main và GitHub Actions được chủ sở hữu xác nhận xanh; v1.0.0 còn các manual release gate**. Release candidate lịch sử được mô tả trong docs/releases/release_checklist.md, docs/releases/final_live_validation.md và evaluation/results/week12/final_release_manifest.json. Các artefact này là nguồn chính cho số liệu xác minh; handover.md chỉ là tài liệu định hướng cho người tiếp nhận. Demo video được chủ sở hữu **cố ý loại khỏi phạm vi v1.0.0** và không được coi là thiếu sót implementation.
 
 ## 1. Tổng quan & Công nghệ sử dụng
 
-### Mục đích chính
+### 1.1 Mục đích và phạm vi
 
-Dự án xây dựng trợ lý AI tra cứu Bộ luật Lao động Việt Nam theo hướng source-grounded. Hệ thống không chỉ sinh câu trả lời bằng LLM mà còn ràng buộc toàn bộ pipeline vào dữ liệu pháp lý đã xử lý, retrieval configuration đã khóa, MCP tools nội bộ, và guardrail Week 10 để giảm rủi ro bịa nguồn.
+Hệ thống nhận câu hỏi tiếng Việt về pháp luật lao động, tìm các điều/khoản liên quan từ một snapshot tài liệu pháp luật đã chuẩn hóa, tạo câu trả lời có dẫn nguồn và chỉ công khai câu trả lời khi workflow và citation guardrail đạt điều kiện. Ngoài tra cứu, hệ thống có hai nhóm tính toán xác định về thời hạn báo trước và thời hạn hợp đồng.
 
-Ở trạng thái hiện tại, sản phẩm Week 11 gồm:
+Phạm vi hiện tại có các giới hạn cần giữ nguyên khi bàn giao:
 
-- Frontend React/Vite cho trải nghiệm chat, lịch sử hội thoại, citation, verification và tool trace.
-- FastAPI backend cung cấp API chat, RAG/retrieval trực tiếp, health/readiness và persistence.
-- Retrieval engine hybrid dense + sparse + reranker theo cấu hình khóa `R2_H2_C10_O5_L512_B1`.
-- MCP stdio servers cho retrieval và calculator.
-- LangGraph Agent hữu hạn chỉ gọi MCP clients nội bộ.
-- Week 10 claim/citation guardrail fail-closed trên output cuối.
-- SQLite runtime cho hội thoại và feedback.
-- Docker Compose gồm Qdrant server, bootstrap index, API và Nginx frontend.
+- Snapshot dữ liệu không đại diện cho toàn bộ hệ thống văn bản pháp luật hiện hành và không tự động cập nhật văn bản mới.
+- Sản phẩm cung cấp thông tin tham khảo có dẫn nguồn, không phải tư vấn pháp lý.
+- Calculator hiện tập trung vào các quy tắc Article 20/35, với provenance liên quan Article 97 trong dữ liệu quy tắc; không được mô tả là engine pháp lý tổng quát.
+- Mặc định chạy CPU, phụ thuộc vào Qdrant, model Hugging Face cục bộ/cache và nhà cung cấp LLM tương thích OpenAI.
+- API hiện là local, single-user, chưa có authentication hoặc phân quyền.
 
-### Công nghệ chính
+### 1.2 Kiến trúc cấp cao
 
-Backend Python:
+~~~text
+Browser
+  -> React/Vite/TypeScript
+  -> Nginx static site + same-origin proxy
+  -> FastAPI
+       -> SQLite: conversations, messages, feedback
+       -> AgentService / finite LangGraph
+            -> MCP stdio child: legal retrieval
+                 -> LegalRetriever
+                 -> Qdrant dense + BM25S Underthesea
+                 -> RRF + BGE reranker
+            -> MCP stdio child: legal calculator
+                 -> deterministic Article 20/35 rules
+            -> citation guardrail: canonical source + membership + semantic support
+            -> structured LLM router/answer generator
+~~~
 
-| Nhóm | Công nghệ / thư viện | Phiên bản trong cấu hình |
-| --- | --- | --- |
-| Runtime | Python | `>=3.11,<3.12` |
-| Package/build | `uv`, `uv_build` | `uv_build>=0.10.11,<0.11.0` |
-| API | FastAPI | `>=0.139.0` |
-| ASGI server | Uvicorn | `uvicorn[standard]>=0.51.0` |
-| Validation/settings | Pydantic, pydantic-settings | `pydantic>=2`, `pydantic-settings>=2.14.2` |
-| HTTP client | HTTPX | `>=0.28.1` |
-| LLM adapter | OpenAI-compatible SDK | `openai>=2.45.0` |
-| Agent orchestration | LangGraph | `>=1.2.9` |
-| MCP protocol | `mcp` Python package | `>=1.28.1,<2` |
-| Vector DB client | Qdrant client | `qdrant-client>=1.18.0` |
-| Dense/reranker model stack | FlagEmbedding, Torch, Transformers | `flagembedding>=1.4.0`, `torch>=2.13.0`, `transformers>=4.44,<5` |
-| Sparse retrieval | BM25S, Underthesea | `bm25s>=0.3.9`, `underthesea>=9.5.0` |
-| Logging | structlog | `>=26.1.0` |
-| Date handling | python-dateutil | `>=2.9.0.post0,<3` |
-| DOCX ingestion | python-docx | `>=1.2.0` |
-| Test/quality | pytest, pytest-asyncio, pytest-cov, ruff, pyright, pre-commit | trong `[dependency-groups].dev` |
+Các adapter ở scripts/, mcp_servers/ và frontend không sở hữu business logic. Business logic nằm trong các bounded area dưới src/vietnamese_labor_law_assistant/; MCP client/server chỉ đóng gói và gọi các capability đó.
 
-Frontend:
+### 1.3 Công nghệ và phiên bản
 
-| Nhóm | Công nghệ / thư viện | Phiên bản trong `frontend/package.json` |
-| --- | --- | --- |
-| UI framework | React, React DOM | `^18.3.1` |
-| Build tool | Vite | `^5.4.2` |
-| Language | TypeScript | `^5.5.3` |
-| Icons | lucide-react | `^0.344.0` |
-| CSS | Tailwind CSS, PostCSS, Autoprefixer | `^3.4.1`, `^8.4.35`, `^10.4.18` |
-| Lint | ESLint, typescript-eslint, react hooks plugins | `^9.9.1`, `^8.3.0`, `^5.1.0-rc.0` |
-| Container runtime | Node image | `node:20-alpine` |
-| Static server/proxy | Nginx image | `nginx:1.27-alpine` |
+Các phiên bản dưới đây lấy từ pyproject.toml, uv.lock, frontend/package.json và các Dockerfile. Dấu >=/< là constraint khai báo; cột uv.lock là phiên bản đã khóa trong môi trường hiện tại.
 
-Data/runtime:
+#### Backend và AI
 
-| Thành phần | Vai trò |
-| --- | --- |
-| Qdrant | Vector database cho dense retrieval; Compose dùng `qdrant/qdrant:v1.16.2`. |
-| SQLite | Lưu hội thoại, message metadata và feedback tại `data/runtime/app.sqlite3` local hoặc `/runtime/app.sqlite3` trong Docker. |
-| JSONL/CSV/JSON | Datasets, processed legal source, benchmark evidence và reports. |
-| Hugging Face cache | Cache model embedding/reranker, local `.cache/huggingface` hoặc Docker volume `hf_cache`. |
+| Thành phần | Công nghệ | Phiên bản/ghi chú |
+|---|---|---|
+| Runtime | Python | >=3.11,<3.12; .python-version là 3.11 |
+| Dependency manager | uv | lockfile yêu cầu Python 3.11; CI evidence dùng uv 0.10.11 |
+| HTTP API | FastAPI / Uvicorn | FastAPI 0.139.0, Uvicorn 0.51.0 |
+| Data contract | Pydantic / pydantic-settings | Pydantic 2.13.4, pydantic-settings 2.14.2 |
+| LLM client | OpenAI SDK / HTTPX | OpenAI 2.45.0, HTTPX 0.28.1; dùng endpoint OpenAI-compatible |
+| Agent orchestration | LangGraph | 1.2.9; graph hữu hạn, không có recursive free-form loop |
+| MCP | MCP Python SDK | 1.28.1; transport production là stdio |
+| Dense embedding | FlagEmbedding BGE-M3 | FlagEmbedding 1.4.0, model mặc định BAAI/bge-m3 |
+| Reranking | FlagEmbedding BGE reranker | model mặc định BAAI/bge-reranker-v2-m3 |
+| ML runtime | PyTorch / Transformers | Torch 2.13.0 CPU index; Transformers 4.57.6 |
+| Lexical retrieval | BM25S / Underthesea | BM25S 0.3.9, Underthesea 9.5.0 |
+| Vector database | Qdrant server / qdrant-client | Server image qdrant/qdrant:v1.16.2; client 1.18.0 |
+| Logging | Structlog | 26.1.0; log JSON/console, có giới hạn preview và không ghi secret |
+| Date/document parsing | python-dateutil / python-docx | dateutil 2.9.0.post0, python-docx 1.2.0 |
+| Storage | SQLite | SQLite local qua thư viện chuẩn Python; không dùng PostgreSQL, MySQL hoặc ORM |
 
-## 2. Cấu trúc thư mục
+#### Frontend, build và chất lượng
 
-```text
+| Thành phần | Phiên bản/ghi chú |
+|---|---|
+| React / React DOM | 18.3.1 |
+| TypeScript | 5.5.3 |
+| Vite | 5.4.2 |
+| Icons | lucide-react 0.344.0 |
+| CSS | Tailwind CSS 3.4.1, PostCSS 8.4.35, Autoprefixer 10.4.18 |
+| Lint/build frontend | ESLint 9.9.1, typescript-eslint 8.3.0, React plugin, npm run typecheck/lint/build |
+| Test backend | Pytest 9.1.1, pytest-asyncio 1.4.0, pytest-cov 7.1.0 |
+| Static quality | Ruff 0.15.21, Pyright 1.1.411, pre-commit 4.6.0 |
+| Containers | Backend python:3.11-slim; frontend build node:20-alpine, runtime nginx:1.27-alpine |
+
+Không có package.json ở root; frontend có package riêng tại frontend/package.json. Không có hệ quản trị cơ sở dữ liệu ngoài SQLite và Qdrant. Qdrant lưu vector/index payload, còn SQLite chỉ lưu dữ liệu hội thoại và feedback.
+
+### 1.4 Cấu hình và artefact dữ liệu quan trọng
+
+- Configuration trung tâm: src/vietnamese_labor_law_assistant/common/settings.py, nạp biến môi trường từ .env một cách lazy. Template an toàn nằm tại .env.example; không đọc hoặc commit secret trong .env.
+- LLM mặc định theo template: Gemini OpenAI-compatible (OPENAI_BASE_URL trỏ tới Google endpoint), model gemini-3.1-flash-lite. API key phải được cung cấp tại runtime.
+- Qdrant có hai chế độ: local cho chạy trực tiếp và remote cho Docker Compose. Collection mặc định là labor_law_chunks.
+- Cấu hình retrieval đã khóa: R2_H2_C10_O5_L512_B1, tức hybrid Underthesea + reranker, dense top-k 5, candidate 10, output 5, reranker max length 512, batch 1. Không thay đổi config này khi tái tạo benchmark nếu chưa có quyết định kiến trúc rõ ràng.
+- Canonical source registry: data/processed/labor_law_clauses.jsonl; source metadata và checksum gốc ở data/raw/source_metadata.json.
+- Dữ liệu đầu vào là DOCX trong data/raw/; output ingestion, BM25S index, manifest và report trong data/processed/. Đây là protected artefacts, chỉ thay đổi khi người có thẩm quyền yêu cầu.
+- GUARDRAIL_LLM_JUDGE_ENABLED=false theo mặc định. Guardrail xác định bằng canonical registry, source membership, đối chiếu điều/khoản và semantic support; LLM judge chỉ là nhánh tùy chọn cho vùng mơ hồ.
+
+### 1.5 Cách chạy ở mức vận hành
+
+~~~powershell
+uv sync
+uv run uvicorn vietnamese_labor_law_assistant.api.main:app --reload --port 8000
+~~~
+
+Frontend chạy riêng bằng npm ci và npm run dev trong frontend/. Cách chạy gần production:
+
+~~~powershell
+docker compose up --build
+~~~
+
+Compose khởi động Qdrant, chạy qdrant-index-bootstrap, sau đó mới khởi động API và Nginx frontend. Cần có model cache, dữ liệu processed và thông tin LLM runtime. API mặc định ở http://localhost:8000, frontend ở http://localhost:8080; các endpoint chính là /health, /ready, /api/v1/chat và /openapi.json.
+
+## 2. Cấu trúc thư mục (Directory Structure)
+
+Cây dưới đây chỉ giữ các thư mục chính và file có ý nghĩa vận hành/phát triển; các thư mục cache, .venv, .git, node_modules, build output và log sinh ra đã được lược bỏ.
+
+~~~text
 .
-|-- AGENTS.md
-|-- README.md
-|-- handover.md
-|-- pyproject.toml
-|-- uv.lock
-|-- Dockerfile
-|-- compose.yaml
-|-- compose.qdrant.yml
-|-- .env.example
-|-- data/
-|   |-- raw/
-|   |-- processed/
-|   |-- evaluation/
-|   `-- runtime/
-|-- docs/
-|   |-- architecture/
-|   |-- week1_*.md ... week11.md
-|   `-- week10_artifact_reconciliation_review.md
-|-- evaluation/
-|   `-- results/
-|-- frontend/
-|   |-- package.json
-|   |-- vite.config.ts
-|   |-- Dockerfile
-|   |-- nginx.conf
-|   `-- src/
-|       |-- api/
-|       |-- components/
-|       |-- App.tsx
-|       |-- main.tsx
-|       `-- index.css
-|-- scripts/
-|-- src/
-|   `-- vietnamese_labor_law_assistant/
-|       |-- api/
-|       |-- agent/
-|       |-- calculator/
-|       |-- common/
-|       |-- evaluation/
-|       |-- generation/
-|       |-- guardrails/
-|       |-- ingestion/
-|       |-- mcp_clients/
-|       |-- mcp_servers/
-|       `-- retrieval/
-`-- tests/
-    |-- unit/
-    |-- integration/
-    `-- end_to_end/
-```
-
-### Chức năng thư mục lớn
+├── AGENTS.md
+├── README.md
+├── CHANGELOG.md
+├── handover.md
+├── pyproject.toml
+├── uv.lock
+├── .env.example
+├── Dockerfile
+├── compose.yaml
+├── compose.qdrant.yml
+├── frontend/
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   └── src/
+├── src/
+│   └── vietnamese_labor_law_assistant/
+│       ├── api/
+│       ├── agent/
+│       ├── calculator/
+│       ├── common/
+│       ├── evaluation/
+│       ├── generation/
+│       ├── guardrails/
+│       ├── ingestion/
+│       ├── mcp_clients/
+│       ├── mcp_servers/
+│       └── retrieval/
+├── scripts/
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── end_to_end/
+├── data/
+│   ├── raw/
+│   └── processed/
+├── docs/
+│   ├── architecture/
+│   ├── evaluation/
+│   └── releases/
+├── evaluation/
+│   └── results/
+└── archive/
+~~~
 
 | Thư mục | Vai trò |
-| --- | --- |
-| `src/vietnamese_labor_law_assistant/` | Production package duy nhất. Import production phải bắt đầu bằng `vietnamese_labor_law_assistant`. |
-| `src/.../api/` | FastAPI app factory, route handlers, public response mapping, SQLite repository và dependency wiring. |
-| `src/.../agent/` | LangGraph workflow hữu hạn, route intent, policy, trace, MCP gateways và service orchestration. |
-| `src/.../calculator/` | Rule engine deterministic cho Article 20/35, tính notice period/contract duration và provenance. |
-| `src/.../common/` | Settings và logging dùng chung. |
-| `src/.../evaluation/` | Evaluation contracts, metrics, verifier logic và official benchmark workflows. |
-| `src/.../generation/` | RAG answer models, prompt builder, LLM adapter và citation formatting cho endpoint RAG truyền thống. |
-| `src/.../guardrails/` | Claim-level citation parsing, canonical source registry, similarity/judge, aggregation và fail-closed policy. |
-| `src/.../ingestion/` | Parse DOCX, normalize, chunking, identifiers, JSONL writers và validation. |
-| `src/.../mcp_clients/` | Clients chạy project MCP servers bằng stdio subprocess. |
-| `src/.../mcp_servers/` | MCP adapters cho retrieval/calculator; chỉ gọi core services, không chứa business logic mới. |
-| `src/.../retrieval/` | Dense/Qdrant, sparse BM25S, hybrid RRF, reranker, filters, metadata và LegalRetriever. |
-| `frontend/` | React/Vite browser app; gọi FastAPI qua HTTP, không gọi LLM/Qdrant/MCP trực tiếp. |
-| `scripts/` | Operational CLIs, benchmark runners và verifiers; phải mỏng, gọi logic trong package. |
-| `data/` | Legal source, processed corpus, evaluation datasets và runtime SQLite. Dữ liệu canonical/evidence là protected. |
-| `evaluation/results/` | Benchmark/evidence outputs chính thức, không chứa production logic. |
-| `docs/` | Tài liệu tuần, kiến trúc, review và reconciliation. |
-| `tests/` | Unit/integration/end-to-end tests mirror theo bounded area. |
+|---|---|
+| src/vietnamese_labor_law_assistant/api | FastAPI app, HTTP contract, SQLite repository, dependency factories và public response mapper. |
+| src/.../agent | Router, typed state, policy, finite LangGraph, orchestration qua MCP client và workflow verification. Không truy cập trực tiếp Qdrant/rule engine. |
+| src/.../calculator | Domain rules xác định cho notice period/contract duration, model đầu vào/đầu ra và legal provenance. |
+| src/.../common | Settings và logging dùng chung. __init__.py chỉ là package marker. |
+| src/.../ingestion | Parse DOCX, normalize, chunk, tạo ID, validate và ghi JSONL canonical. |
+| src/.../retrieval | Embedding, Qdrant, BM25S, tokenizer, RRF, reranker, factory và LegalRetriever. |
+| src/.../generation | Legacy/direct RAG path: prompt, structured LLM generation, citation mapping và RagService. |
+| src/.../guardrails | Parse legal citation, canonical source registry, semantic scorer, claim-level verification và fail-closed answer policy. |
+| src/.../mcp_clients | Real stdio clients cho retrieval/calculator, transport timeout/retry và môi trường Hugging Face tối thiểu. |
+| src/.../mcp_servers | Hai MCP server stdio; schema và adapter mỏng, gọi service core được inject vào. |
+| scripts | Entrypoint CLI cho ingestion/indexing, demo MCP/Agent, evaluation, review và release validation. Không đặt business logic mới ở đây. |
+| tests | Unit mirror theo bounded area, integration protocol/workflow và end-to-end/API/live fixtures. |
+| frontend | React/Vite UI, API client, hội thoại, citation/evidence panel và Docker/Nginx packaging. |
+| data/raw | Nguồn DOCX và metadata snapshot. Protected. |
+| data/processed | Canonical articles/clauses, lexical indexes, dense/reranker manifests và validation reports. Generated/protected. |
+| docs | Kiến trúc, benchmark, review, release checklist, sơ đồ và hướng dẫn vận hành. |
+| evaluation/results | Kết quả benchmark và release evidence chính thức; không sửa để làm đẹp số liệu. |
+| archive | Snapshot/lịch sử phục vụ truy vết, không phải runtime source. |
 
-## 3. Bản đồ chức năng của file
+## 3. Bản đồ chức năng của File (File Functionality Map)
 
-### Backend API
+Các __init__.py trong src/... chỉ đánh dấu package và không chứa khởi tạo runtime. Danh sách dưới đây tập trung vào file code quan trọng; các test được mô tả ở cuối phần này theo nhóm tương ứng.
 
-| File | Nhiệm vụ chính | Hàm/class cần lưu ý |
-| --- | --- | --- |
-| `src/vietnamese_labor_law_assistant/api/main.py` | Tạo FastAPI app, middleware, error envelope, health/ready, chat, conversation, feedback, RAG và retrieval endpoints. | `create_app`, route `/api/v1/chat`, `/ready`, `/api/v1/search`, `/api/v1/sources/{chunk_id}` |
-| `src/.../api/dependencies.py` | Lazy singleton factories cho RAG, Agent, repository và passthrough retrieval factory. | `get_rag_service`, `get_agent_service`, `get_conversation_repository` |
-| `src/.../api/chat_models.py` | Pydantic request/response models cho browser chat, citations, trace, verification, conversations, feedback. | `ChatRequest`, `ChatResponse`, `MessageResponse`, `FeedbackRequest` |
-| `src/.../api/conversation_repository.py` | SQLite adapter cho conversations, messages, metadata JSON và feedback. | `ConversationRepository.initialize`, `create_conversation`, `add_message`, `messages`, `set_feedback` |
-| `src/.../api/public_mapper.py` | Chuyển `AgentResult` nội bộ thành payload an toàn cho frontend. | `public_answer`, `citations_for`, `tool_trace_for`, `verification_for` |
+### 3.1 Root, cấu hình và đóng gói
 
-### Agent
+| File | Nhiệm vụ và điểm cần lưu ý |
+|---|---|
+| pyproject.toml | Khai báo package Python, dependency runtime/dev, Ruff, Pyright, Pytest, coverage và index CPU của Torch. Đây là nguồn constraint chính. |
+| uv.lock | Khóa dependency và checksum; phải đồng bộ với pyproject.toml. Dùng uv lock --check để xác minh. |
+| frontend/package.json | Script dev, build, lint, typecheck; dependency React/Vite/Tailwind/Lucide. frontend/package-lock.json khóa npm dependency. |
+| Dockerfile | Image backend Python 3.11, copy package và một số script indexing/diagnostic, chạy Uvicorn tại port 8000. |
+| frontend/Dockerfile | Multi-stage npm build rồi phục vụ static bundle bằng Nginx. |
+| compose.yaml | Orchestrate Qdrant, dense index bootstrap, API và frontend; khai báo volume runtime SQLite/model cache, healthcheck và CORS. |
+| compose.qdrant.yml | Qdrant độc lập cho development, expose 6333/6334. |
+| .env.example | Template LLM, Qdrant, embedding, retrieval, guardrail, Agent, database và API settings. Không chứa secret thật. |
+| README.md | Tài liệu kiến trúc, API, cách chạy, locked retrieval config, benchmark và giới hạn sản phẩm. |
+| CHANGELOG.md | Lịch sử thay đổi và trạng thái release; hiện ghi technical/review complete, manual release actions required. |
+| AGENTS.md | Ràng buộc kiến trúc, protected artefacts, testing và Definition of Done cho người phát triển. |
 
-| File | Nhiệm vụ chính | Hàm/class cần lưu ý |
-| --- | --- | --- |
-| `src/.../agent/service.py` | Orchestrator chính: validate input, classify intent, gọi MCP tools, generate answer, verify workflow và áp Week 10 guardrail. | `AgentService.from_settings`, `run`, `classify_intent`, `generate_answer`, `apply_claim_guardrail` |
-| `src/.../agent/graph.py` | Định nghĩa LangGraph state machine và route giữa các bước. | `build_agent_graph` |
-| `src/.../agent/routing.py` | OpenAI-compatible structured router và answer generator. | `OpenAIStructuredIntentRouter`, `OpenAIStructuredAgentAnswerGenerator` |
-| `src/.../agent/mcp_gateways.py` | Gateway adapter gọi legal retrieval/calculator MCP clients. | `RetrievalMcpGateway`, `CalculatorMcpGateway` |
-| `src/.../agent/policies.py` | Giới hạn input, tool budget, timeout, allowlist và sanitize arguments. | `AgentPolicy.ensure_budget`, `bounded_retrieval_arguments`, `sanitized_arguments` |
-| `src/.../agent/models.py` | Typed state/result/trace models cho workflow. | `RouterOutput`, `AgentAnswerDraft`, `ToolTrace`, `AgentResult`, `AgentState` |
-| `src/.../agent/enums.py` | Intent, tool name và workflow status enums. | `AgentIntent`, `ToolName`, `WorkflowStatus` |
-| `src/.../agent/errors.py` | Public/safe error taxonomy cho Agent. | `AgentError`, `ToolTimeoutError`, `WorkflowVerificationError` |
-| `src/.../agent/protocols.py` | Protocol interfaces giúp test bằng fake router/generator/gateway. | `IntentRouter`, `AgentAnswerGenerator`, `ToolGateway` |
+### 3.2 Common và API
 
-### Retrieval
+| File | Chức năng chính | Hàm/class cần lưu ý |
+|---|---|---|
+| src/.../common/settings.py | Nạp và validate toàn bộ cấu hình runtime từ environment/.env; tránh model/network load khi import. | Settings, get_settings(), llm_configured |
+| src/.../common/logging.py | Cấu hình structlog JSON/console, tạo preview câu hỏi bị giới hạn và tránh ghi dữ liệu nhạy cảm. | configure_logging(), question_preview() |
+| src/.../api/main.py | Application factory, lifespan, middleware request ID/CORS, error handlers và toàn bộ HTTP routes. | create_app(), /health, /ready, POST /api/v1/chat, conversation/feedback routes, direct RAG/search routes |
+| src/.../api/dependencies.py | lru_cache cho repository, retriever, guardrail scorer/service và AgentService; là composition root của API. | get_legal_retriever(), get_agent_service(), get_guardrail_service(), readiness factories |
+| src/.../api/chat_models.py | Pydantic request/response contract cho chat, citation, trace, verification, conversation, message và feedback. | ChatRequest, ChatResponse, các model status/citation/trace |
+| src/.../api/conversation_repository.py | Persistence SQLite local; tự tạo schema, bật foreign key cascade và index theo conversation/time. | initialize(), create_conversation(), add_message(), list_messages(), set_feedback(), delete_conversation() |
+| src/.../api/public_mapper.py | Chuyển AgentResult/internal metadata thành response public, lọc field nhạy cảm, map citation canonical và trace đã sanitize. | public_answer(), citations_for(), verification_for(), tool_trace_for() |
 
-| File | Nhiệm vụ chính | Hàm/class cần lưu ý |
-| --- | --- | --- |
-| `src/.../retrieval/factory.py` | Xây singleton retrieval stack theo cấu hình production. Khóa supported modes. | `get_legal_retriever`, `readiness`, `ensure_supported_production_retrieval_mode` |
-| `src/.../retrieval/service.py` | Facade search/get_article/get_clause kết hợp dense/sparse/hybrid/rerank. | `LegalRetriever.search`, `hybrid_search`, `rerank` |
-| `src/.../retrieval/dense.py` | Dense retrieval qua embedding provider và Qdrant. | `DenseRetriever.search` |
-| `src/.../retrieval/sparse.py` | Sparse retrieval qua BM25S store. | `SparseRetriever.search` |
-| `src/.../retrieval/hybrid.py` | Hybrid retrieval và Reciprocal Rank Fusion. | `HybridRetriever.search` |
-| `src/.../retrieval/reranker.py` | BGE reranker adapter. | `BgeReranker`, `resolve_reranker_device` |
-| `src/.../retrieval/qdrant_store.py` | Qdrant collection, point ID, payload index, upsert/search adapter. | `QdrantStore`, `build_qdrant_point_id` |
-| `src/.../retrieval/bm25_store.py` | Build/save/load/search BM25S lexical index. | `Bm25Store` |
-| `src/.../retrieval/embeddings.py` | BGE-M3 embedding provider và device resolution. | `BgeM3EmbeddingProvider`, `EmbeddingProvider` |
-| `src/.../retrieval/models.py` | Retrieval request/response/domain models. | `SearchRequest`, `RetrievedChunk`, `SearchResponse`, `LegalSearchFilters` |
-| `src/.../retrieval/filters.py` | Filter matching theo metadata. | `matches_filters` |
-| `src/.../retrieval/rrf.py` | Reciprocal Rank Fusion helper. | `fuse_rrf` |
-| `src/.../retrieval/lexical_*` | Normalize/build/tokenize text cho BM25S. | `normalize_lexical_text`, `build_lexical_text`, `UndertheseaTokenizer` |
-| `src/.../retrieval/text_builder.py` | Xây embedding document từ legal chunk. | `build_embedding_text`, `to_embedding_document` |
-| `src/.../retrieval/metadata.py` | Legal document metadata provider. | `LegalDocumentMetadataProvider` |
-| `src/.../retrieval/errors.py` | Retrieval error taxonomy mapped to HTTP/MCP public errors. | `RetrievalError` và subclasses |
+Schema SQLite gồm conversations, messages, feedback; chưa có migration framework, ownership/auth hoặc multi-user isolation. Đây là giới hạn thiết kế hiện tại, không phải thiếu sót của MCP.
 
-### Ingestion
+### 3.3 Agent và orchestration
 
-| File | Nhiệm vụ chính | Hàm/class cần lưu ý |
-| --- | --- | --- |
-| `src/.../ingestion/parser.py` | Parse DOCX thành document/article/clause/point blocks. | `LegalDocumentParser`, `iter_docx_blocks` |
-| `src/.../ingestion/chunking.py` | Build article/chunk records từ parsed document. | `build_articles`, `build_chunks` |
-| `src/.../ingestion/models.py` | Canonical legal source models và validation. | `SourceMetadata`, `LegalArticle`, `LegalChunk`, `ValidationReport` |
-| `src/.../ingestion/normalize.py` | Unicode/whitespace/legal text normalization. | `normalize_legal_text`, `join_docx_runs` |
-| `src/.../ingestion/patterns.py` | Regex parser cho chapter/section/article/clause/point headings. | `parse_article_heading`, `parse_clause_heading`, `parse_point_heading` |
-| `src/.../ingestion/identifiers.py` | SHA-256 và deterministic chunk ID. | `calculate_file_sha256`, `build_chunk_id` |
-| `src/.../ingestion/writers.py` | JSONL read/write helpers cho articles/chunks. | `write_chunks_jsonl`, `read_chunks_jsonl` |
-| `src/.../ingestion/validation.py` | Kiểm tra completeness/consistency của processed corpus. | `validate_ingestion` |
-| `src/.../ingestion/manual_review.py` | Manual review records và sync evidence. | `ManualReviewRecord`, `synchronize_manual_review_report` |
+| File | Chức năng chính | Điểm cần lưu ý |
+|---|---|---|
+| src/.../agent/enums.py | Enum intent, tool name và workflow status. | Tách rõ retrieval-only, calculator-only, combined, out-of-scope; có CLARIFICATION, INSUFFICIENT_CONTEXT, TOOL_ERROR, OUTPUT_INVALID. |
+| src/.../agent/models.py | Typed state và contract của router, tool plan, atomic claim, answer draft, trace/result. | Validator giữ allowlist tool, deduplicate plan và kiểm soát explicit article. |
+| src/.../agent/policies.py | Giới hạn input/calls/articles, timeout, retries, top-k và sanitize args. | Policy mặc định giới hạn Agent tối đa 3 tool calls và 3 articles. |
+| src/.../agent/clarifications.py | Trích xuất số điều và tạo các câu clarification ổn định. | Dùng khi input thiếu ngữ cảnh hoặc vượt giới hạn multi-article. |
+| src/.../agent/routing.py | OpenAI-compatible structured intent router và answer generator. | Dùng beta.chat.completions.parse, repair retry có giới hạn; prompt quy định legal notice và route semantics. |
+| src/.../agent/mcp_gateways.py | Adapter allowlist giữa Agent và hai real MCP clients. | Chỉ forward tool call; không chứa retrieval/calculator rule. |
+| src/.../agent/graph.py | Định nghĩa topology LangGraph hữu hạn. | START -> validate -> classify -> tool branch -> generate/refusal -> verify -> claim guardrail -> finalize; combined đi calculator rồi retrieval. |
+| src/.../agent/service.py | Facade/orchestrator end-to-end: validate, route, gọi MCP theo budget, generate, verify, merge evidence và trả AgentResult. | AgentService.from_settings(), run(), execute/retry/timeout logic, canonical calculator provenance và numeric citation enrichment. |
+| src/.../agent/errors.py | Taxonomy lỗi ổn định cho routing, protocol, timeout, output và workflow. | Dùng để map lỗi thành trạng thái an toàn, không leak exception nội bộ. |
+| src/.../agent/protocols.py | Injectable ports cho router, generator, gateways và semantic/guardrail dependencies. | Hỗ trợ unit test offline và giữ bounded-area direction. |
 
-### Generation và Guardrails
+Agent không import trực tiếp Qdrant hoặc calculator rules. Luồng gọi backend đi qua mcp_clients và process MCP tương ứng.
 
-| File | Nhiệm vụ chính | Hàm/class cần lưu ý |
-| --- | --- | --- |
-| `src/.../generation/service.py` | RAG endpoint truyền thống: retrieval + LLM answer + citations. | `RagService.query` |
-| `src/.../generation/llm.py` | OpenAI-compatible LLM adapter cho legal answer draft. | `OpenAICompatibleLegalAnswerGenerator` |
-| `src/.../generation/prompts.py` | Prompt package cho legal QA. | `build_legal_qa_prompt` |
-| `src/.../generation/models.py` | Answer/query/citation/error models. | `AnswerDraft`, `AnswerClaim`, `QueryRequest`, `QueryResponse` |
-| `src/.../generation/citations.py` | Validate citation IDs, format answer with citation markers. | `validate_answer_draft`, `build_citations` |
-| `src/.../guardrails/service.py` | Three-layer claim verification: citation parse/source membership/similarity/judge. | `CitationGuardrailService.verify` |
-| `src/.../guardrails/policy.py` | Fail-closed answer projection. | `guarded_answer` |
-| `src/.../guardrails/source_registry.py` | Lazy read-only canonical chunk registry. | `CanonicalSourceRegistry.records`, `get` |
-| `src/.../guardrails/citation_parser.py` | Parse Vietnamese legal citations. | `parse_legal_citation`, `extract_legal_citations` |
-| `src/.../guardrails/similarity.py` | Token cosine scorer và BGE-M3 scorer. | `TokenCosineScorer`, `BgeM3SemanticScorer` |
-| `src/.../guardrails/judge.py` | Optional structured LLM judge. Disabled by default. | `OpenAIStructuredClaimJudge`, `JudgeDecision` |
-| `src/.../guardrails/models.py` | Typed claim/evidence/verification models. | `AtomicClaim`, `EvidenceContext`, `VerificationResult` |
-| `src/.../guardrails/enums.py` | Verification statuses và reason codes. | `VerificationStatus`, `ReasonCode` |
+### 3.4 Calculator
 
-### Calculator và MCP
+| File | Chức năng chính | Hàm/class cần lưu ý |
+|---|---|---|
+| src/.../calculator/models.py | Input/output Pydantic, legal basis, disclaimer và validation ngày ISO. | NoticePeriodInput, ContractDurationInput |
+| src/.../calculator/enums.py | Contract type, duration type, role, special case và outcome/support status. | Enum cho các trường hợp không cần báo trước, external regulation và wage-delay. |
+| src/.../calculator/rules.py | Bảng rule immutable, chọn rule theo loại hợp đồng/trường hợp. | NOTICE_RULES, DURATION_RULES, select_notice_rule(), select_duration_rule(); provenance trỏ canonical Article 20/35/97 snapshot. |
+| src/.../calculator/notice_period.py | Tính số ngày báo trước hoặc kết quả thiếu thông tin/không cần báo trước/external regulation. | calculate_notice_period() |
+| src/.../calculator/contract_duration.py | Tính elapsed duration, kiểm tra end date và giới hạn fixed-term 36 tháng. | calculate_contract_duration(); dùng relativedelta. |
+| src/.../calculator/service.py | Facade được MCP adapter gọi. | CalculatorService |
+| src/.../calculator/provenance.py | Kiểm chứng rule citation với canonical JSONL, không dùng Internet hay kiến thức ngoài snapshot. | validate_rule_provenance() |
+| src/.../calculator/errors.py | Lỗi input/rule ổn định. | Được map thành MCP error response an toàn. |
 
-| File | Nhiệm vụ chính | Hàm/class cần lưu ý |
-| --- | --- | --- |
-| `src/.../calculator/service.py` | Public calculator service facade. | `CalculatorService` |
-| `src/.../calculator/notice_period.py` | Tính thời hạn báo trước theo rule table hiện có. | `calculate_notice_period` |
-| `src/.../calculator/contract_duration.py` | Tính duration/limit status của hợp đồng. | `calculate_contract_duration` |
-| `src/.../calculator/rules.py` | Rule registry cho Article 20/35. | `NoticeRule`, `ContractDurationRule`, `select_notice_rule` |
-| `src/.../calculator/models.py` | Calculator inputs/results/legal basis. | `NoticePeriodInput`, `ContractDurationInput`, `LegalBasis` |
-| `src/.../calculator/provenance.py` | Validate calculator rules trỏ đúng canonical source chunks. | `validate_rule_provenance` |
-| `src/.../mcp_servers/legal_retrieval/server.py` | Tạo stdio MCP server retrieval. | `create_server`, `main` |
-| `src/.../mcp_servers/legal_retrieval/tools.py` | MCP tool adapter gọi `LegalRetriever`. | `LegalRetrievalToolAdapter` |
-| `src/.../mcp_servers/legal_retrieval/schemas.py` | Tool schemas/envelopes cho retrieval MCP. | `SearchLaborLawInput`, `ToolResponse` |
-| `src/.../mcp_servers/legal_calculator/server.py` | Tạo stdio MCP server calculator. | `create_server`, `main` |
-| `src/.../mcp_servers/legal_calculator/tools.py` | MCP tool adapter gọi `CalculatorService`. | `LegalCalculatorToolAdapter` |
-| `src/.../mcp_servers/legal_calculator/schemas.py` | Tool schemas/envelopes cho calculator MCP. | `ToolResponse`, `ToolError` |
-| `src/.../mcp_clients/legal_retrieval.py` | Client subprocess/session cho retrieval MCP. | `LegalRetrievalMcpClient.search_labor_law`, `get_article`, `get_clause` |
-| `src/.../mcp_clients/legal_calculator.py` | Client subprocess/session cho calculator MCP. | `LegalCalculatorMcpClient.calculate_notice_period`, `calculate_contract_duration` |
-| `src/.../mcp_clients/huggingface_environment.py` | Allowlist env truyền vào retrieval MCP child. | `select_retrieval_mcp_environment` |
+### 3.5 Ingestion và dữ liệu pháp lý
 
-### Evaluation và scripts
+| File | Chức năng chính | Hàm/class cần lưu ý |
+|---|---|---|
+| src/.../ingestion/models.py | Schema source metadata, article, chunk, validation issue/report. | SourceMetadata, LegalArticle, LegalChunk, ValidationReport |
+| src/.../ingestion/patterns.py | Regex/pattern anchored cho chương, mục, điều, khoản, điểm tiếng Việt. | Parser heading không được nới lỏng tùy tiện vì ảnh hưởng provenance. |
+| src/.../ingestion/normalize.py | Normalize Unicode/whitespace, nối DOCX runs và loại header/footer/certification noise. | normalize_legal_text(), join_docx_runs() |
+| src/.../ingestion/identifiers.py | Hash file/content và tạo chunk ID deterministic. | build_chunk_id() tạo ID dạng ll_... |
+| src/.../ingestion/parser.py | Đọc DOCX theo XML order, tạo block/article/clause/point, bảo toàn source block index. | LegalDocumentParser |
+| src/.../ingestion/chunking.py | Xây article/chunk clause/point/article và gắn provenance. | build_articles(), build_chunks() |
+| src/.../ingestion/validation.py | Kiểm tra thiếu/trùng/không tăng số Điều, chunk rỗng/trùng/quá dài và case amendment như Article 219. | validate_ingestion() |
+| src/.../ingestion/writers.py | Đọc/ghi JSONL UTF-8 deterministic. | Read/write canonical articles/clauses/reports. |
+| src/.../ingestion/manual_review.py | Load/validate manual review evidence, checksum và đồng bộ report. | ManualReviewRecord, ManualReviewEvidence |
 
-| File | Nhiệm vụ chính | Hàm/class cần lưu ý |
-| --- | --- | --- |
-| `src/.../evaluation/week10_guardrails.py` | Week 10 dataset loader, canonical JSONL checksum, provenance validation, runner/verifier logic. | `canonical_jsonl_sha256`, `load_week10_cases`, `run_week10_cases`, `verify_week10_evidence` |
-| `src/.../evaluation/week9_agent.py` | Offline Week 9 Agent contract evaluation. | `Week9AgentCase`, `run_offline_contract_evaluation`, `week9_metrics` |
-| `src/.../evaluation/week6_locked_verification.py` | Locked DEV/TEST retrieval verification. | `run` |
-| `src/.../evaluation/week5_current.py` | Current Week 5 reranker matrix and verifier. | `run_week5_current`, `verify_week5_current` |
-| `src/.../evaluation/week4_current.py` | Current Week 4 retrieval benchmark and verifier. | `run_week4_current`, `verify_week4_current` |
-| `src/.../evaluation/current_retrieval.py` | Shared retrieval evidence builder/verifier. | `evaluate_retriever`, `build_current_evidence`, `verify_current_evidence` |
-| `src/.../evaluation/dataset.py` | Evaluation dataset IO helpers. | `load_questions`, `load_chunk_map`, `write_json` |
-| `src/.../evaluation/metrics.py` | Retrieval/citation metrics. | `retrieval_metrics`, `citation_metrics` |
-| `scripts/run_ingestion.py` | CLI tạo processed legal source từ DOCX. | `main` |
-| `scripts/index_dense.py` | CLI index dense vectors vào Qdrant local/remote. | `main` |
-| `scripts/index_bm25s.py` | CLI build BM25S lexical index. | `main` |
-| `scripts/run_week10_guardrail_evaluation.py` | Official Week 10 runner tạo metrics/manifest/predictions/report. | `main` |
-| `scripts/verify_week10_guardrail.py` | Official Week 10 evidence verifier. | `main` |
-| `scripts/run_week9_agent_evaluation.py`, `scripts/verify_week9_agent.py` | Week 9 Agent eval/verifier adapters. | `main` |
-| `scripts/verify_week7_mcp_inspector.py`, `scripts/verify_week8_mcp_inspector.py` | Inspector-based MCP verification writers. | `main` |
-| `scripts/run_week{2,4,5,6}_*.py`, `scripts/verify_week{2,4,5}_*.py` | Historical/current benchmark runners and verifiers. | `main` |
+### 3.6 Retrieval
 
-### Frontend
+| File | Chức năng chính | Điểm cần lưu ý |
+|---|---|---|
+| src/.../retrieval/models.py | Contract document/chunk/search/filter/result/article/clause và retrieval mode. | Các mode gồm dense, sparse Underthesea, hybrid, dense rerank, hybrid rerank. |
+| src/.../retrieval/errors.py | Typed errors cho index, embedding, Qdrant, reranker, manifest, article/clause và invalid query. | Không silently fallback khi production mode lỗi. |
+| src/.../retrieval/embeddings.py | Lazy BGE-M3 provider, device resolution, batch encode và kiểm tra dimension/finite vector. | BgeM3EmbeddingProvider, EmbeddingProvider. |
+| src/.../retrieval/qdrant_store.py | Local/remote Qdrant collection, named vector dense, payload index, upsert/query/source lookup/readiness. | Point ID UUIDv5 deterministic qua build_qdrant_point_id(). |
+| src/.../retrieval/bm25_store.py | Build/save/load/search persistent BM25S và chunk mapping. | Index phải tương thích canonical data snapshot. |
+| src/.../retrieval/lexical_tokenizers.py | Tokenizer whitespace và Underthesea 9.5.0. | get_lexical_tokenizer() |
+| src/.../retrieval/lexical_normalization.py | Chuẩn hóa lexical tiếng Việt. | Dùng nhất quán khi build và query BM25. |
+| src/.../retrieval/lexical_text.py | Tạo text cho lexical index. | Tránh trộn logic với embedding text. |
+| src/.../retrieval/text_builder.py | Tạo embedding text có legal metadata header và map sang EmbeddingDocument. | build_embedding_text(), to_embedding_document() |
+| src/.../retrieval/tokenization.py | Đếm token model và tạo token report. | Dùng để kiểm tra max length trước khi index. |
+| src/.../retrieval/dense.py | Embed query rồi truy vấn Qdrant, áp filter và đo latency. | DenseRetriever |
+| src/.../retrieval/sparse.py | Tìm BM25S, map result về chunk và áp semantics của filter. | SparseRetriever |
+| src/.../retrieval/hybrid.py | Hybrid dense+sparse generic path cho benchmark/historical comparison. | Production dispatch vẫn do LegalRetriever/factory kiểm soát. |
+| src/.../retrieval/rrf.py | Reciprocal Rank Fusion deterministic, k=60 và stable tie order. | Không thay đổi khi so sánh locked benchmark. |
+| src/.../retrieval/reranker.py | Lazy BGE reranker, candidate scoring, device/fp16, fallback/error policy. | BgeReranker, RerankResult; fallback phải theo settings, không tự hạ chất lượng âm thầm. |
+| src/.../retrieval/rerank_text.py | Tạo passage cho cặp query/passage rerank. | Giữ text format đồng bộ với benchmark. |
+| src/.../retrieval/rerank_tokenization.py | Token report cho query/passage pair. | Dùng kiểm soát max length 512. |
+| src/.../retrieval/service.py | Service public duy nhất cho retrieval; dispatch mode, cache query vector, search article/clause và readiness. | LegalRetriever.search(), dense_search(), sparse_search(), hybrid_search(), rerank(). |
+| src/.../retrieval/factory.py | Process-level cached construction của store/provider/retriever/reranker. | Enforce locked production mode và Underthesea index path. |
+| src/.../retrieval/query_cache.py | Thread-safe bounded LRU cache vector query, không persist. | Giảm chi phí encode nhưng không thay đổi tính đúng của result. |
+| src/.../retrieval/filters.py | Predicate filter metadata dùng chung. | Đảm bảo article/clause/source filter cùng semantics. |
+| src/.../retrieval/metadata.py | Fixed source metadata/validation provider. | DocumentMetadata |
+| src/.../retrieval/article_coverage.py | Audit article lookup coverage. | Evidence hiện tại ghi nhận 220/220 article lookup. |
 
-| File | Nhiệm vụ chính | Hàm/class cần lưu ý |
-| --- | --- | --- |
-| `frontend/src/main.tsx` | Mount React app. | React root render |
-| `frontend/src/App.tsx` | App shell: conversation state, readiness, chat submit, feedback, evidence selection. | `App` |
-| `frontend/src/api/client.ts` | HTTP client wrapper với timeout và error mapping. | `api.chat`, `api.conversations`, `api.messages`, `api.feedback`, `request` |
-| `frontend/src/api/types.ts` | TypeScript API contracts mirror backend responses. | `ChatResponse`, `Message`, `Citation`, `Verification`, `ToolTrace` |
-| `frontend/src/api/errors.ts` | API client error class. | `ApiClientError` |
-| `frontend/src/api/verification.ts` | Label map cho verification status. | `verificationLabel` |
-| `frontend/src/components/Sidebar.tsx` | Conversation navigation/delete/new chat. | `Sidebar` |
-| `frontend/src/components/TopBar.tsx` | Header, ready status, mobile controls. | `TopBar` |
-| `frontend/src/components/ChatView.tsx` | Message list. | `ChatView` |
-| `frontend/src/components/MessageBubble.tsx` | Render user/assistant messages, verification chip, citation action, feedback. | `MessageBubble` |
-| `frontend/src/components/MessageInput.tsx` | Question input. | `MessageInput` |
-| `frontend/src/components/EvidencePanel.tsx` | Desktop citation/tool trace/verification panel. | `EvidencePanel` |
-| `frontend/src/components/MobileEvidenceSheet.tsx` | Mobile evidence drawer. | `MobileEvidenceSheet` |
-| `frontend/src/components/EmptyState.tsx` | Initial prompt suggestions. | `EmptyState` |
-| `frontend/src/index.css` | Tailwind/base app styling. | CSS tokens/classes |
-| `frontend/vite.config.ts` | Vite configuration. | React plugin |
-| `frontend/nginx.conf` | Nginx static serving, SPA fallback và proxy `/api`, `/health`, `/ready`, `/openapi.json`. | server config |
-| `frontend/Dockerfile` | Build frontend with Node, serve with Nginx. | multi-stage Dockerfile |
+Pipeline production là: BGE-M3 dense + BM25S Underthesea -> RRF -> tối đa 10 candidate -> BGE reranker -> tối đa 5 chunk. DenseRetriever, HybridRetriever và benchmark modules vẫn tồn tại để tái lập/evaluate các phiên bản retrieval trước đó.
 
-## 4. Luồng hoạt động chính
+### 3.7 Generation và guardrails
 
-### Docker startup
+| File | Chức năng chính | Điểm cần lưu ý |
+|---|---|---|
+| src/.../generation/models.py | Contract cho direct RAG query, answer claim/draft/citation/error. | Đây là path RAG tương thích/legacy bên cạnh Agent. |
+| src/.../generation/prompts.py | Prompt legal QA và quy ước context ID. | Context phải do server cung cấp. |
+| src/.../generation/citations.py | Kiểm tra citation trong draft, tạo label/source endpoint và format answer. | Không cho LLM tự sở hữu source metadata. |
+| src/.../generation/llm.py | OpenAI-compatible structured answer generator. | Parse Pydantic, fail khi refusal/invalid, không tự parse JSON thủ công. |
+| src/.../generation/service.py | Direct RAG: retrieval -> LLM -> citation validation -> optional guardrail -> fail closed. | Được expose qua /api/v1/query và /api/v1/rag/query. |
+| src/.../guardrails/models.py | Model legal reference, evidence context, atomic claim và verification result. | Đây là contract claim-level. |
+| src/.../guardrails/enums.py | Status supported/partial/unsupported/insufficient và reason codes. | Phân biệt evidence thiếu với citation sai. |
+| src/.../guardrails/citation_parser.py | Parser citation Unicode-tolerant, trích số Điều/Khoản/Điểm và bắt malformed/duplicate. | Citation không hợp lệ không được lặng lẽ bỏ qua. |
+| src/.../guardrails/source_registry.py | Lazy read-only registry từ canonical clauses JSONL. | Từ chối duplicate/malformed; là nguồn sự thật cho public citation. |
+| src/.../guardrails/similarity.py | Token cosine scorer cho offline test và BGE-M3 semantic scorer cho runtime. | Có warmup/batch/bounds; CPU có thể chậm. |
+| src/.../guardrails/service.py | Verify syntax, canonical existence, retrieved membership, article match, numeric/legal reference và semantic threshold. | CitationGuardrailService; aggregate fail-closed. |
+| src/.../guardrails/policy.py | Chính sách xuất câu trả lời sau verification. | Giữ claim supported, qualify partial, còn lại trả INSUFFICIENT_VERIFIED_EVIDENCE. |
+| src/.../guardrails/judge.py | Optional structured LLM judge cho ambiguous band. | Disabled mặc định; timeout/unavailable/invalid đều fail closed. |
 
-```text
-docker compose up
-  -> qdrant service starts
-  -> qdrant-index-bootstrap builds/runs Python image
-     -> scripts/index_dense.py
-     -> reads data/processed read-only
-     -> indexes/validates Qdrant remote collection
-  -> api service starts
-     -> uvicorn vietnamese_labor_law_assistant.api.main:app
-     -> FastAPI lifespan initializes SQLite repository
-  -> frontend service starts after API healthcheck
-     -> Nginx serves React static files
-     -> Nginx proxies API calls to api:8000
-```
+### 3.8 MCP clients và servers
 
-Compose mounts `./data/processed` read-only into API/bootstrap containers. Qdrant vectors và SQLite nằm trong named volumes `qdrant_server_storage`, `runtime`; Hugging Face cache là bind mount từ `.cache/huggingface` tới `/hf-cache`.
+| File | Chức năng chính |
+|---|---|
+| src/.../mcp_clients/legal_retrieval.py | Khởi động retrieval server bằng stdio, initialize/list tools, timeout và validate structured envelope; gọi search/article/clause/metadata. |
+| src/.../mcp_clients/legal_calculator.py | Client stdio tương tự cho hai calculator tool. |
+| src/.../mcp_clients/huggingface_environment.py | Chỉ truyền allowlisted model cache/Qdrant runtime env cho child process; không truyền toàn bộ environment hoặc API key. |
+| src/.../mcp_servers/legal_retrieval/schemas.py | Schema v1.0 cho input, public chunk/data type và ToolResponse đồng nhất. |
+| src/.../mcp_servers/legal_retrieval/tools.py | LegalRetrievalToolAdapter, gọi injected LegalRetriever, map typed error và sanitize output. |
+| src/.../mcp_servers/legal_retrieval/server.py | FastMCP server, đăng ký 4 tool, structured output, stderr logging và entrypoint stdio. |
+| src/.../mcp_servers/legal_calculator/schemas.py | Response/meta/error schema calculator. |
+| src/.../mcp_servers/legal_calculator/tools.py | LegalCalculatorToolAdapter, validate input, gọi CalculatorService, map expected errors. |
+| src/.../mcp_servers/legal_calculator/server.py | FastMCP server và entrypoint stdio cho 2 tool calculator. |
 
-### Browser chat request
+Hai server MCP không được mở network port trong production flow. Mỗi client tạo child process, gọi tool bằng protocol MCP và kiểm tra envelope/schema trước khi đưa dữ liệu vào Agent.
 
-```text
-User
-  -> React App.tsx
-  -> frontend/src/api/client.ts POST /api/v1/chat
-  -> Nginx proxy
-  -> FastAPI api/main.py chat()
-  -> ConversationRepository ensures/creates conversation
-  -> AgentService.run()
-     -> validate_input
-     -> OpenAIStructuredIntentRouter.classify()
-     -> LangGraph route
-     -> MCP client subprocess calls:
-        - legal retrieval MCP for search/get_article/get_clause
-        - legal calculator MCP for notice/contract duration
-     -> OpenAIStructuredAgentAnswerGenerator.generate()
-     -> workflow invariant verification
-     -> CitationGuardrailService.verify()
-     -> guarded_answer()
-  -> public_mapper builds public answer/citations/tool trace/verification
-  -> ConversationRepository persists user and assistant messages
-  -> ChatResponse returned to React
-  -> frontend renders answer, citations, tool trace, verification and feedback buttons
-```
+### 3.9 Evaluation, scripts và test
 
-### Direct RAG/retrieval endpoints
+| Khu vực/file | Nhiệm vụ |
+|---|---|
+| src/.../evaluation/models.py, dataset.py | Model câu hỏi/expected clause/prediction và loader/writer JSONL cho evaluation. |
+| src/.../evaluation/metrics.py | Retrieval, citation và latency metrics deterministic; không tự tạo judge score. |
+| src/.../evaluation/current_retrieval.py, week4_current.py | Tái lập/verify retrieval current và benchmark Dense/BM25/RRF. |
+| src/.../evaluation/week5_current.py, week5_reranker_runner.py, week6_locked_verification.py | So sánh reranker, chọn và verify locked configuration. |
+| src/.../evaluation/week9_agent.py, week10_guardrails.py | Offline contract evaluation cho Agent và claim guardrail, checksum/provenance/report. |
+| src/.../evaluation/week12_portfolio.py, week12_round3_review.py | Tổng hợp V1-V4 evidence, release manifest, review packet và final Agent report. |
+| src/.../evaluation/frozen_evidence.py, independent_review.py, review_application.py, review_packets.py, review_policy.py, pre_week6_readiness.py | Đọc checksum/evidence, review độc lập và readiness; đây là tooling đánh giá, không phải runtime request path. |
+| scripts/run_ingestion.py | DOCX -> parse/chunk/JSONL/report/manual-review template. |
+| scripts/index_dense.py | Validate token, tạo embedding, collection Qdrant, upsert deterministic và manifest. |
+| scripts/index_bm25s.py | Tạo persistent BM25S index theo tokenizer/config. |
+| scripts/query_dense.py, scripts/inspect_docx.py | CLI query/inspection hỗ trợ phát triển và kiểm tra dữ liệu. |
+| scripts/demo_week7_mcp_client.py, demo_week8_mcp_calculator_client.py, demo_week9_agent.py | Demo real MCP retrieval/calculator và finite Agent. |
+| scripts/check_llm.py, diagnose_guardrail_semantic_scorer.py, diagnose_structured_router.py | Kiểm tra provider, structured output, semantic scorer và môi trường khi chẩn đoán. |
+| scripts/run_week9_agent_evaluation.py, verify_week9_agent.py, run_week10_guardrail_evaluation.py, verify_week10_guardrail.py | Chạy và verify offline evidence. |
+| scripts/run_week11_live_smoke.py | Smoke test HTTP public flow, canonical citation, multi-article và kiểm tra marker secret. |
+| scripts/run_week12_pass_regression.py, các generate_week12_*, validate_week12_release.py, generate_week12_portfolio.py, generate_portfolio_assets.py | Regression, review remediation, release/portfolio evidence và validation. |
+| Các script Week 2-6 còn lại | Tái lập dataset, benchmark, report và historical review; không đưa business logic mới vào đây. |
+| tests/unit/<area>/ | Unit test mirror cho agent, api, calculator, common, evaluation, generation, guardrails, ingestion, mcp_clients, mcp_servers, retrieval; có test_repository_structure.py. |
+| tests/integration/ | Reproducibility/manual review/provenance, MCP protocol Week 7/8, Agent workflow, RAG/guardrail và API Week 11. |
+| tests/end_to_end/ | Question-to-verified-answer, live smoke fixtures, multi-article và Week 12 remediation/round 3. |
 
-```text
-POST /api/v1/query or /api/v1/rag/query
-  -> RagService.query()
-  -> LegalRetriever.search()
-  -> OpenAICompatibleLegalAnswerGenerator.generate()
-  -> citation formatting
+Ở trạng thái release mới nhất, tài liệu release ghi nhận 361 Python tests và 85.92% coverage. Một số evidence cũ ghi 319 tests/86.56%; không trộn hai bộ số liệu khi báo cáo, vì test/evidence đã được bổ sung sau đó.
 
-POST /api/v1/search
-  -> LegalRetriever.search()
-  -> DenseRetriever / SparseRetriever / HybridRetriever / BgeReranker according to settings
-  -> QdrantStore and/or Bm25Store
-```
+### 3.10 Frontend
 
-### Retrieval stack
+| File | Chức năng chính |
+|---|---|
+| frontend/src/main.tsx | Mount React StrictMode và App. |
+| frontend/src/App.tsx | Global state hội thoại, messages, readiness, error, gửi chat, feedback, xóa và responsive evidence layout. |
+| frontend/src/api/client.ts | Same-origin/fallback VITE_API_BASE_URL fetch wrapper, timeout 100 giây, health/readiness/conversation/chat/feedback calls. |
+| frontend/src/api/types.ts | TypeScript mirror của API contracts, citation/trace/verification/status. |
+| frontend/src/api/errors.ts | ApiClientError và map lỗi HTTP. |
+| frontend/src/api/verification.ts | Map verification status sang label hiển thị. |
+| frontend/src/components/Sidebar.tsx | Chọn/tạo/xóa conversation và list lịch sử. |
+| frontend/src/components/TopBar.tsx | Tên ứng dụng, readiness và evidence menu. |
+| frontend/src/components/ChatView.tsx | Render message list, typing và autoscroll. |
+| frontend/src/components/MessageBubble.tsx | Render user/assistant, status, citation link, feedback và copy. |
+| frontend/src/components/MessageInput.tsx | Textarea, send và Enter handling. Icon đính kèm hiện chưa có handler. |
+| frontend/src/components/EvidencePanel.tsx | Desktop tabs citations/process/verification. |
+| frontend/src/components/MobileEvidenceSheet.tsx | Evidence overlay trên mobile. |
+| frontend/src/components/EmptyState.tsx, TypingIndicator.tsx, Icons.tsx | Empty suggestions, loading indicator và icon wrapper. |
+| frontend/src/index.css | Tailwind base, layout styles, màu và animation. |
+| frontend/vite.config.ts, tailwind.config.js, postcss.config.js, eslint.config.js, tsconfig*.json, index.html, nginx.conf | Build, typecheck/lint, CSS pipeline, app shell và reverse proxy production. |
 
-```text
-LegalRetriever
-  -> DenseRetriever
-     -> BgeM3EmbeddingProvider
-     -> QdrantStore
-  -> SparseRetriever
-     -> Bm25Store
-     -> UndertheseaTokenizer
-  -> HybridRetriever
-     -> fuse_rrf
-  -> BgeReranker
-```
+## 4. Luồng hoạt động chính (Core Workflow)
 
-Production retrieval mode mặc định là `hybrid_underthesea_rerank`, tương ứng selected locked configuration:
+### 4.1 Khởi động ứng dụng
 
-```text
-R2_H2_C10_O5_L512_B1
-hybrid Underthesea + candidate_k=10 + output_k=5 + reranker_max_length=512 + batch_size=1
-```
+1. uvicorn import vietnamese_labor_law_assistant.api.main:app; create_app() đăng ký middleware, CORS, exception handlers và routes.
+2. Lifespan khởi tạo schema SQLite qua ConversationRepository, sau đó warm semantic scorer trong thread với giới hạn thời gian. Warmup lỗi không làm liveness chết; /ready vẫn phản ánh dependency chưa sẵn sàng.
+3. Với Docker Compose, Qdrant lên trước. qdrant-index-bootstrap kiểm tra/tạo dense index theo dữ liệu processed, rồi API mới chạy. Frontend Nginx chỉ phụ thuộc API health.
+4. /health phản ánh process liveness; /ready tổng hợp retrieval factory, semantic scorer và database readiness. Model/LLM credential được kiểm tra theo configuration khi cần, không load toàn bộ ở import package.
 
-### Ingestion/evaluation workflow
+### 4.2 Luồng chat chính
 
-```text
+~~~text
+POST /api/v1/chat
+  -> ChatRequest validation/normalize
+  -> AgentService.run(include_trace=True)
+  -> finite LangGraph
+       validate input
+       classify intent + explicit articles
+       clarification/out-of-scope, hoặc lập tool plan
+       calculator MCP / retrieval MCP / combined
+       structured answer generation
+       workflow verification
+       claim-level citation guardrail
+       finalize AgentResult
+  -> public_mapper
+  -> SQLite persist user + assistant message
+  -> ChatResponse cho Browser
+~~~
+
+Chi tiết route:
+
+- RETRIEVAL_ONLY: gọi retrieval MCP, thường là search hoặc article/clause lookup, sau đó tạo câu trả lời từ evidence.
+- CALCULATOR_ONLY: gọi calculator MCP với input đã validate và giữ legal basis/disclaimer.
+- RETRIEVAL_AND_CALCULATOR: thực hiện calculator trước, retrieval sau, rồi tạo câu trả lời tổng hợp. Các citation calculator được liên kết canonical.
+- OUT_OF_SCOPE: không gọi backend pháp lý, trả refusal có kiểm soát.
+- Thiếu điều kiện hoặc câu hỏi không rõ: trả clarification. Explicit article bị giới hạn theo policy; plan sai allowlist/dedup/parameter cũng bị chặn.
+
+Router và answer generator dùng structured output OpenAI-compatible với repair retry hữu hạn. Agent áp timeout/retry/budget trước khi đưa tool result vào prompt. Không có vòng lặp tự do; topology graph là hữu hạn và không tự sinh tool tùy ý.
+
+### 4.3 Retrieval bên trong MCP
+
+1. LegalRetrievalClient khởi động legal_retrieval.server bằng stdio và kiểm tra initialize/tool schema.
+2. Server adapter gọi LegalRetriever từ factory.
+3. LegalRetriever dispatch locked mode: chuẩn hóa query, lấy dense vector BGE-M3 và/hoặc lexical BM25S Underthesea, áp filter article/clause/source.
+4. Hybrid kết hợp kết quả bằng RRF; tối đa 10 candidate được chuyển cho BGE reranker; kết quả public còn tối đa 5 chunk.
+5. Adapter trả uniform ToolResponse schema v1.0, sanitize field và map typed error. Client validate envelope trước khi Agent dùng evidence.
+
+### 4.4 Calculator bên trong MCP
+
+1. LegalCalculatorClient khởi động calculator MCP server bằng stdio.
+2. Server validate Pydantic input rồi gọi CalculatorService.
+3. rules.py chọn rule immutable theo contract type/special case, tính toán ngày bằng notice_period.py hoặc contract_duration.py.
+4. Kết quả kèm legal basis, support status và disclaimer; lỗi input/thiếu dữ kiện/ngoại lệ được trả có mã ổn định, không biến thành kết luận pháp lý mơ hồ.
+
+### 4.5 Verification, persistence và các path khác
+
+- Sau generation, workflow verification kiểm tra trạng thái Agent. Claim guardrail parse citation, kiểm tra citation có trong canonical registry và retrieved evidence, đối chiếu article/chunk/numeric support, sau đó chạy semantic scorer. Nếu không đạt, public_mapper không phát hành câu trả lời như verified answer.
+- API chỉ persist sau khi workflow verification đạt trạng thái cho phép. Message lưu content và metadata đã sanitize; feedback gắn theo message_id.
+- /api/v1/query và /api/v1/rag/query đi qua RagService direct path: retrieval -> structured LLM -> citation validation -> guardrail/fail-closed. Đây là path tương thích, không thay thế Agent chat.
+- /api/v1/search, article, clause và source là các endpoint truy vấn trực tiếp phục vụ UI/diagnostic. Browser không gọi Qdrant hoặc MCP trực tiếp.
+
+### 4.6 Ingestion, indexing và evaluation workflow
+
+~~~text
 data/raw/labor_law.docx
   -> scripts/run_ingestion.py
-  -> LegalDocumentParser
-  -> normalize/chunking/identifiers/validation
-  -> data/processed/labor_law_articles.jsonl
-  -> data/processed/labor_law_clauses.jsonl
+  -> parser/normalize/chunk/validation
+  -> data/processed/*.jsonl + reports
+  -> scripts/index_dense.py -> Qdrant
+  -> scripts/index_bm25s.py -> persistent BM25S
+  -> tests/evaluation/release verifiers
+~~~
 
-data/processed/*
-  -> scripts/index_dense.py and scripts/index_bm25s.py
-  -> Qdrant collection and BM25S indexes
+Ingestion tạo ID và output deterministic, giữ provenance Điều/Khoản/Điểm. Evaluation đọc canonical data và evidence checksum để tái lập benchmark; không được sửa report/metric để làm thay đổi kết luận.
 
-data/evaluation/*
-  -> scripts/run_week*_*.py
-  -> src/.../evaluation/*
-  -> evaluation/results/*
-  -> scripts/verify_week*_*.py
-```
+## 5. Đánh giá hiện trạng & Gợi ý bước tiếp theo (Next Steps)
 
-## 5. Đánh giá hiện trạng & Gợi ý bước tiếp theo
+### 5.1 Đã hoàn thiện
 
-### Đã hoàn thiện hoặc có implementation thực tế
+- **Ingestion và corpus:** parser DOCX, normalization, chunking, canonical JSONL, validation/manual review và provenance đã có. Evidence hiện tại giữ 220 articles, 682 chunks, không có empty/duplicate chunk được ghi nhận trong các report liên quan.
+- **Retrieval:** dense BGE-M3, BM25S Underthesea, RRF, BGE reranker, Qdrant local/remote, manifests và readiness đã hoàn thiện. Config chọn là R2_H2_C10_O5_L512_B1 và được khóa trong benchmark/release evidence.
+- **MCP Week 7/8:** retrieval server có 4 tool, calculator server có 2 tool, đều là stdio thật, schema/error mapping/protocol test đầy đủ. Adapter không chứa domain logic.
+- **Agent Week 9:** finite LangGraph trên MCP clients, structured routing/generation, clarification, out-of-scope, combined flow, timeout/retry/budget và sanitized trace đã hoàn thiện.
+- **Guardrail:** canonical registry, citation parser, claim-level semantic/provenance verification và fail-closed policy đã có; LLM judge là tùy chọn và đang tắt.
+- **API/UI:** FastAPI chat/conversation/feedback/direct retrieval routes, SQLite persistence, React chat UI, evidence panel, Docker/Nginx packaging và Compose health flow đã có.
+- **Xác minh release:** release docs ghi nhận 361 test Python, coverage 85.92%; final live CPU Docker validation có 87/87 attempt đạt route/tool, 22/22 explicit parameter, 19/19 clarification, 61/61 canonical citation existence/validity, 0 timeout và 0 error. Đây là số liệu từ evidence, không phải cam kết cho mọi dữ liệu hoặc nhà cung cấp LLM mới.
 
-- Week 1 ingestion pipeline: DOCX parsing, chunking, normalized legal source, validation reports.
-- Week 2 dense baseline và current dense verifier.
-- Week 3 evaluation dataset/review workflow.
-- Week 4 hybrid retrieval benchmarks.
-- Week 5 reranker selection với cấu hình locked `R2_H2_C10_O5_L512_B1`.
-- Week 6 production retrieval engine với Qdrant, BM25S Underthesea, hybrid RRF và reranker.
-- Week 7 legal retrieval MCP stdio server/client.
-- Week 8 deterministic legal calculator MCP server/client cho các rule Article 20/35 hiện có.
-- Week 9 finite LangGraph Agent trên MCP clients, có policy budget/timeout/trace.
-- Week 10 citation/claim guardrail, canonical source registry, canonical JSONL checksum và official runner/verifier.
-- Week 11 browser/API/Docker stack: React frontend, FastAPI chat API, SQLite history/feedback, Nginx proxy, Docker Compose Qdrant/API/frontend.
+### 5.2 Còn dang dở, giới hạn hoặc chỉ là khung sườn
 
-### Bằng chứng vận hành Week 11 (2026-07-21)
+- **Phát hành công khai:** ba screenshot UI bắt buộc trong `docs/images/` đã được xác minh, chủ sở hữu đã chọn MIT License và final local release gate đã PASS; các thao tác thủ công còn lại là Git review/phê duyệt, kiểm tra GitHub rendering, tag/push/release và cập nhật CV/LinkedIn. Demo video được chủ sở hữu cố ý loại khỏi v1.0.0, không được ghi là completed và không được claim tồn tại. Chưa nên tuyên bố phát hành cuối chỉ dựa vào quality gate.
+- **Frontend:** paperclip đã được loại khỏi UI vì upload không thuộc phạm vi v1.0.0; link điều hướng placeholder đã bị loại. Cuộc trò chuyện mới được tạo khi gửi câu hỏi đầu tiên qua `/api/v1/chat`, sau đó UI reload danh sách và message từ SQLite; API `createConversation` vẫn là endpoint riêng nhưng không phải flow hiển thị chính. Chưa có bộ test browser tự động tương đương độ bao phủ backend; việc bổ sung framework bị hoãn tới v1.1 do package lockfile được checksum trong manifest Week 12.
+- **Production operations:** SQLite local chưa có migration, auth, tenant ownership, backup/restore hoặc concurrent multi-user design. Qdrant/BM25 index và model cache vẫn cần operational runbook/backup rõ ràng.
+- **Hiệu năng:** CPU reranker/semantic scorer và LLM live latency có thể cao; final live evidence có mean khoảng 11.6 giây và p95 khoảng 25.8 giây. Không được giảm timeout hoặc tắt guardrail chỉ để che latency.
+- **Phạm vi pháp lý:** corpus là snapshot; calculator chưa bao phủ toàn bộ điều luật/tình huống; guardrail fail-closed có thể trả thiếu bằng chứng khi claim gần ngưỡng; faithfulness/relevancy/correctness judge-backed chưa có metric tái lập trong benchmark hiện tại.
+- **Không phải boilerplate:** agent, retrieval, calculator, guardrails, hai MCP server và test/evidence hiện là implementation thực. Phần cần hoàn thiện chủ yếu là release hygiene, frontend edge cases và production hardening, không phải dựng lại các bounded area này.
 
-- Boundary chủ ý là React/Vite -> FastAPI -> AgentService -> MCP stdio -> retrieval/calculator core -> Week 10 guardrail. React thay Streamlit và không gọi trực tiếp LLM, Qdrant hoặc MCP.
-- Structured-output root cause là `ROUTER_SCHEMA_INVALID`. Router và answer generator có tối đa hai repair retries sau lần đầu; không gọi tool trước route hợp lệ và fail closed khi hết retry.
-- BGE-M3 scorer là singleton theo API process, CPU/fp16=false, batch claims và unique contexts. Compose dùng `HF_HOME=/hf-cache`, `HF_HUB_CACHE=/hf-cache/hub`; không truyền đường dẫn Windows nguyên dạng vào container Linux.
-- Timing: constructor 10.4–14.2 giây; cold 2.25–3.00 giây; warm 0.38–0.49 giây; startup warm-up 6.31–6.71 giây. `/health` là liveness; `/ready` chỉ PASS sau `guardrail_semantic=true` và các dependency khác sẵn sàng.
-- Live smoke PASS 11/11: retrieval 3/3, calculator 1/1, combined positive 3/3, combined fail-closed 1/1, out-of-scope 1/1, valid insufficient-context 1/1 và clarification `w9-019` 1/1. SQLite giữ conversation/message/feedback qua API restart.
-- Full Python: 295 passed, coverage 86.09%. Frontend typecheck/lint/build PASS; production npm audit 0 vulnerabilities. Week 1–10 regression PASS; protected scanner CLEAR.
-- Clarification, out-of-scope, insufficient-context, unsupported và output-invalid là các contract khác nhau. Video demo và release thuộc Week 12.
+### 5.3 5 đầu việc kỹ thuật tiếp theo
 
-### Follow-up multi-article regression (2026-07-28)
+1. **Đóng release checklist có kiểm soát.** Ba screenshot UI bắt buộc, MIT License và final local gate đã hoàn thành; thực hiện Git review/phê duyệt, rà lại GitHub rendering sau PR, sau đó commit/tag/push/release đúng thứ tự. Demo video không thuộc phạm vi v1.0.0. Không sửa corpus, locked config hoặc historical evidence để đạt kết quả đẹp hơn.
+2. **Bổ sung kiểm thử frontend và hoàn thiện interaction.** Thêm browser test cho create/select/delete conversation, send/error/timeout, citation/evidence mobile-desktop, feedback và readiness. Giữ paperclip không hiển thị trừ khi có phạm vi upload thực và không thêm lại link placeholder.
+3. **Thiết kế production persistence/security.** Chọn migration strategy, auth/tenant model, ownership của conversation, rate limit, secret management, backup/restore và concurrency policy trước khi đưa SQLite local thành dịch vụ nhiều người dùng.
+4. **Hoàn thiện vận hành và quan sát.** Tạo runbook cho Qdrant/BM25/model cache, readiness dependency, rebuild index và checksum; bổ sung correlation/request metrics, latency theo từng tool/model, retry/error dashboard và load test CPU. Giữ các log đã sanitize và không đưa API key vào child MCP process.
+5. **Mở rộng năng lực pháp lý theo từng bounded change.** Khi thêm điều luật hoặc calculator rule, cập nhật canonical data/provenance, schema, MCP contract, unit/integration/e2e cases và offline/live evaluation cùng một change set. Không đưa rule vào agent, scripts hay MCP adapter và không tạo guardrail placeholder ngoài capability đã xác định.
 
-- Root cause nằm tại Router contract trước executor: retrieval route từng bắt buộc đúng một retrieval
-  tool và không biểu diễn được nhiều arguments cho cùng `get_article`. Direct production MCP
-  `get_article(32)` rồi `get_article(54)` trong cùng session đều PASS.
-- Router hiện trả ordered `tool_plan`; mỗi call có `call_id`, `tool_name`, `arguments`, `sequence`
-  và `purpose`. Repeated tool names được giữ nguyên, article trùng được deduplicate theo thứ tự xuất
-  hiện, và budget được tính theo số call.
-- Mặc định hỗ trợ tối đa ba article khác nhau trong một request qua
-  `AGENT_MAX_ARTICLES_PER_REQUEST=3`. Vượt giới hạn trả clarification trước khi gọi MCP.
-- Executor/evidence giữ association article, call ID, tool name và canonical chunk ID. Context
-  projection bảo đảm mỗi target hợp lệ có evidence trước global limit; guardrail kiểm tra
-  claim/citation theo từng article.
-- Mixed valid/missing giữ phần article hợp lệ và thêm warning `ARTICLE_NOT_FOUND:<article>`;
-  all-missing trả `INSUFFICIENT_CONTEXT`.
-- Live multi-article matrix PASS 11/11; original Week 11 cùng broad single-article matrix PASS
-  27/27; article coverage 220/220 và SQLite persistence qua API restart PASS.
-- Full Python hiện tại: 319 passed, coverage 86.56%. Frontend typecheck/lint/build và production
-  npm audit PASS, 0 vulnerabilities.
+### 5.4 Nguyên tắc tiếp nhận cho lập trình viên mới
 
-### Còn giới hạn hoặc cần cẩn trọng
-
-- Calculator không phải legal reasoning tổng quát; chỉ bao phủ rules đã encode cho Article 20/35.
-- `GUARDRAIL_LLM_JUDGE_ENABLED=false` theo mặc định; guardrail dựa vào parser, source registry, similarity và fail-closed policy nếu judge tắt.
-- Live Agent cần credential LLM hợp lệ và network/provider tương thích.
-- SQLite runtime hiện phù hợp local/single-user; chưa có auth, tenancy hoặc migration framework đầy đủ như production SaaS.
-- Frontend hiện là app nội bộ/local; chưa có authentication, role model hoặc server-side session boundary.
-- Dữ liệu canonical, evaluation datasets, benchmark evidence và locked retrieval config là protected; không sửa khi làm feature thông thường.
-- Một số tài liệu lịch sử ghi Week 11 complete, nhưng khi bàn giao môi trường mới vẫn nên chạy lại Docker smoke vì build/model download có thể phụ thuộc cache/network.
-
-### Gợi ý 3-5 đầu việc kỹ thuật tiếp theo
-
-1. Chuẩn hóa release/readiness gate cho Week 11/12: tạo một script smoke read-only gom `uv` quality gates, frontend gates, verifier Week 1-10, Docker build/up, health/ready và chat smoke để tránh thao tác thủ công rời rạc.
-2. Thiết kế authentication và multi-user persistence trước khi mở rộng sản phẩm: user/session model, conversation ownership, feedback ownership, SQLite migration path hoặc chuyển sang Postgres nếu deployment nhiều người dùng.
-3. Mở rộng calculator bằng quy trình có provenance: mỗi rule mới phải trỏ tới canonical `chunk_id`, có unit tests, MCP schema compatibility tests và guardrail evidence mapping.
-4. Cải thiện operational observability: structured request metrics, trace correlation giữa frontend request ID, FastAPI request ID, Agent trace, MCP calls và guardrail verification.
-5. Làm rõ production deployment profile: CPU/GPU model strategy, Hugging Face cache warm-up, Qdrant backup/restore, secret management và health/readiness policy cho môi trường thật.
-
-### Nguyên tắc giữ nguyên khi phát triển tiếp
-
-- Không đặt business logic trong `scripts/`, `apps/`, `frontend/` hoặc MCP adapter.
-- Không gọi LLM/Qdrant/MCP trực tiếp từ frontend.
-- Không thêm fake guardrail/retrieval/calculator implementation chỉ để lấp scaffold.
-- Không thay canonical legal source, frozen datasets, benchmark evidence hoặc locked retrieval configuration nếu chưa có phê duyệt rõ ràng.
-- Mọi production module mới phải nằm trong bounded area phù hợp dưới `src/vietnamese_labor_law_assistant/` và có test mirror trong `tests/`.
+- Đọc AGENTS.md, README.md, docs/architecture/architecture.mmd, docs/releases/release_checklist.md trước khi sửa code.
+- Tìm bounded area sở hữu capability rồi sửa trong src/...; API/MCP/script chỉ wire hoặc adapt.
+- Đọc pyproject.toml và tree trước khi tạo module; dùng absolute import bắt đầu bằng vietnamese_labor_law_assistant.
+- Mọi production module mới phải có test dưới tests/unit/<area>/; thay đổi shared workflow cần integration/e2e tương ứng.
+- Chạy tối thiểu formatter/linter/typecheck và test liên quan; trước readiness hoặc commit chạy canonical project quality gate và protected-artifact guard.
+- Không sửa .env, secret, dữ liệu data/raw/data/processed, evaluation dataset, benchmark schema/metric hoặc evidence lịch sử nếu chưa được yêu cầu rõ ràng.
