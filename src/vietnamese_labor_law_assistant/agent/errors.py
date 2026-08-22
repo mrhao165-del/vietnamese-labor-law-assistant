@@ -14,6 +14,10 @@ class IntentClassificationError(AgentError):
     code = "INTENT_CLASSIFICATION_ERROR"
 
 
+class RequestModeRoutingError(AgentError):
+    code = "REQUEST_MODE_ROUTING_ERROR"
+
+
 class InvalidRouterOutputError(IntentClassificationError):
     code = "INVALID_ROUTER_OUTPUT"
 

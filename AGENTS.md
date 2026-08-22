@@ -6,14 +6,15 @@ The project has completed the Week 6 retrieval engine, Week 7 MCP Legal Retrieva
 
 ## 2. Repository architecture
 
-Production code lives only in `src/vietnamese_labor_law_assistant/`, the primary import package. Its bounded areas are `api`, `common`, `ingestion`, `retrieval`, `generation`, `evaluation`, `calculator`, `mcp_servers`, and `mcp_clients`. `apps/` and `scripts/` are adapters or entrypoints; MCP adapters may only adapt and call core services, never host business logic.
+Production code lives only in `src/vietnamese_labor_law_assistant/`, the primary import package. Its bounded areas are `api`, `common`, `ingestion`, `retrieval`, `generation`, `evaluation`, `calculator`, `agent`, `guardrails`, `mcp_servers`, and `mcp_clients`. The planned v1.1 `decision_support` bounded area owns case-analysis domain capability when introduced; see `docs/architecture/adr_decision_support_boundary.md`. `apps/` and `scripts/` are adapters or entrypoints; MCP adapters may only adapt and call core services, never host business logic.
 
 ## 3. File placement rules
 
 - Always read `pyproject.toml` and inspect the directory tree before creating a module.
-- Before creating code, decide whether it belongs to `api`, `common`, `ingestion`, `retrieval`, `generation`, `evaluation`, `agent`, or `guardrails`.
+- Before creating code, decide whether it belongs to `api`, `common`, `ingestion`, `retrieval`, `generation`, `evaluation`, `agent`, `guardrails`, or `decision_support`.
 - Do not create a new top-level directory when an existing location fits.
 - Do not put business logic in `apps/`, `scripts/`, or `mcp_servers/`; they may only adapt and call the core package.
+- Put future case-analysis domain rules and models in `decision_support/`; keep `agent` limited to finite orchestration over bounded capabilities. Do not put decision-support rules in API routes, MCP clients/servers, scripts, or the existing direct-QA `AgentService`.
 - Do not duplicate logic across modules. Avoid generic names such as `helpers.py`, `utils.py`, `misc.py`, or `common.py`; name modules for their concrete responsibility.
 - Do not put Python code in `data/`, `docs/`, or `evaluation/results/`.
 

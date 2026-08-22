@@ -21,6 +21,7 @@ The installable code is isolated under `src/`, so imports exercised in tests and
 | `src/vietnamese_labor_law_assistant/mcp_clients/` | Reusable protocol clients for project-owned MCP servers. |
 | `src/vietnamese_labor_law_assistant/agent/` | Finite LangGraph orchestration, policies, typed state, safe errors, traces, and MCP client gateways. |
 | `src/vietnamese_labor_law_assistant/guardrails/` | Week 10 typed citations, canonical source registry, grounding, optional structured judge, aggregation, and fail-closed policy. |
+| `src/vietnamese_labor_law_assistant/decision_support/` | Week-2 case-intake vocabulary and preliminary issue contracts. Future domain rules belong here, while finite orchestration remains in `agent/`. |
 | `apps/` | Historical adapter convention; this directory is not present in the current tree. The implemented frontend is `frontend/`. |
 | `scripts/` | Thin operational CLIs: parse arguments, invoke the package, write artefacts, return an exit code. |
 | `tests/` | Tests mirroring production areas: `unit`, `integration`, and `end_to_end`. |
@@ -68,6 +69,21 @@ common   evaluation    common
 ```
 
 `api` is an HTTP adapter and wires services; it must not duplicate retrieval or generation algorithms. `generation` may consume retrieval contracts. `retrieval` may consume ingestion data contracts. `evaluation` may use package contracts and metrics, but benchmark artefacts remain outside the package. `common` stays small and cannot become a catch-all dependency sink.
+
+## v1.1 decision-support boundary (Week 1 as built)
+
+The frozen v1.0 direct path remains `AgentService -> finite LangGraph -> existing MCP capabilities
+-> guardrail`. The chat API now uses the v1.1 additive outer `AssistantService` and `RequestMode`:
+`DIRECT_QA` delegates unchanged to the existing `AgentService`; `CASE_ANALYSIS` currently terminates
+in a finite fail-closed `CaseGraph`; `OUT_OF_SCOPE` terminates safely. The `decision_support`
+bounded domain capability now contains only the Week-2 case-intake vocabulary, preliminary issue
+allowlist, provider-neutral extraction port, and one-stage OpenAI-compatible structured adapter. It
+has no runtime wiring, capability calls, case rules, or issue requirements yet.
+
+`AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
+status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned
+in this scope. See [the boundary ADR](adr_decision_support_boundary.md) for the complete dependency
+and fail-closed contract.
 
 ## Structural audit, 2026-07-14 (historical record)
 

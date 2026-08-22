@@ -6,28 +6,35 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from vietnamese_labor_law_assistant.agent.assistant_service import AssistantResult
 from vietnamese_labor_law_assistant.agent.enums import AgentIntent, WorkflowStatus
+from vietnamese_labor_law_assistant.agent.mode_routing import RequestMode
 from vietnamese_labor_law_assistant.agent.models import AgentResult
 from vietnamese_labor_law_assistant.api import main as api_main
 from vietnamese_labor_law_assistant.api.conversation_repository import ConversationRepository
 from vietnamese_labor_law_assistant.api.dependencies import (
-    get_agent_service,
+    get_assistant_service,
     get_conversation_repository,
 )
 from vietnamese_labor_law_assistant.api.main import create_app
 from vietnamese_labor_law_assistant.common.settings import Settings
 
 
-class FakeAgent:
+class FakeAssistant:
     def __init__(self, result: AgentResult | Exception) -> None:
         self.result = result
         self.calls: list[tuple[str, bool]] = []
 
-    async def run(self, question: str, *, include_trace: bool = False) -> AgentResult:
+    async def run(self, question: str, *, include_trace: bool = False) -> AssistantResult:
         self.calls.append((question, include_trace))
         if isinstance(self.result, Exception):
             raise self.result
-        return self.result
+        mode = (
+            RequestMode.OUT_OF_SCOPE
+            if self.result.intent is AgentIntent.OUT_OF_SCOPE
+            else RequestMode.DIRECT_QA
+        )
+        return AssistantResult(request_mode=mode, agent_result=self.result)
 
 
 class ReadyScorer:
@@ -66,15 +73,15 @@ def agent_result(
 def client_factory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     def build(
         result: AgentResult | Exception,
-    ) -> tuple[TestClient, ConversationRepository, FakeAgent]:
+    ) -> tuple[TestClient, ConversationRepository, FakeAssistant]:
         settings = Settings(
             app_db_path=tmp_path / "app.sqlite3", cors_allowed_origins="http://allowed.test"
         )
         repository = ConversationRepository(settings.app_db_path)
         repository.initialize()
         app = create_app(settings, semantic_scorer=ReadyScorer())
-        fake = FakeAgent(result)
-        app.dependency_overrides[get_agent_service] = lambda: fake
+        fake = FakeAssistant(result)
+        app.dependency_overrides[get_assistant_service] = lambda: fake
         app.dependency_overrides[get_conversation_repository] = lambda: repository
         monkeypatch.setattr(api_main, "readiness", lambda _: {"retrieval": True, "llm": True})
         return TestClient(app), repository, fake

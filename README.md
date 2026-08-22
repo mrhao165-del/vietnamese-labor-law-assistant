@@ -46,14 +46,17 @@ Browser
   -> Nginx static frontend + same-origin proxy
   -> FastAPI
        -> SQLite persistence
-       -> AgentService / finite LangGraph
-            -> project-owned MCP stdio child: Legal Retrieval
-                 -> Qdrant dense retrieval
-                 -> Vietnamese BM25S / Underthesea lexical retrieval
-                 -> reciprocal-rank fusion + reranker
-            -> project-owned MCP stdio child: Legal Calculator
-                 -> deterministic Article 20/35 rules
-            -> fail-closed citation / semantic guardrail
+       -> AssistantService / RequestMode
+            -> DIRECT_QA -> existing AgentService / finite LangGraph
+                 -> project-owned MCP stdio child: Legal Retrieval
+                      -> Qdrant dense retrieval
+                      -> Vietnamese BM25S / Underthesea lexical retrieval
+                      -> reciprocal-rank fusion + reranker
+                 -> project-owned MCP stdio child: Legal Calculator
+                      -> deterministic Article 20/35 rules
+                 -> fail-closed citation / semantic guardrail
+            -> CASE_ANALYSIS -> finite Week-1 not-ready CaseGraph
+            -> OUT_OF_SCOPE -> bounded refusal
 ```
 
 React replaced the earlier Streamlit direction and is the only current frontend. Docker was verified
@@ -67,6 +70,24 @@ Nginx, FastAPI/SQLite, and project-owned MCP **stdio** child processes. Streamli
 Streamable HTTP MCP are not part of the implemented production path. See
 [design evolution](docs/architecture/design_evolution.md) for the boundary between historical
 planning and the current implementation.
+
+## v1.1 architecture being introduced
+
+Week 1 introduces an additive architecture contract for a future legal decision-support path. The
+frozen v1.0 direct-QA behavior remains implemented by the existing `AgentService`. The chat API now
+uses the outer composition `AssistantService -> RequestMode.DIRECT_QA -> existing AgentService`.
+`RequestMode.CASE_ANALYSIS` terminates in the finite Week-1 `CaseGraph` skeleton, and
+`RequestMode.OUT_OF_SCOPE` returns the established bounded refusal semantics.
+
+`AgentIntent` and `WorkflowStatus` are unchanged v1.0 backend contracts; clarification remains an
+execution outcome, not an outer request mode. `agent/case_graph.py` provides only a finite
+fail-closed `CASE_ANALYSIS_NOT_READY` skeleton; it produces no legal conclusion and invokes no
+capability. Week 2 introduces a typed, user-message Case Intake contract, a two-code preliminary
+issue allowlist for the existing Article 20/35 capability scope, and a one-stage structured provider
+adapter with source-span validation; it is not wired into the runtime. No CaseGraph intake flow,
+document analysis, case memory, temporal versioning, decision-support rules, or additional MCP
+server is implemented. See the
+[Decision Support boundary ADR](docs/architecture/adr_decision_support_boundary.md).
 
 ## RAG pipeline
 
@@ -163,7 +184,7 @@ not changed.
 ```text
 src/vietnamese_labor_law_assistant/  production Python package
   api/ agent/ calculator/ common/ evaluation/ generation/
-  guardrails/ ingestion/ mcp_clients/ mcp_servers/ retrieval/
+  guardrails/ ingestion/ mcp_clients/ mcp_servers/ retrieval/ decision_support/
 frontend/                            React/Vite/TypeScript application
 data/                                protected source, processed, and evaluation data
 evaluation/results/                  benchmark and verification evidence

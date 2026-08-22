@@ -1,0 +1,17 @@
+{
+  "dataset_id": "case_intake_v1_1_development",
+  "dataset_version": "v1_1_dev",
+  "purpose": "Week-2 Case Intake development evaluation",
+  "frozen_final": false,
+  "human_validated": false,
+  "review_status": "PENDING_HUMAN_REVIEW",
+  "live_evaluation": {
+    "status": "LIVE_EVAL_NOT_RUN",
+    "reason": "Development labels and deterministic evaluator were created offline; no provider run is recorded."
+  },
+  "record_requirements": [
+    "all implemented candidate issue codes",
+    "multi-issue and no-supported-issue cases",
+    "money, exact date, ambiguous time, paraphrase, incomplete fact, and adversarial input coverage"
+  ]
+}
