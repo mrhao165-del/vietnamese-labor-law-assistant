@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from vietnamese_labor_law_assistant.agent.assistant_service import AssistantService
+from vietnamese_labor_law_assistant.agent.case_graph import CaseGraph
+from vietnamese_labor_law_assistant.agent.mode_routing import (
+    OpenAIStructuredRequestModeRouter,
+    OuterRequestModeRouter,
+)
 from vietnamese_labor_law_assistant.agent.service import AgentService
 from vietnamese_labor_law_assistant.common.settings import get_settings
 from vietnamese_labor_law_assistant.generation.llm import OpenAICompatibleLegalAnswerGenerator
@@ -70,6 +76,17 @@ def get_guardrail_service() -> CitationGuardrailService:
 @lru_cache(maxsize=1)
 def get_agent_service() -> AgentService:
     return AgentService.from_settings(get_settings(), guardrail_service=get_guardrail_service())
+
+
+@lru_cache(maxsize=1)
+def get_assistant_service() -> AssistantService:
+    settings = get_settings()
+    return AssistantService(
+        OuterRequestModeRouter(OpenAIStructuredRequestModeRouter(settings)),
+        get_agent_service(),
+        CaseGraph(),
+        lambda: get_guardrail_service().verify([], [], out_of_scope_refusal=True),
+    )
 
 
 @lru_cache(maxsize=1)

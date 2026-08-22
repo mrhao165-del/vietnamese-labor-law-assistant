@@ -1,14 +1,14 @@
 # Tài liệu bàn giao dự án
 
 **Dự án:** Vietnamese Labor Law Assistant
-**Cập nhật:** 2026-08-08
+**Cập nhật:** 2026-08-22
 **Phạm vi tài liệu:** mã nguồn hiện tại, cấu hình, frontend, script vận hành, test và các artefact xác minh trong repository.
 
 ## Trạng thái đọc nhanh
 
 Đây là một trợ lý tra cứu thông tin Bộ luật Lao động Việt Nam theo hướng **source-grounded**. Hệ thống kết hợp tìm kiếm dense và lexical, reranker, các công cụ MCP chạy qua stdio, bộ quy tắc tính toán pháp lý xác định, Agent hữu hạn bằng LangGraph và guardrail kiểm tra trích dẫn. Người dùng cuối chỉ giao tiếp với FastAPI; trình duyệt không gọi trực tiếp Qdrant, MCP server hay LLM.
 
-Trạng thái kỹ thuật hiện tại là **Week 12 đã merge vào main và GitHub Actions được chủ sở hữu xác nhận xanh; v1.0.0 còn các manual release gate**. Release candidate lịch sử được mô tả trong docs/releases/release_checklist.md, docs/releases/final_live_validation.md và evaluation/results/week12/final_release_manifest.json. Các artefact này là nguồn chính cho số liệu xác minh; handover.md chỉ là tài liệu định hướng cho người tiếp nhận. Demo video được chủ sở hữu **cố ý loại khỏi phạm vi v1.0.0** và không được coi là thiếu sót implementation.
+Trạng thái kỹ thuật hiện tại là **Week 12 đã merge vào main và GitHub Actions được chủ sở hữu xác nhận xanh; v1.0.0 còn các manual release gate**. Week 1–2 của kiến trúc v1.1 đang được bổ sung trong working tree: chat đi qua outer `AssistantService`, còn Case Intake mới chỉ là bounded capability chưa được nối vào `CaseGraph`. Release candidate lịch sử được mô tả trong docs/releases/release_checklist.md, docs/releases/final_live_validation.md và evaluation/results/week12/final_release_manifest.json. Các artefact này là nguồn chính cho số liệu xác minh; handover.md chỉ là tài liệu định hướng cho người tiếp nhận. Demo video được chủ sở hữu **cố ý loại khỏi phạm vi v1.0.0** và không được coi là thiếu sót implementation.
 
 ## 1. Tổng quan & Công nghệ sử dụng
 
@@ -32,15 +32,18 @@ Browser
   -> Nginx static site + same-origin proxy
   -> FastAPI
        -> SQLite: conversations, messages, feedback
-       -> AgentService / finite LangGraph
-            -> MCP stdio child: legal retrieval
-                 -> LegalRetriever
-                 -> Qdrant dense + BM25S Underthesea
-                 -> RRF + BGE reranker
-            -> MCP stdio child: legal calculator
-                 -> deterministic Article 20/35 rules
-            -> citation guardrail: canonical source + membership + semantic support
-            -> structured LLM router/answer generator
+       -> AssistantService / RequestMode
+            -> DIRECT_QA -> AgentService / finite LangGraph
+                 -> MCP stdio child: legal retrieval
+                      -> LegalRetriever
+                      -> Qdrant dense + BM25S Underthesea
+                      -> RRF + BGE reranker
+                 -> MCP stdio child: legal calculator
+                      -> deterministic Article 20/35 rules
+                 -> citation guardrail: canonical source + membership + semantic support
+                 -> structured LLM router/answer generator
+            -> CASE_ANALYSIS -> finite fail-closed CaseGraph skeleton
+            -> OUT_OF_SCOPE -> bounded refusal
 ~~~
 
 Các adapter ở scripts/, mcp_servers/ và frontend không sở hữu business logic. Business logic nằm trong các bounded area dưới src/vietnamese_labor_law_assistant/; MCP client/server chỉ đóng gói và gọi các capability đó.
@@ -210,7 +213,7 @@ Các __init__.py trong src/... chỉ đánh dấu package và không chứa kh�
 | src/.../common/settings.py | Nạp và validate toàn bộ cấu hình runtime từ environment/.env; tránh model/network load khi import. | Settings, get_settings(), llm_configured |
 | src/.../common/logging.py | Cấu hình structlog JSON/console, tạo preview câu hỏi bị giới hạn và tránh ghi dữ liệu nhạy cảm. | configure_logging(), question_preview() |
 | src/.../api/main.py | Application factory, lifespan, middleware request ID/CORS, error handlers và toàn bộ HTTP routes. | create_app(), /health, /ready, POST /api/v1/chat, conversation/feedback routes, direct RAG/search routes |
-| src/.../api/dependencies.py | lru_cache cho repository, retriever, guardrail scorer/service và AgentService; là composition root của API. | get_legal_retriever(), get_agent_service(), get_guardrail_service(), readiness factories |
+| src/.../api/dependencies.py | lru_cache cho repository, retriever, guardrail scorer/service, AgentService và outer AssistantService; là composition root của API. | get_legal_retriever(), get_agent_service(), get_assistant_service(), get_guardrail_service(), readiness factories |
 | src/.../api/chat_models.py | Pydantic request/response contract cho chat, citation, trace, verification, conversation, message và feedback. | ChatRequest, ChatResponse, các model status/citation/trace |
 | src/.../api/conversation_repository.py | Persistence SQLite local; tự tạo schema, bật foreign key cascade và index theo conversation/time. | initialize(), create_conversation(), add_message(), list_messages(), set_feedback(), delete_conversation() |
 | src/.../api/public_mapper.py | Chuyển AgentResult/internal metadata thành response public, lọc field nhạy cảm, map citation canonical và trace đã sanitize. | public_answer(), citations_for(), verification_for(), tool_trace_for() |
@@ -231,8 +234,22 @@ Schema SQLite gồm conversations, messages, feedback; chưa có migration frame
 | src/.../agent/service.py | Facade/orchestrator end-to-end: validate, route, gọi MCP theo budget, generate, verify, merge evidence và trả AgentResult. | AgentService.from_settings(), run(), execute/retry/timeout logic, canonical calculator provenance và numeric citation enrichment. |
 | src/.../agent/errors.py | Taxonomy lỗi ổn định cho routing, protocol, timeout, output và workflow. | Dùng để map lỗi thành trạng thái an toàn, không leak exception nội bộ. |
 | src/.../agent/protocols.py | Injectable ports cho router, generator, gateways và semantic/guardrail dependencies. | Hỗ trợ unit test offline và giữ bounded-area direction. |
+| src/.../agent/mode_routing.py | Outer RequestMode router trước direct-QA AgentIntent router. | Chỉ trả DIRECT_QA, CASE_ANALYSIS hoặc OUT_OF_SCOPE; không chọn tool hay legal rule. |
+| src/.../agent/assistant_service.py | Outer facade của chat runtime. | Delegate DIRECT_QA nguyên vẹn cho AgentService và fail closed ở các nhánh còn lại. |
+| src/.../agent/case_graph.py | Case Analysis topology hữu hạn của Week 1. | Chỉ trả CASE_ANALYSIS_NOT_READY; chưa gọi Case Intake hoặc MCP. |
 
 Agent không import trực tiếp Qdrant hoặc calculator rules. Luồng gọi backend đi qua mcp_clients và process MCP tương ứng.
+
+### 3.3.1 Decision Support Week 2
+
+| File | Chức năng chính |
+|---|---|
+| src/.../decision_support/enums.py, issues.py | Vocabulary fact và allowlist issue sơ bộ trong phạm vi Article 20/35. |
+| src/.../decision_support/models.py | CaseFact, CandidateIssue và CaseIntakeResult có provenance typed. |
+| src/.../decision_support/protocols.py | Port Case Intake injectable để test offline. |
+| src/.../decision_support/intake.py | Một structured provider call cho facts + candidate issues, sau đó validation source span fail-closed. |
+
+Capability này chưa được nối vào production CaseGraph; missing facts, clarification Case Analysis, rules và evidence thuộc các tuần sau.
 
 ### 3.4 Calculator
 
@@ -387,8 +404,8 @@ Hai server MCP không được mở network port trong production flow. Mỗi cl
 ~~~text
 POST /api/v1/chat
   -> ChatRequest validation/normalize
-  -> AgentService.run(include_trace=True)
-  -> finite LangGraph
+  -> AssistantService.run(include_trace=True)
+  -> DIRECT_QA -> AgentService.run(include_trace=True) -> finite LangGraph
        validate input
        classify intent + explicit articles
        clarification/out-of-scope, hoặc lập tool plan
@@ -397,6 +414,8 @@ POST /api/v1/chat
        workflow verification
        claim-level citation guardrail
        finalize AgentResult
+  -> CASE_ANALYSIS -> finite CASE_ANALYSIS_NOT_READY result
+  -> OUT_OF_SCOPE -> bounded refusal
   -> public_mapper
   -> SQLite persist user + assistant message
   -> ChatResponse cho Browser

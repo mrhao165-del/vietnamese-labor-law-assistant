@@ -16,7 +16,6 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    app_env: str = "development"
     log_level: str = "INFO"
     log_format: Literal["json", "console"] = "json"
     qdrant_mode: Literal["remote", "local"] = "local"
@@ -50,10 +49,8 @@ class Settings(BaseSettings):
     reranker_candidate_k: int = Field(default=10, ge=1, le=100)
     reranker_output_k: int = Field(default=5, ge=1, le=100)
     reranker_fallback_mode: Literal["skip", "error"] = "error"
-    reranker_cache_size: int = Field(default=128, ge=0, le=4096)
     query_embedding_cache_enabled: bool = True
     query_embedding_cache_size: int = Field(default=256, ge=0, le=4096)
-    query_embedding_cache_ttl_seconds: int = Field(default=3600, ge=0, le=86400)
     openai_api_key: SecretStr | None = None
     openai_base_url: str | None = None
     llm_model: str | None = None
@@ -72,7 +69,6 @@ class Settings(BaseSettings):
     guardrail_judge_timeout_seconds: float = Field(default=10, gt=0, le=120)
     guardrail_max_claims: int = Field(default=20, ge=1, le=50)
     guardrail_max_citations_per_claim: int = Field(default=20, ge=1, le=20)
-    guardrail_fail_closed: bool = True
     agent_max_input_length: int = Field(default=4000, ge=1, le=16000)
     agent_max_tool_calls: int = Field(default=3, ge=1, le=10)
     agent_max_articles_per_request: int = Field(default=3, ge=1, le=10)
@@ -82,8 +78,6 @@ class Settings(BaseSettings):
     agent_structured_output_max_retries: int = Field(default=2, ge=0, le=2)
     agent_max_retrieval_top_k: int = Field(default=5, ge=1, le=10)
     agent_tool_output_max_chars: int = Field(default=12000, ge=256, le=100000)
-    api_host: str = "127.0.0.1"
-    api_port: int = Field(default=8000, ge=1, le=65535)
     app_db_path: Path = Path("data/runtime/app.sqlite3")
     cors_allowed_origins: str = "http://localhost:5173,http://localhost:8080"
     api_max_page_size: int = Field(default=50, ge=1, le=100)

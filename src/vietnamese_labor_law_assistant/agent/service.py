@@ -63,6 +63,12 @@ from .routing import OpenAIStructuredAgentAnswerGenerator, OpenAIStructuredInten
 DISCLAIMER = "Hệ thống chỉ hỗ trợ tra cứu, không thay thế tư vấn pháp lý chuyên nghiệp."
 
 
+def out_of_scope_answer(reason: str | None = None) -> str:
+    """Return the established direct-agent refusal wording for outer reuse."""
+
+    return f"Yêu cầu này nằm ngoài phạm vi hỗ trợ ({reason or 'ngoài snapshot pháp luật'})."
+
+
 class AgentService:
     """A bounded graph: one classification and at most three allowlisted MCP calls."""
 
@@ -458,7 +464,7 @@ class AgentService:
         reason = (state.get("router_output") or {}).get(
             "out_of_scope_reason"
         ) or "ngoài snapshot pháp luật"
-        return {"final_answer": f"Yêu cầu này nằm ngoài phạm vi hỗ trợ ({reason})."}
+        return {"final_answer": out_of_scope_answer(reason)}
 
     async def generate_answer(self, state: AgentState) -> dict[str, Any]:
         if state.get("route_status") == WorkflowStatus.CLARIFICATION_REQUIRED.value:

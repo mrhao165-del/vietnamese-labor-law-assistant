@@ -18,8 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from vietnamese_labor_law_assistant.agent.models import AgentResult
-from vietnamese_labor_law_assistant.agent.service import AgentService
+from vietnamese_labor_law_assistant.agent.assistant_service import AssistantService
 from vietnamese_labor_law_assistant.common.logging import configure_logging, question_preview
 from vietnamese_labor_law_assistant.common.settings import Settings, get_settings
 from vietnamese_labor_law_assistant.generation.models import (
@@ -47,7 +46,7 @@ from .chat_models import (
 from .conversation_repository import ConversationRepository, ConversationRepositoryError
 from .dependencies import (
     ensure_supported_production_retrieval_mode,
-    get_agent_service,
+    get_assistant_service,
     get_conversation_repository,
     get_guardrail_semantic_scorer,
     get_legal_retriever,
@@ -206,7 +205,7 @@ def create_app(
     )
     async def chat(
         payload: ChatRequest,
-        service: Annotated[AgentService, Depends(get_agent_service)],
+        service: Annotated[AssistantService, Depends(get_assistant_service)],
         repository: Annotated[ConversationRepository, Depends(get_conversation_repository)],
     ) -> ChatResponse:
         question = " ".join(payload.question.split())
@@ -221,8 +220,9 @@ def create_app(
                 raise HTTPException(status_code=404, detail="CONVERSATION_NOT_FOUND") from exc
         else:
             conversation = None
-        # AgentService owns the MCP-only workflow and the final Week 10 guardrail.
-        result: AgentResult = await service.run(question, include_trace=True)
+        # AssistantService selects the outer mode; direct QA stays owned by AgentService.
+        assistant_result = await service.run(question, include_trace=True)
+        result = assistant_result.agent_result
         if result.workflow_verification.get("status") != "PASS":
             raise HTTPException(status_code=503, detail="AGENT_WORKFLOW_UNAVAILABLE")
         if conversation is None:
@@ -237,10 +237,17 @@ def create_app(
         answer_text = public_answer(result.answer, result.verification, result.status.value)
         machine_code = verification_code(result.verification)
         user_facing_message = answer_text if answer_text != result.answer else None
+        public_route = (
+            result.intent.value
+            if result.intent
+            else assistant_result.request_mode.value
+            if assistant_result.request_mode
+            else None
+        )
         metadata = {
             "router_decision": result.router_decision,
             "planned_tools": [item.value for item in result.planned_tools],
-            "route": result.intent.value if result.intent else None,
+            "route": public_route,
             "final_status": result.status.value,
             "citations": [item.model_dump(mode="json") for item in citations],
             "tool_trace": [item.model_dump(mode="json") for item in tool_trace_for(result)],
