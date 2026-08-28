@@ -1,0 +1,50 @@
+{
+  "week": 3,
+  "roadmap_version": "v1.2",
+  "status": "PASS",
+  "mode": "OFFLINE_DETERMINISTIC_DEVELOPMENT_REGRESSION",
+  "classification": "DEVELOPMENT_UNFROZEN_NOT_RELEASE_EVIDENCE",
+  "dataset": "data/evaluation/decision_support/v1_1/missing_facts_clarification_dev.jsonl",
+  "dataset_id": "missing_facts_clarification_v1_1_development",
+  "dataset_version": "v1_1_dev",
+  "spec": "data/evaluation/decision_support/v1_1/week3_evaluation_spec.json",
+  "spec_id": "week3_missing_facts_clarification_v1_1_dev_preregistered",
+  "case_count": 17,
+  "frozen_final": false,
+  "human_validated": false,
+  "review_status": "PENDING_HUMAN_REVIEW",
+  "thresholds": {
+    "missing_fact_precision_min": 1.0,
+    "missing_fact_recall_min": 1.0,
+    "duplicate_question_rate_max": 0.0,
+    "critical_fact_leakage_max": 0.0
+  },
+  "metrics": {
+    "missing_fact_true_positive": 31,
+    "missing_fact_false_positive": 0,
+    "missing_fact_false_negative": 0,
+    "missing_fact_precision": 1.0,
+    "missing_fact_recall": 1.0,
+    "question_count": 27,
+    "duplicate_question_count": 0,
+    "duplicate_question_rate": 0.0,
+    "critical_gap_case_count": 11,
+    "critical_fact_leakage_count": 0,
+    "critical_fact_leakage": 0.0
+  },
+  "threshold_results": {
+    "missing_fact_precision_pass": true,
+    "missing_fact_recall_pass": true,
+    "duplicate_question_rate_pass": true,
+    "critical_fact_leakage_pass": true,
+    "contract_failures_pass": true,
+    "overall_pass": true
+  },
+  "failure_count": 0,
+  "failures": [],
+  "limitations": [
+    "Development labels are authored but not yet human validated.",
+    "Week 4 owns the frozen v1.1 evaluation set and release evidence.",
+    "Critical leakage measures blocking semantics; no DecisionRule is executed."
+  ]
+}

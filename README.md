@@ -86,7 +86,16 @@ capability. Week 2 introduces a typed, user-message Case Intake contract, a two-
 issue allowlist for the existing Article 20/35 capability scope, and a one-stage structured provider
 adapter with source-span validation; it is not wired into the runtime. No CaseGraph intake flow,
 document analysis, case memory, temporal versioning, decision-support rules, or additional MCP
-server is implemented. See the
+server is implemented. Week 3 adds an immutable issue registry, pure deterministic missing-fact
+detection, and bounded targeted clarification metadata. Clarification uses neutral field-specific
+templates, prioritizes critical and multi-issue gaps, skips caller-supplied previously requested
+fields, and asks at most three questions per round by default. It adds no LLM, retrieval, calculator,
+or runtime CaseGraph call. The separate 17-case Week-3 offline development regression pre-registers
+exact missing-fact and clarification gates; it remains unfrozen and pending human review until Week
+4. Week 4—not Week 3—owns refined-issue processing, the complete v1.1 topology and production
+`CaseGraph` connection, the frontend Case Analysis/missing-information flow, and the human-reviewed
+frozen v1.1 evaluation set and release report. Week 3 is therefore a domain-level development
+checkpoint, not a v1.1 release. See the
 [Decision Support boundary ADR](docs/architecture/adr_decision_support_boundary.md).
 
 ## RAG pipeline

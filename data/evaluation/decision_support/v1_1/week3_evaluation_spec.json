@@ -1,0 +1,26 @@
+{
+  "spec_id": "week3_missing_facts_clarification_v1_1_dev_preregistered",
+  "dataset_id": "missing_facts_clarification_v1_1_development",
+  "dataset_path": "data/evaluation/decision_support/v1_1/missing_facts_clarification_dev.jsonl",
+  "dataset_version": "v1_1_dev",
+  "split_status": "DEVELOPMENT_UNFROZEN",
+  "registered_on": "2026-08-28",
+  "registration_status": "PRE_REGISTERED_BEFORE_FIRST_FINAL_RUN",
+  "thresholds": {
+    "missing_fact_precision_min": 1.0,
+    "missing_fact_recall_min": 1.0,
+    "duplicate_question_rate_max": 0.0,
+    "critical_fact_leakage_max": 0.0
+  },
+  "metric_definitions": {
+    "missing_fact_precision": "TP / (TP + FP) over semantic (case_id, fact_key) missing-field labels.",
+    "missing_fact_recall": "TP / (TP + FN) over semantic (case_id, fact_key) missing-field labels.",
+    "duplicate_question_rate": "Questions whose fact_key repeats earlier in the same round or appears in provided previous-request history, divided by emitted questions.",
+    "critical_fact_leakage": "Cases labelled with a critical gap but marked substantive_ready=true, divided by cases labelled with a critical gap. Detector errors remain fail-closed and never count as ready."
+  },
+  "threshold_rationale": "Conservative exact targets were chosen before the first final run because the evaluated registry, detector, clarification templates, labels, and runner are deterministic offline contracts.",
+  "threshold_change_policy": "Do not lower or otherwise change thresholds after observing Week-3 development metrics. Any future change requires a new versioned specification and documented rationale.",
+  "frozen_final": false,
+  "human_validated": false,
+  "review_status": "PENDING_HUMAN_REVIEW"
+}

@@ -21,7 +21,7 @@ The installable code is isolated under `src/`, so imports exercised in tests and
 | `src/vietnamese_labor_law_assistant/mcp_clients/` | Reusable protocol clients for project-owned MCP servers. |
 | `src/vietnamese_labor_law_assistant/agent/` | Finite LangGraph orchestration, policies, typed state, safe errors, traces, and MCP client gateways. |
 | `src/vietnamese_labor_law_assistant/guardrails/` | Week 10 typed citations, canonical source registry, grounding, optional structured judge, aggregation, and fail-closed policy. |
-| `src/vietnamese_labor_law_assistant/decision_support/` | Week-2 case-intake vocabulary and preliminary issue contracts. Future domain rules belong here, while finite orchestration remains in `agent/`. |
+| `src/vietnamese_labor_law_assistant/decision_support/` | Case-intake vocabulary, preliminary issue contracts, the immutable Week-3 issue registry, pure missing-fact detection, and bounded targeted clarification. Domain rules belong here, while finite orchestration remains in `agent/`. |
 | `apps/` | Historical adapter convention; this directory is not present in the current tree. The implemented frontend is `frontend/`. |
 | `scripts/` | Thin operational CLIs: parse arguments, invoke the package, write artefacts, return an exit code. |
 | `tests/` | Tests mirroring production areas: `unit`, `integration`, and `end_to_end`. |
@@ -76,9 +76,22 @@ The frozen v1.0 direct path remains `AgentService -> finite LangGraph -> existin
 -> guardrail`. The chat API now uses the v1.1 additive outer `AssistantService` and `RequestMode`:
 `DIRECT_QA` delegates unchanged to the existing `AgentService`; `CASE_ANALYSIS` currently terminates
 in a finite fail-closed `CaseGraph`; `OUT_OF_SCOPE` terminates safely. The `decision_support`
-bounded domain capability now contains only the Week-2 case-intake vocabulary, preliminary issue
+bounded domain capability contains the Week-2 case-intake vocabulary, preliminary issue
 allowlist, provider-neutral extraction port, and one-stage OpenAI-compatible structured adapter. It
-has no runtime wiring, capability calls, case rules, or issue requirements yet.
+also contains the additive Week-3 `issue_registry.py` contract: immutable required/critical facts,
+canonical evidence metadata, calculator-need metadata, and applicability scope for the two existing
+issue codes. The pure `missing_facts.py` detector compares typed intake facts with those configured
+requirements, preserves assertion/verification policy, and returns deterministic issue-level and
+deduplicated multi-issue gap metadata. The pure `clarification.py` capability consumes only that
+detector output, ranks critical gaps before issue coverage and canonical order, suppresses fields
+already requested by the caller, and emits neutral field-specific templates. A clarification round
+is capped at three questions by default; callers may supply a smaller or larger positive explicit
+budget without changing the global direct-QA tool budget. These contracts perform no issue spotting,
+retrieval, calculator execution, legal application, or runtime wiring; `CaseGraph` remains
+fail-closed with `CASE_ANALYSIS_NOT_READY`. The mirrored
+`evaluation/decision_support_week3.py` capability owns offline dataset validation, deterministic
+metrics, pre-registered gate application, and failure reporting. Its script is a thin load/run/write
+adapter; the 17-case development set remains unfrozen and pending human review until Week 4.
 
 `AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
 status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned
