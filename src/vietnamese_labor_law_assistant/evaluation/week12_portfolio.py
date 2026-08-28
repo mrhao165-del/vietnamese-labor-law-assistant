@@ -76,6 +76,41 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def resolve_checksum_digests(
+    root: Path,
+    relative_paths: Iterable[str],
+    *,
+    versioned_sources: Mapping[str, VersionedChecksumSource] | None = None,
+) -> dict[str, str]:
+    """Resolve exact-byte digests under the allowlisted historical-source policy."""
+
+    paths = tuple(relative_paths)
+    sources = dict(versioned_sources or {})
+    for relative_path in sources:
+        if relative_path != HISTORICAL_FRONTEND_LOCK_PATH:
+            raise ValueError(f"versioned checksum source is not allowed: {relative_path}")
+        if relative_path not in paths:
+            raise ValueError(f"versioned checksum source is unused: {relative_path}")
+
+    resolved: dict[str, str] = {}
+    for relative_path in paths:
+        if relative_path == HISTORICAL_FRONTEND_LOCK_PATH:
+            source = sources.get(relative_path)
+            if source is None:
+                raise ValueError(
+                    "versioned checksum source is missing: "
+                    f"{relative_path}@{HISTORICAL_FRONTEND_LOCK_REF}"
+                )
+            if source.revision != HISTORICAL_FRONTEND_LOCK_REF:
+                raise ValueError(f"versioned checksum revision mismatch: {relative_path}")
+            resolved[relative_path] = hashlib.sha256(source.content).hexdigest()
+            continue
+
+        path = root / relative_path
+        resolved[relative_path] = sha256_file(path) if path.is_file() else "MISSING"
+    return resolved
+
+
 def validate_checksum_contract(
     root: Path,
     checksums: Mapping[str, object],
@@ -84,13 +119,6 @@ def validate_checksum_contract(
     context: str,
 ) -> None:
     """Validate historical lock bytes by policy and every other target in the worktree."""
-
-    sources = dict(versioned_sources or {})
-    for relative_path in sources:
-        if relative_path != HISTORICAL_FRONTEND_LOCK_PATH:
-            raise ValueError(f"versioned checksum source is not allowed: {relative_path}")
-        if relative_path not in checksums:
-            raise ValueError(f"versioned checksum source is unused: {relative_path}")
 
     for relative_path, expected in checksums.items():
         if (
@@ -101,19 +129,13 @@ def validate_checksum_contract(
         ):
             raise ValueError(f"invalid checksum digest: {relative_path}")
 
-        if relative_path == HISTORICAL_FRONTEND_LOCK_PATH:
-            source = sources.get(relative_path)
-            if source is None:
-                raise ValueError(
-                    "versioned checksum source is missing: "
-                    f"{relative_path}@{HISTORICAL_FRONTEND_LOCK_REF}"
-                )
-            if source.revision != HISTORICAL_FRONTEND_LOCK_REF:
-                raise ValueError(f"versioned checksum revision mismatch: {relative_path}")
-            actual = hashlib.sha256(source.content).hexdigest()
-        else:
-            actual = sha256_file(root / relative_path)
-
+    actual_by_path = resolve_checksum_digests(
+        root,
+        checksums,
+        versioned_sources=versioned_sources,
+    )
+    for relative_path, expected in checksums.items():
+        actual = actual_by_path[relative_path]
         if actual != expected:
             raise ValueError(f"{context} checksum mismatch: {relative_path}")
 

@@ -211,6 +211,7 @@ tests/unit/evaluation/test_week12_portfolio.py
 scripts/generate_week12_portfolio.py
 scripts/generate_week12_manual_review_packet.py
 scripts/generate_portfolio_assets.py
+scripts/historical_frontend_lock.py      # exact v1.0.0 Git-blob source adapter
 scripts/validate_week12_release.py
 evaluation/results/week12/          # new release evidence only
 evaluation/review/                  # unreviewed 24-case packet

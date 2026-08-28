@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from vietnamese_labor_law_assistant.evaluation.week12_portfolio import (
+    VersionedChecksumSource,
+    resolve_checksum_digests,
+)
 
 
 @dataclass(frozen=True)
@@ -142,12 +147,15 @@ def discover_frozen_evidence(root: Path) -> list[FrozenEvidence]:
 
 
 def validate_frozen_evidence(
-    root: Path, evidence: list[FrozenEvidence]
+    root: Path,
+    evidence: list[FrozenEvidence],
+    *,
+    versioned_sources: Mapping[str, VersionedChecksumSource] | None = None,
 ) -> list[FrozenEvidenceResult]:
-    """Hash exact file bytes without rewriting or normalizing any artifact."""
-    results: list[FrozenEvidenceResult] = []
-    for item in evidence:
-        path = root / item.path
-        actual = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else "MISSING"
-        results.append(FrozenEvidenceResult(item, actual))
-    return results
+    """Hash exact policy-resolved bytes without rewriting or normalizing artifacts."""
+    actual_by_path = resolve_checksum_digests(
+        root,
+        (item.path for item in evidence),
+        versioned_sources=versioned_sources,
+    )
+    return [FrozenEvidenceResult(item, actual_by_path[item.path]) for item in evidence]

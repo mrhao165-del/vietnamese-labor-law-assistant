@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from historical_frontend_lock import read_historical_frontend_lock_source
+
 from vietnamese_labor_law_assistant.evaluation.frozen_evidence import (
     discover_frozen_evidence,
     validate_frozen_evidence,
@@ -12,7 +14,11 @@ from vietnamese_labor_law_assistant.evaluation.frozen_evidence import (
 
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
-    results = validate_frozen_evidence(root, discover_frozen_evidence(root))
+    results = validate_frozen_evidence(
+        root,
+        discover_frozen_evidence(root),
+        versioned_sources=read_historical_frontend_lock_source(root),
+    )
     for result in results:
         status = "PASS" if result.matches else "FAIL"
         print(

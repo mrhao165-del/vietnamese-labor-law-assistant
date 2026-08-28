@@ -9,11 +9,10 @@ import re
 import subprocess
 from pathlib import Path
 
+from historical_frontend_lock import read_historical_frontend_lock_source
+
 from vietnamese_labor_law_assistant.evaluation.week12_portfolio import (
-    HISTORICAL_FRONTEND_LOCK_PATH,
-    HISTORICAL_FRONTEND_LOCK_REF,
     SELECTED_RETRIEVAL_CONFIG,
-    VersionedChecksumSource,
     select_phase_manifest,
     sha256_file,
     validate_benchmark_summary,
@@ -37,27 +36,6 @@ FORBIDDEN_TRACKED_PARTS = (
     "frontend/dist/",
     ".cache/",
 )
-
-
-def historical_checksum_sources(root: Path) -> dict[str, VersionedChecksumSource]:
-    """Read the immutable v1.0.0 frontend lock blob without moving policy into the adapter."""
-
-    object_name = f"{HISTORICAL_FRONTEND_LOCK_REF}:{HISTORICAL_FRONTEND_LOCK_PATH}"
-    try:
-        result = subprocess.run(
-            ["git", "cat-file", "blob", object_name],
-            cwd=root,
-            check=True,
-            capture_output=True,
-        )
-    except (FileNotFoundError, subprocess.CalledProcessError) as exc:
-        raise ValueError(f"historical checksum source is unavailable: {object_name}") from exc
-    return {
-        HISTORICAL_FRONTEND_LOCK_PATH: VersionedChecksumSource(
-            revision=HISTORICAL_FRONTEND_LOCK_REF,
-            content=result.stdout,
-        )
-    }
 
 
 def tracked_files(root: Path) -> list[Path]:
@@ -116,7 +94,7 @@ def validate_week12_files(root: Path, manifest_phase: str = "auto") -> None:
     manifest = json.loads((result_dir / "release_manifest.json").read_text(encoding="utf-8"))
     if manifest["retrieval"]["selected_config"] != SELECTED_RETRIEVAL_CONFIG:
         raise ValueError("release manifest selected configuration changed")
-    versioned_sources = historical_checksum_sources(root)
+    versioned_sources = read_historical_frontend_lock_source(root)
     checksum_targets = {
         manifest["corpus"]["path"]: manifest["corpus"]["sha256"],
         manifest["evaluation_dataset"]["path"]: manifest["evaluation_dataset"]["sha256"],

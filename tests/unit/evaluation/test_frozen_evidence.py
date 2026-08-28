@@ -3,10 +3,15 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
+import pytest
+
 from vietnamese_labor_law_assistant.evaluation.frozen_evidence import (
     FrozenEvidence,
     discover_frozen_evidence,
     validate_frozen_evidence,
+)
+from vietnamese_labor_law_assistant.evaluation.week12_portfolio import (
+    VersionedChecksumSource,
 )
 
 
@@ -47,3 +52,115 @@ def test_validation_reports_every_mismatch(tmp_path: Path) -> None:
     results = validate_frozen_evidence(tmp_path, evidence)
 
     assert [result.matches for result in results] == [False, False]
+
+
+def test_validation_uses_exact_v1_tag_bytes_for_historical_frontend_lock(
+    tmp_path: Path,
+) -> None:
+    current = b"current lock\r\n"
+    historical = b"historical lock\r\n"
+    frontend = tmp_path / "frontend"
+    frontend.mkdir()
+    (frontend / "package-lock.json").write_bytes(current)
+    expected = hashlib.sha256(historical).hexdigest()
+
+    result = validate_frozen_evidence(
+        tmp_path,
+        [
+            FrozenEvidence(
+                "frontend/package-lock.json",
+                expected,
+                "final_release_manifest.json:checksums[frontend/package-lock.json]",
+            )
+        ],
+        versioned_sources={
+            "frontend/package-lock.json": VersionedChecksumSource(
+                revision="v1.0.0",
+                content=historical,
+            )
+        },
+    )[0]
+
+    assert result.matches
+    assert result.actual_sha256 == expected
+    assert result.actual_sha256 != hashlib.sha256(current).hexdigest()
+
+
+def test_validation_reports_wrong_v1_tag_bytes_as_mismatch(tmp_path: Path) -> None:
+    expected = hashlib.sha256(b"historical lock\r\n").hexdigest()
+
+    result = validate_frozen_evidence(
+        tmp_path,
+        [
+            FrozenEvidence(
+                "frontend/package-lock.json",
+                expected,
+                "final_release_manifest.json:checksums[frontend/package-lock.json]",
+            )
+        ],
+        versioned_sources={
+            "frontend/package-lock.json": VersionedChecksumSource(
+                revision="v1.0.0",
+                content=b"wrong tagged bytes\r\n",
+            )
+        },
+    )[0]
+
+    assert not result.matches
+    assert result.actual_sha256 == hashlib.sha256(b"wrong tagged bytes\r\n").hexdigest()
+
+
+def test_validation_rejects_missing_historical_frontend_lock_source(tmp_path: Path) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"versioned checksum source is missing: frontend/package-lock\.json@v1\.0\.0",
+    ):
+        validate_frozen_evidence(
+            tmp_path,
+            [
+                FrozenEvidence(
+                    "frontend/package-lock.json",
+                    "0" * 64,
+                    "final_release_manifest.json:checksums[frontend/package-lock.json]",
+                )
+            ],
+        )
+
+
+def test_validation_rejects_non_v1_historical_frontend_lock_source(tmp_path: Path) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"versioned checksum revision mismatch: frontend/package-lock\.json",
+    ):
+        validate_frozen_evidence(
+            tmp_path,
+            [
+                FrozenEvidence(
+                    "frontend/package-lock.json",
+                    "0" * 64,
+                    "final_release_manifest.json:checksums[frontend/package-lock.json]",
+                )
+            ],
+            versioned_sources={
+                "frontend/package-lock.json": VersionedChecksumSource(
+                    revision="HEAD",
+                    content=b"current lock\r\n",
+                )
+            },
+        )
+
+
+def test_validation_rejects_versioned_source_for_current_worktree_target(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ValueError, match=r"versioned checksum source is not allowed: uv\.lock"):
+        validate_frozen_evidence(
+            tmp_path,
+            [FrozenEvidence("uv.lock", "0" * 64, "final_release_manifest.json:checksums")],
+            versioned_sources={
+                "uv.lock": VersionedChecksumSource(
+                    revision="v1.0.0",
+                    content=b"historical uv lock\n",
+                )
+            },
+        )
