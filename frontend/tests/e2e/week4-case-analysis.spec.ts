@@ -11,6 +11,7 @@ test('direct statutory lookup preserves answer and citation action', async ({ pa
 
   await expect(page.getByText('Tra cứu điều luật')).toBeVisible();
   await expect(page.getByText('Người lao động phải báo trước.')).toBeVisible();
+  await expect(page.getByText('Được nguồn hỗ trợ')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Xem căn cứ pháp lý' })).toBeVisible();
 });
 
@@ -20,13 +21,18 @@ test('Case Analysis displays bounded clarification state', async ({ page }) => {
 
   await page
     .getByPlaceholder('Nhập câu hỏi về Bộ luật Lao động…')
-    .fill('Phân tích hợp đồng của tôi.');
+    .fill('Phân tích hợp đồng từ 2026-01-01 đến 2026-12-31 của tôi.');
   await page.getByRole('button', { name: 'Gửi' }).click();
 
   await expect(page.getByText('Phân tích tình huống', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Thông tin còn thiếu' })).toBeVisible();
   await expect(page.getByText('Loại hợp đồng')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Câu hỏi cần làm rõ' })).toBeVisible();
+  await expect(
+    page.getByText(
+      'Hợp đồng lao động thuộc loại không xác định thời hạn, xác định thời hạn dưới 12 tháng, hay xác định thời hạn từ 12 đến 36 tháng?',
+    ),
+  ).toBeVisible();
 });
 
 test('public error copy never exposes provider details', async ({ page }) => {

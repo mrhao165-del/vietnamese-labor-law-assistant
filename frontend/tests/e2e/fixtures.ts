@@ -13,6 +13,11 @@ import type {
 export type Scenario = 'direct' | 'clarification' | 'error';
 
 const createdAt = '2026-08-29T00:00:00Z';
+const localViteOrigin = 'http://127.0.0.1:4173';
+const googleFontOrigins = new Set([
+  'https://fonts.googleapis.com',
+  'https://fonts.gstatic.com',
+]);
 
 const directCitation: Citation = {
   index: 1,
@@ -42,14 +47,24 @@ const clarificationAnalysis: CaseAnalysis = {
   error_code: null,
   known_facts: [
     {
-      fact_id: 'fact-event-time',
-      fact_key: 'EVENT_TIME',
-      raw_value: 'hiện tại',
-      normalized_value: 'CURRENT',
+      fact_id: 'fact-contract-start-date',
+      fact_key: 'CONTRACT_START_DATE',
+      raw_value: '2026-01-01',
+      normalized_value: '2026-01-01',
       assertion_mode: 'EXPLICIT',
       verification_status: 'UNVERIFIED',
       source_ref: 'user_message:user-message-clarification',
-      source_span: { start_offset: 0, end_offset: 9, text: 'Phân tích' },
+      source_span: { start_offset: 22, end_offset: 32, text: '2026-01-01' },
+    },
+    {
+      fact_id: 'fact-contract-end-date',
+      fact_key: 'CONTRACT_END_DATE',
+      raw_value: '2026-12-31',
+      normalized_value: '2026-12-31',
+      assertion_mode: 'EXPLICIT',
+      verification_status: 'UNVERIFIED',
+      source_ref: 'user_message:user-message-clarification',
+      source_span: { start_offset: 37, end_offset: 47, text: '2026-12-31' },
     },
   ],
   candidate_issues: ['CONTRACT_TERM'],
@@ -64,10 +79,11 @@ const clarificationAnalysis: CaseAnalysis = {
   clarification_questions: [
     {
       fact_key: 'CONTRACT_TYPE',
-      question: 'Hợp đồng của bạn thuộc loại nào?',
+      question:
+        'Hợp đồng lao động thuộc loại không xác định thời hạn, xác định thời hạn dưới 12 tháng, hay xác định thời hạn từ 12 đến 36 tháng?',
       critical: true,
       related_issue_codes: ['CONTRACT_TERM'],
-      requirement_reasons: ['CRITICAL_FACTS_MISSING'],
+      requirement_reasons: ['FACT_NOT_PROVIDED'],
       priority: 1,
     },
   ],
@@ -81,7 +97,7 @@ function assistantMetadata(response: ChatResponse): Message['metadata'] & Record
   return {
     router_decision: response.router_decision,
     planned_tools: response.planned_tools,
-    route: response.route ?? undefined,
+    route: response.route,
     final_status: response.final_status,
     citations: response.citations,
     tool_trace: response.tool_trace,
@@ -133,7 +149,21 @@ export async function installMockApi(page: Page, scenario: Scenario): Promise<vo
 
   await page.route('**/*', async (route) => {
     const request = route.request();
-    const { pathname } = new URL(request.url());
+    const url = new URL(request.url());
+    if (url.origin !== localViteOrigin) {
+      if (googleFontOrigins.has(url.origin)) {
+        await route.fulfill({
+          status: 204,
+          contentType: url.hostname === 'fonts.googleapis.com' ? 'text/css' : 'application/octet-stream',
+          body: '',
+        });
+      } else {
+        await route.abort('blockedbyclient');
+      }
+      return;
+    }
+
+    const { pathname } = url;
     const method = request.method();
 
     if (method === 'GET' && pathname === '/ready') {

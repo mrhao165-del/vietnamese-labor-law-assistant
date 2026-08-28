@@ -44,9 +44,9 @@ const failedAnalysisMessages: Record<string, string> = {
   CASE_INTAKE_FAILED: 'Không thể tiếp nhận thông tin vụ việc một cách an toàn.',
   CASE_ANALYSIS_FAILED: 'Không thể tiếp tục phân tích vụ việc một cách an toàn.',
 };
+const genericFailedAnalysisMessage = 'Không thể tiếp tục phân tích vụ việc một cách an toàn.';
 
 const unknownFactLabel = 'Thông tin đã cung cấp';
-const unknownAnalysisStatusLabel = 'Trạng thái phân tích đang được cập nhật';
 const unknownIssueLabel = 'Vấn đề trong yêu cầu';
 const unknownRefinedStatusLabel = 'Trạng thái chưa được hỗ trợ';
 const unknownReasonLabel = 'Lý do chưa được hỗ trợ';
@@ -55,12 +55,23 @@ function factLabel(factKey: string): string {
   return factLabels[factKey] ?? unknownFactLabel;
 }
 
+function hasOwnLabel(labels: Record<string, string>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(labels, key);
+}
+
 export function CaseAnalysisPanel({ analysis }: { analysis: CaseAnalysis }) {
-  const failedMessage = failedAnalysisMessages[analysis.status];
-  if (failedMessage) {
+  if (hasOwnLabel(failedAnalysisMessages, analysis.status)) {
     return (
       <div role="alert" className="mt-3 rounded-lg bg-error-container p-3 text-sm text-on-error-container">
-        {failedMessage}
+        {failedAnalysisMessages[analysis.status]}
+      </div>
+    );
+  }
+
+  if (analysis.error_code !== null || !hasOwnLabel(analysisStatusLabels, analysis.status)) {
+    return (
+      <div role="alert" className="mt-3 rounded-lg bg-error-container p-3 text-sm text-on-error-container">
+        {genericFailedAnalysisMessage}
       </div>
     );
   }
@@ -68,7 +79,7 @@ export function CaseAnalysisPanel({ analysis }: { analysis: CaseAnalysis }) {
   return (
     <section aria-label="Phân tích tình huống" className="mt-3 space-y-3 rounded-lg bg-surface-container-high p-3 text-sm">
       <div role="status" className="font-medium text-on-surface">
-        {analysisStatusLabels[analysis.status] ?? unknownAnalysisStatusLabel}
+        {analysisStatusLabels[analysis.status]}
       </div>
 
       {analysis.known_facts.length > 0 && (

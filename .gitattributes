@@ -11,7 +11,7 @@ docs/week1_manual_validation.csv -text
 # Raw-checksum historical evidence below is stored byte-for-byte.
 # Exact EOL/BOM bytes are part of the recorded SHA-256 provenance.
 compose.yaml -text
-frontend/package-lock.json -text
+frontend/package-lock.json -text whitespace=cr-at-eol
 data/evaluation/labor_law_eval_v1_manifest.json -text
 data/evaluation/labor_law_eval_v1_independent_review_packet.csv -text
 evaluation/results/week4_current_retrieval_predictions.jsonl -text

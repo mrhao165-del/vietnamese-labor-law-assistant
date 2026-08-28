@@ -10,10 +10,14 @@ import subprocess
 from pathlib import Path
 
 from vietnamese_labor_law_assistant.evaluation.week12_portfolio import (
+    HISTORICAL_FRONTEND_LOCK_PATH,
+    HISTORICAL_FRONTEND_LOCK_REF,
     SELECTED_RETRIEVAL_CONFIG,
+    VersionedChecksumSource,
     select_phase_manifest,
     sha256_file,
     validate_benchmark_summary,
+    validate_checksum_contract,
     validate_final_agent_guardrail,
     validate_final_candidate_manifest,
     validate_review_rows,
@@ -33,6 +37,27 @@ FORBIDDEN_TRACKED_PARTS = (
     "frontend/dist/",
     ".cache/",
 )
+
+
+def historical_checksum_sources(root: Path) -> dict[str, VersionedChecksumSource]:
+    """Read the immutable v1.0.0 frontend lock blob without moving policy into the adapter."""
+
+    object_name = f"{HISTORICAL_FRONTEND_LOCK_REF}:{HISTORICAL_FRONTEND_LOCK_PATH}"
+    try:
+        result = subprocess.run(
+            ["git", "cat-file", "blob", object_name],
+            cwd=root,
+            check=True,
+            capture_output=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError) as exc:
+        raise ValueError(f"historical checksum source is unavailable: {object_name}") from exc
+    return {
+        HISTORICAL_FRONTEND_LOCK_PATH: VersionedChecksumSource(
+            revision=HISTORICAL_FRONTEND_LOCK_REF,
+            content=result.stdout,
+        )
+    }
 
 
 def tracked_files(root: Path) -> list[Path]:
@@ -91,33 +116,30 @@ def validate_week12_files(root: Path, manifest_phase: str = "auto") -> None:
     manifest = json.loads((result_dir / "release_manifest.json").read_text(encoding="utf-8"))
     if manifest["retrieval"]["selected_config"] != SELECTED_RETRIEVAL_CONFIG:
         raise ValueError("release manifest selected configuration changed")
+    versioned_sources = historical_checksum_sources(root)
     checksum_targets = {
-        "corpus": (
-            root / manifest["corpus"]["path"],
-            manifest["corpus"]["sha256"],
-        ),
-        "evaluation_dataset": (
-            root / manifest["evaluation_dataset"]["path"],
-            manifest["evaluation_dataset"]["sha256"],
-        ),
+        manifest["corpus"]["path"]: manifest["corpus"]["sha256"],
+        manifest["evaluation_dataset"]["path"]: manifest["evaluation_dataset"]["sha256"],
         **{
-            name: (root / name, digest)
-            for name, digest in manifest["lockfiles"].items()
-            if name != "compose.yaml"
+            name: digest for name, digest in manifest["lockfiles"].items() if name != "compose.yaml"
         },
-        "split_manifest": (
-            root / manifest["evaluation_dataset"]["manifest_path"],
-            manifest["evaluation_dataset"]["manifest_sha256"],
-        ),
+        manifest["evaluation_dataset"]["manifest_path"]: manifest["evaluation_dataset"][
+            "manifest_sha256"
+        ],
     }
-    for name, (path, expected) in checksum_targets.items():
-        if sha256_file(path) != expected:
-            raise ValueError(f"release manifest checksum mismatch: {name}")
+    validate_checksum_contract(
+        root,
+        checksum_targets,
+        versioned_sources=versioned_sources,
+        context="release manifest",
+    )
     selected_manifest = select_phase_manifest(result_dir, manifest_phase)
     selected_name = selected_manifest.name
     if selected_name == "final_release_manifest.json":
         validate_final_candidate_manifest(
-            root, json.loads(selected_manifest.read_text(encoding="utf-8"))
+            root,
+            json.loads(selected_manifest.read_text(encoding="utf-8")),
+            versioned_sources=versioned_sources,
         )
     elif selected_name == "remediation_manifest.json":
         remediation_manifest_path = selected_manifest

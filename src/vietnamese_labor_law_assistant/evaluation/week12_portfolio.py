@@ -17,6 +17,8 @@ PHASE_MANIFEST_NAMES = {
     "remediation": "remediation_manifest.json",
     "final": "final_release_manifest.json",
 }
+HISTORICAL_FRONTEND_LOCK_PATH = "frontend/package-lock.json"
+HISTORICAL_FRONTEND_LOCK_REF = "v1.0.0"
 
 REQUIRED_BENCHMARK_FIELDS = {
     "tier",
@@ -48,6 +50,14 @@ class MetricSpec:
     unit: str
 
 
+@dataclass(frozen=True)
+class VersionedChecksumSource:
+    """Exact bytes read by an adapter from one named repository revision."""
+
+    revision: str
+    content: bytes
+
+
 RETRIEVAL_METRICS = (
     MetricSpec("hit_rate_at_1", "Eligible questions with a relevant chunk at rank 1.", "ratio"),
     MetricSpec("recall_at_5", "Mean relevant-chunk recall within the first five results.", "ratio"),
@@ -64,6 +74,48 @@ def sha256_file(path: Path) -> str:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def validate_checksum_contract(
+    root: Path,
+    checksums: Mapping[str, object],
+    *,
+    versioned_sources: Mapping[str, VersionedChecksumSource] | None = None,
+    context: str,
+) -> None:
+    """Validate historical lock bytes by policy and every other target in the worktree."""
+
+    sources = dict(versioned_sources or {})
+    for relative_path in sources:
+        if relative_path != HISTORICAL_FRONTEND_LOCK_PATH:
+            raise ValueError(f"versioned checksum source is not allowed: {relative_path}")
+        if relative_path not in checksums:
+            raise ValueError(f"versioned checksum source is unused: {relative_path}")
+
+    for relative_path, expected in checksums.items():
+        if (
+            not isinstance(relative_path, str)
+            or not isinstance(expected, str)
+            or len(expected) != 64
+            or any(character not in "0123456789abcdef" for character in expected)
+        ):
+            raise ValueError(f"invalid checksum digest: {relative_path}")
+
+        if relative_path == HISTORICAL_FRONTEND_LOCK_PATH:
+            source = sources.get(relative_path)
+            if source is None:
+                raise ValueError(
+                    "versioned checksum source is missing: "
+                    f"{relative_path}@{HISTORICAL_FRONTEND_LOCK_REF}"
+                )
+            if source.revision != HISTORICAL_FRONTEND_LOCK_REF:
+                raise ValueError(f"versioned checksum revision mismatch: {relative_path}")
+            actual = hashlib.sha256(source.content).hexdigest()
+        else:
+            actual = sha256_file(root / relative_path)
+
+        if actual != expected:
+            raise ValueError(f"{context} checksum mismatch: {relative_path}")
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -91,7 +143,12 @@ def select_phase_manifest(result_dir: Path, phase: str = "auto") -> Path:
     return path
 
 
-def validate_final_candidate_manifest(root: Path, manifest: Mapping[str, Any]) -> None:
+def validate_final_candidate_manifest(
+    root: Path,
+    manifest: Mapping[str, Any],
+    *,
+    versioned_sources: Mapping[str, VersionedChecksumSource] | None = None,
+) -> None:
     """Validate current candidate inputs without mutating historical phase evidence."""
 
     if manifest.get("phase") != "POST_ROUND3_FINAL_RELEASE_CANDIDATE":
@@ -101,11 +158,12 @@ def validate_final_candidate_manifest(root: Path, manifest: Mapping[str, Any]) -
     checksums = manifest.get("checksums")
     if not isinstance(checksums, Mapping):
         raise ValueError("final release manifest checksums must be an object")
-    for relative_path, expected in checksums.items():
-        if not isinstance(relative_path, str) or not isinstance(expected, str):
-            raise ValueError("final release manifest checksum entry is invalid")
-        if sha256_file(root / relative_path) != expected:
-            raise ValueError(f"final release manifest checksum mismatch: {relative_path}")
+    validate_checksum_contract(
+        root,
+        checksums,
+        versioned_sources=versioned_sources,
+        context="final release manifest",
+    )
     thresholds = manifest.get("guardrail_thresholds")
     if thresholds != {"lower": 0.35, "high": 0.75}:
         raise ValueError("final release manifest guardrail thresholds changed")

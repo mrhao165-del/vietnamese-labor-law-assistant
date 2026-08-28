@@ -7,10 +7,12 @@ from pathlib import Path
 import pytest
 
 from vietnamese_labor_law_assistant.evaluation.week12_portfolio import (
+    VersionedChecksumSource,
     build_benchmark_summary,
     deterministic_metric_order,
     select_phase_manifest,
     validate_benchmark_summary,
+    validate_checksum_contract,
     validate_final_agent_guardrail,
     validate_final_candidate_manifest,
 )
@@ -96,3 +98,132 @@ def test_final_manifest_rejects_historical_manifest_substitution() -> None:
     }
     with pytest.raises(ValueError, match="invalid final release manifest phase"):
         validate_final_candidate_manifest(ROOT, historical)
+
+
+def test_checksum_contract_uses_the_v1_tag_blob_only_for_the_historical_frontend_lock(
+    tmp_path: Path,
+) -> None:
+    frontend = tmp_path / "frontend"
+    frontend.mkdir()
+    (frontend / "package-lock.json").write_bytes(b"current lock\r\n")
+    (tmp_path / "uv.lock").write_bytes(b"current uv\n")
+
+    validate_checksum_contract(
+        tmp_path,
+        {
+            "frontend/package-lock.json": (
+                "1d77f497bc0b6772659358c530d236af8b5afb94be5a5e784fd1947d42d68435"
+            ),
+            "uv.lock": "72853fc9e2c7d825d317d3b7949e577c57a105ade0ea276192901734c77ce20c",
+        },
+        versioned_sources={
+            "frontend/package-lock.json": VersionedChecksumSource(
+                revision="v1.0.0",
+                content=b"historical lock\r\n",
+            )
+        },
+        context="release manifest",
+    )
+
+
+def test_checksum_contract_rejects_a_versioned_override_for_a_current_worktree_target(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "uv.lock").write_bytes(b"current uv\n")
+
+    with pytest.raises(ValueError, match=r"versioned checksum source is not allowed: uv\.lock"):
+        validate_checksum_contract(
+            tmp_path,
+            {"uv.lock": ("72853fc9e2c7d825d317d3b7949e577c57a105ade0ea276192901734c77ce20c")},
+            versioned_sources={
+                "uv.lock": VersionedChecksumSource(
+                    revision="v1.0.0",
+                    content=b"historical lock\r\n",
+                )
+            },
+            context="release manifest",
+        )
+
+
+def test_checksum_contract_rejects_a_missing_historical_frontend_lock_source(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"versioned checksum source is missing: frontend/package-lock\.json@v1\.0\.0",
+    ):
+        validate_checksum_contract(
+            tmp_path,
+            {
+                "frontend/package-lock.json": (
+                    "1d77f497bc0b6772659358c530d236af8b5afb94be5a5e784fd1947d42d68435"
+                )
+            },
+            context="release manifest",
+        )
+
+
+def test_checksum_contract_rejects_a_non_v1_revision_for_the_historical_frontend_lock(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"versioned checksum revision mismatch: frontend/package-lock\.json",
+    ):
+        validate_checksum_contract(
+            tmp_path,
+            {
+                "frontend/package-lock.json": (
+                    "1d77f497bc0b6772659358c530d236af8b5afb94be5a5e784fd1947d42d68435"
+                )
+            },
+            versioned_sources={
+                "frontend/package-lock.json": VersionedChecksumSource(
+                    revision="HEAD",
+                    content=b"historical lock\r\n",
+                )
+            },
+            context="release manifest",
+        )
+
+
+def test_checksum_contract_rejects_a_missing_expected_digest(tmp_path: Path) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"invalid checksum digest: frontend/package-lock\.json",
+    ):
+        validate_checksum_contract(
+            tmp_path,
+            {"frontend/package-lock.json": None},
+            versioned_sources={
+                "frontend/package-lock.json": VersionedChecksumSource(
+                    revision="v1.0.0",
+                    content=b"historical lock\r\n",
+                )
+            },
+            context="release manifest",
+        )
+
+
+def test_checksum_contract_rejects_a_wrong_historical_frontend_lock_digest(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"release manifest checksum mismatch: frontend/package-lock\.json",
+    ):
+        validate_checksum_contract(
+            tmp_path,
+            {
+                "frontend/package-lock.json": (
+                    "551b77965395bbc60d1329111dd3ed3e84f0b9b2a564a4265ba9826f004f96cc"
+                )
+            },
+            versioned_sources={
+                "frontend/package-lock.json": VersionedChecksumSource(
+                    revision="v1.0.0",
+                    content=b"historical lock\r\n",
+                )
+            },
+            context="release manifest",
+        )
