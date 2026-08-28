@@ -98,6 +98,18 @@ frozen v1.1 evaluation set and release report. Week 3 is therefore a domain-leve
 checkpoint, not a v1.1 release. See the
 [Decision Support boundary ADR](docs/architecture/adr_decision_support_boundary.md).
 
+Week 4 now begins with the deterministic refined-issue domain contract only. It marks a supported
+candidate `ACTIVE` when all registry requirements are satisfied and otherwise keeps it `POSSIBLE`,
+while preserving fact provenance and missing-field traceability. It does not infer
+`RESOLVED_OUT` or `UNSUPPORTED_SCOPE` without an explicit deterministic contract, and it emits no
+legal conclusion. The additive Week-4 evidence-request skeleton materializes only registry-owned
+legal-source and calculator-capability metadata for `ACTIVE` and `POSSIBLE` issues, deduplicates
+shared requirements with per-issue traceability, and preserves a critical-fact block. It is not the
+Week-5 `EvidencePlan`: it generates no query or budget and performs no retrieval, MCP, or calculator
+execution. Production `CaseGraph` wiring, frontend Case Analysis flow, and frozen v1.1 release
+evidence remain subsequent Week-4 work; `CASE_ANALYSIS_NOT_READY` is still the runtime behavior at
+this checkpoint.
+
 ## RAG pipeline
 
 ![RAG pipeline](docs/images/rag-pipeline.png)

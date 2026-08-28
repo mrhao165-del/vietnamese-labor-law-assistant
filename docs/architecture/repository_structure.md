@@ -21,7 +21,7 @@ The installable code is isolated under `src/`, so imports exercised in tests and
 | `src/vietnamese_labor_law_assistant/mcp_clients/` | Reusable protocol clients for project-owned MCP servers. |
 | `src/vietnamese_labor_law_assistant/agent/` | Finite LangGraph orchestration, policies, typed state, safe errors, traces, and MCP client gateways. |
 | `src/vietnamese_labor_law_assistant/guardrails/` | Week 10 typed citations, canonical source registry, grounding, optional structured judge, aggregation, and fail-closed policy. |
-| `src/vietnamese_labor_law_assistant/decision_support/` | Case-intake vocabulary, preliminary issue contracts, the immutable Week-3 issue registry, pure missing-fact detection, and bounded targeted clarification. Domain rules belong here, while finite orchestration remains in `agent/`. |
+| `src/vietnamese_labor_law_assistant/decision_support/` | Case-intake vocabulary, preliminary and refined issue contracts, the immutable issue registry, pure missing-fact detection, bounded targeted clarification, and non-executing evidence-request metadata. Domain rules belong here, while finite orchestration remains in `agent/`. |
 | `apps/` | Historical adapter convention; this directory is not present in the current tree. The implemented frontend is `frontend/`. |
 | `scripts/` | Thin operational CLIs: parse arguments, invoke the package, write artefacts, return an exit code. |
 | `tests/` | Tests mirroring production areas: `unit`, `integration`, and `end_to_end`. |
@@ -92,6 +92,20 @@ fail-closed with `CASE_ANALYSIS_NOT_READY`. The mirrored
 `evaluation/decision_support_week3.py` capability owns offline dataset validation, deterministic
 metrics, pre-registered gate application, and failure reporting. Its script is a thin load/run/write
 adapter; the 17-case development set remains unfrozen and pending human review until Week 4.
+
+Week 4 begins with the additive `refined_issues.py` domain capability. It validates that a supplied
+missing-fact result still matches the latest facts, candidates, and registry, then emits immutable
+analysis-state metadata in canonical issue order. A supported issue is `ACTIVE` only when every
+configured requirement is satisfied and remains `POSSIBLE` while any required fact is missing.
+`RESOLVED_OUT` and `UNSUPPORTED_SCOPE` are typed vocabulary but are not inferred without a future
+deterministic exclusion or applicability contract. The output preserves original candidates and
+source-grounded `CaseFact` provenance; it contains no legal outcome or recommendation. The
+`evidence_requests.py` capability then selects registry-owned evidence and calculator metadata for
+`ACTIVE` and `POSSIBLE` refined issues. It deduplicates shared metadata while retaining canonical
+per-issue traces, excludes `RESOLVED_OUT` and `UNSUPPORTED_SCOPE`, and exposes a critical-fact block
+without changing issue status. This bounded skeleton is not the Week-5 `EvidencePlan`: it contains
+no query, ranking, source resolution, execution, or tool/retrieval budget. These domain additions do
+not change the production `CaseGraph`, which still returns `CASE_ANALYSIS_NOT_READY`.
 
 `AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
 status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned
