@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { api } from './api/client';
-import { ApiClientError } from './api/errors';
+import { publicApiErrorMessage } from './api/errors';
 import type { Citation, Conversation, Message, ToolTrace, Verification } from './api/types';
 import { ChatView } from './components/ChatView';
 import { EmptyState } from './components/EmptyState';
@@ -76,7 +76,7 @@ export default function App() {
         await loadMessages(result.conversation_id);
         await loadConversations();
       } catch (caught) {
-        setError(caught instanceof ApiClientError ? caught.message : 'Không thể gửi câu hỏi.');
+        setError(publicApiErrorMessage(caught));
       } finally {
         setThinking(false);
       }
