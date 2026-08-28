@@ -1,14 +1,14 @@
 # Tài liệu bàn giao dự án
 
 **Dự án:** Vietnamese Labor Law Assistant
-**Cập nhật:** 2026-08-22
+**Cập nhật:** 2026-08-28
 **Phạm vi tài liệu:** mã nguồn hiện tại, cấu hình, frontend, script vận hành, test và các artefact xác minh trong repository.
 
 ## Trạng thái đọc nhanh
 
 Đây là một trợ lý tra cứu thông tin Bộ luật Lao động Việt Nam theo hướng **source-grounded**. Hệ thống kết hợp tìm kiếm dense và lexical, reranker, các công cụ MCP chạy qua stdio, bộ quy tắc tính toán pháp lý xác định, Agent hữu hạn bằng LangGraph và guardrail kiểm tra trích dẫn. Người dùng cuối chỉ giao tiếp với FastAPI; trình duyệt không gọi trực tiếp Qdrant, MCP server hay LLM.
 
-Trạng thái kỹ thuật hiện tại là **Week 12 đã merge vào main và GitHub Actions được chủ sở hữu xác nhận xanh; v1.0.0 còn các manual release gate**. Week 1–2 của kiến trúc v1.1 đang được bổ sung trong working tree: chat đi qua outer `AssistantService`, còn Case Intake mới chỉ là bounded capability chưa được nối vào `CaseGraph`. Release candidate lịch sử được mô tả trong docs/releases/release_checklist.md, docs/releases/final_live_validation.md và evaluation/results/week12/final_release_manifest.json. Các artefact này là nguồn chính cho số liệu xác minh; handover.md chỉ là tài liệu định hướng cho người tiếp nhận. Demo video được chủ sở hữu **cố ý loại khỏi phạm vi v1.0.0** và không được coi là thiếu sót implementation.
+Trạng thái kỹ thuật hiện tại là **Week 12 đã merge vào main và GitHub Actions được chủ sở hữu xác nhận xanh; v1.0.0 còn các manual release gate**. Week 1–2 của kiến trúc v1.1 đã merge; Week 3 trong nhánh phát triển hiện bổ sung `IssueRegistry` typed, missing-fact detection xác định, bounded clarification và evaluation development offline ở domain level. Production `CaseGraph` vẫn chưa gọi các capability này và tiếp tục fail closed với `CASE_ANALYSIS_NOT_READY`. Release candidate lịch sử được mô tả trong docs/releases/release_checklist.md, docs/releases/final_live_validation.md và evaluation/results/week12/final_release_manifest.json. Các artefact này là nguồn chính cho số liệu xác minh; handover.md chỉ là tài liệu định hướng cho người tiếp nhận. Demo video được chủ sở hữu **cố ý loại khỏi phạm vi v1.0.0** và không được coi là thiếu sót implementation.
 
 ## 1. Tổng quan & Công nghệ sử dụng
 
@@ -240,7 +240,7 @@ Schema SQLite gồm conversations, messages, feedback; chưa có migration frame
 
 Agent không import trực tiếp Qdrant hoặc calculator rules. Luồng gọi backend đi qua mcp_clients và process MCP tương ứng.
 
-### 3.3.1 Decision Support Week 2
+### 3.3.1 Decision Support Week 2–3
 
 | File | Chức năng chính |
 |---|---|
@@ -248,8 +248,11 @@ Agent không import trực tiếp Qdrant hoặc calculator rules. Luồng gọi 
 | src/.../decision_support/models.py | CaseFact, CandidateIssue và CaseIntakeResult có provenance typed. |
 | src/.../decision_support/protocols.py | Port Case Intake injectable để test offline. |
 | src/.../decision_support/intake.py | Một structured provider call cho facts + candidate issues, sau đó validation source span fail-closed. |
+| src/.../decision_support/issue_registry.py | Registry immutable cho hai `IssueCode` hiện có, gồm required/critical facts và metadata evidence/calculator không thực thi. |
+| src/.../decision_support/missing_facts.py | So sánh deterministic `CaseFact` với requirement theo issue, giữ assertion/verification policy và critical gate. |
+| src/.../decision_support/clarification.py | Chọn câu hỏi trung tính theo missing-fact output, deduplicate field dùng chung và giới hạn mặc định ba câu mỗi vòng. |
 
-Capability này chưa được nối vào production CaseGraph; missing facts, clarification Case Analysis, rules và evidence thuộc các tuần sau.
+Chuỗi domain typed đã được kiểm tra offline từ `CaseIntakeResult` qua registry, detector đến clarification. Các capability này chưa được nối vào production `CaseGraph`; không có retrieval, calculator execution, refined issue, legal rule/application hoặc kết luận pháp lý trong Week 3.
 
 ### 3.4 Calculator
 
@@ -351,6 +354,7 @@ Hai server MCP không được mở network port trong production flow. Mỗi cl
 | src/.../evaluation/current_retrieval.py, week4_current.py | Tái lập/verify retrieval current và benchmark Dense/BM25/RRF. |
 | src/.../evaluation/week5_current.py, week5_reranker_runner.py, week6_locked_verification.py | So sánh reranker, chọn và verify locked configuration. |
 | src/.../evaluation/week9_agent.py, week10_guardrails.py | Offline contract evaluation cho Agent và claim guardrail, checksum/provenance/report. |
+| src/.../evaluation/decision_support_week3.py | Validation dataset và metrics deterministic cho missing-fact precision/recall, duplicate questions và critical-gate leakage. |
 | src/.../evaluation/week12_portfolio.py, week12_round3_review.py | Tổng hợp V1-V4 evidence, release manifest, review packet và final Agent report. |
 | src/.../evaluation/frozen_evidence.py, independent_review.py, review_application.py, review_packets.py, review_policy.py, pre_week6_readiness.py | Đọc checksum/evidence, review độc lập và readiness; đây là tooling đánh giá, không phải runtime request path. |
 | scripts/run_ingestion.py | DOCX -> parse/chunk/JSONL/report/manual-review template. |
@@ -360,11 +364,12 @@ Hai server MCP không được mở network port trong production flow. Mỗi cl
 | scripts/demo_week7_mcp_client.py, demo_week8_mcp_calculator_client.py, demo_week9_agent.py | Demo real MCP retrieval/calculator và finite Agent. |
 | scripts/check_llm.py, diagnose_guardrail_semantic_scorer.py, diagnose_structured_router.py | Kiểm tra provider, structured output, semantic scorer và môi trường khi chẩn đoán. |
 | scripts/run_week9_agent_evaluation.py, verify_week9_agent.py, run_week10_guardrail_evaluation.py, verify_week10_guardrail.py | Chạy và verify offline evidence. |
+| scripts/run_week3_decision_support_evaluation.py | Adapter offline đọc development labels, gọi evaluation capability và ghi report unfrozen; không chứa domain rules. |
 | scripts/run_week11_live_smoke.py | Smoke test HTTP public flow, canonical citation, multi-article và kiểm tra marker secret. |
 | scripts/run_week12_pass_regression.py, các generate_week12_*, validate_week12_release.py, generate_week12_portfolio.py, generate_portfolio_assets.py | Regression, review remediation, release/portfolio evidence và validation. |
 | Các script Week 2-6 còn lại | Tái lập dataset, benchmark, report và historical review; không đưa business logic mới vào đây. |
 | tests/unit/<area>/ | Unit test mirror cho agent, api, calculator, common, evaluation, generation, guardrails, ingestion, mcp_clients, mcp_servers, retrieval; có test_repository_structure.py. |
-| tests/integration/ | Reproducibility/manual review/provenance, MCP protocol Week 7/8, Agent workflow, RAG/guardrail và API Week 11. |
+| tests/integration/ | Reproducibility/manual review/provenance, MCP protocol Week 7/8, Agent workflow, RAG/guardrail, API Week 11 và chuỗi domain typed Week 2→3. |
 | tests/end_to_end/ | Question-to-verified-answer, live smoke fixtures, multi-article và Week 12 remediation/round 3. |
 
 Ở trạng thái release mới nhất, tài liệu release ghi nhận 361 Python tests và 85.92% coverage. Một số evidence cũ ghi 319 tests/86.56%; không trộn hai bộ số liệu khi báo cáo, vì test/evidence đã được bổ sung sau đó.
@@ -486,6 +491,7 @@ Ingestion tạo ID và output deterministic, giữ provenance Điều/Khoản/Đ
 - **Production operations:** SQLite local chưa có migration, auth, tenant ownership, backup/restore hoặc concurrent multi-user design. Qdrant/BM25 index và model cache vẫn cần operational runbook/backup rõ ràng.
 - **Hiệu năng:** CPU reranker/semantic scorer và LLM live latency có thể cao; final live evidence có mean khoảng 11.6 giây và p95 khoảng 25.8 giây. Không được giảm timeout hoặc tắt guardrail chỉ để che latency.
 - **Phạm vi pháp lý:** corpus là snapshot; calculator chưa bao phủ toàn bộ điều luật/tình huống; guardrail fail-closed có thể trả thiếu bằng chứng khi claim gần ngưỡng; faithfulness/relevancy/correctness judge-backed chưa có metric tái lập trong benchmark hiện tại.
+- **Case Analysis v1.1:** Week 3 mới hoàn thiện registry, missing-fact gate, bounded clarification và development metrics ở domain level. Dataset 17 case chưa frozen và chưa human review; production vẫn trả `CASE_ANALYSIS_NOT_READY`. Week 4 mới sở hữu refined issues, topology v1.1 hoàn chỉnh, kết nối production `CaseGraph`, frontend mode/missing-information flow và frozen v1.1 evaluation/release report.
 - **Không phải boilerplate:** agent, retrieval, calculator, guardrails, hai MCP server và test/evidence hiện là implementation thực. Phần cần hoàn thiện chủ yếu là release hygiene, frontend edge cases và production hardening, không phải dựng lại các bounded area này.
 
 ### 5.3 5 đầu việc kỹ thuật tiếp theo

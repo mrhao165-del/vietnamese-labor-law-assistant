@@ -1,0 +1,37 @@
+{
+  "dataset_id": "missing_facts_clarification_v1_1_development",
+  "dataset_version": "v1_1_dev",
+  "dataset_path": "data/evaluation/decision_support/v1_1/missing_facts_clarification_dev.jsonl",
+  "purpose": "Week-3 deterministic missing-fact and bounded clarification development regression",
+  "record_count": 17,
+  "frozen_final": false,
+  "human_validated": false,
+  "review_status": "PENDING_HUMAN_REVIEW",
+  "label_provenance": "Authored deterministic development labels; labels were not copied from component predictions.",
+  "execution_profile": "OFFLINE_NO_PROVIDER_NO_QDRANT_NO_MCP",
+  "registry_profiles": [
+    "DEFAULT",
+    "CONTRACT_TYPE_EXPLICIT_ONLY",
+    "CONTRACT_TYPE_ONLY_CRITICAL"
+  ],
+  "metrics": [
+    "missing_fact_precision",
+    "missing_fact_recall",
+    "duplicate_question_rate",
+    "critical_fact_leakage"
+  ],
+  "threshold_spec": "data/evaluation/decision_support/v1_1/week3_evaluation_spec.json",
+  "record_requirements": [
+    "single issue with all facts and with missing required or critical facts",
+    "evaluation-only non-critical and stronger assertion-policy profiles",
+    "multi-issue shared-field aggregation",
+    "explicit unverified, inferred, unknown, ambiguous, and duplicate fact inputs",
+    "no candidate and unsupported candidate fail-closed behavior",
+    "previously requested fields, question budget, zero clarification, and legal-conclusion safety"
+  ],
+  "limitations": [
+    "This is not a frozen v1.1 holdout or release benchmark.",
+    "Week 4 owns dataset freezing and human-review completion.",
+    "Critical-fact leakage measures gate readiness only; no substantive DecisionRule exists in Week 3."
+  ]
+}
