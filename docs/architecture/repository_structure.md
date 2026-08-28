@@ -70,42 +70,34 @@ common   evaluation    common
 
 `api` is an HTTP adapter and wires services; it must not duplicate retrieval or generation algorithms. `generation` may consume retrieval contracts. `retrieval` may consume ingestion data contracts. `evaluation` may use package contracts and metrics, but benchmark artefacts remain outside the package. `common` stays small and cannot become a catch-all dependency sink.
 
-## v1.1 decision-support boundary (Week 1 as built)
+## v1.1 decision-support boundary (Week 4 backend topology)
 
 The frozen v1.0 direct path remains `AgentService -> finite LangGraph -> existing MCP capabilities
--> guardrail`. The chat API now uses the v1.1 additive outer `AssistantService` and `RequestMode`:
-`DIRECT_QA` delegates unchanged to the existing `AgentService`; `CASE_ANALYSIS` currently terminates
-in a finite fail-closed `CaseGraph`; `OUT_OF_SCOPE` terminates safely. The `decision_support`
-bounded domain capability contains the Week-2 case-intake vocabulary, preliminary issue
-allowlist, provider-neutral extraction port, and one-stage OpenAI-compatible structured adapter. It
-also contains the additive Week-3 `issue_registry.py` contract: immutable required/critical facts,
-canonical evidence metadata, calculator-need metadata, and applicability scope for the two existing
-issue codes. The pure `missing_facts.py` detector compares typed intake facts with those configured
-requirements, preserves assertion/verification policy, and returns deterministic issue-level and
-deduplicated multi-issue gap metadata. The pure `clarification.py` capability consumes only that
-detector output, ranks critical gaps before issue coverage and canonical order, suppresses fields
-already requested by the caller, and emits neutral field-specific templates. A clarification round
-is capped at three questions by default; callers may supply a smaller or larger positive explicit
-budget without changing the global direct-QA tool budget. These contracts perform no issue spotting,
-retrieval, calculator execution, legal application, or runtime wiring; `CaseGraph` remains
-fail-closed with `CASE_ANALYSIS_NOT_READY`. The mirrored
-`evaluation/decision_support_week3.py` capability owns offline dataset validation, deterministic
-metrics, pre-registered gate application, and failure reporting. Its script is a thin load/run/write
-adapter; the 17-case development set remains unfrozen and pending human review until Week 4.
+-> guardrail`. The additive `AssistantService` routes `DIRECT_QA` unchanged to `AgentService`,
+`CASE_ANALYSIS` to the separate finite `CaseGraph`, and `OUT_OF_SCOPE` to the bounded refusal.
 
-Week 4 begins with the additive `refined_issues.py` domain capability. It validates that a supplied
-missing-fact result still matches the latest facts, candidates, and registry, then emits immutable
-analysis-state metadata in canonical issue order. A supported issue is `ACTIVE` only when every
-configured requirement is satisfied and remains `POSSIBLE` while any required fact is missing.
-`RESOLVED_OUT` and `UNSUPPORTED_SCOPE` are typed vocabulary but are not inferred without a future
-deterministic exclusion or applicability contract. The output preserves original candidates and
-source-grounded `CaseFact` provenance; it contains no legal outcome or recommendation. The
-`evidence_requests.py` capability then selects registry-owned evidence and calculator metadata for
-`ACTIVE` and `POSSIBLE` refined issues. It deduplicates shared metadata while retaining canonical
-per-issue traces, excludes `RESOLVED_OUT` and `UNSUPPORTED_SCOPE`, and exposes a critical-fact block
-without changing issue status. This bounded skeleton is not the Week-5 `EvidencePlan`: it contains
-no query, ranking, source resolution, execution, or tool/retrieval budget. These domain additions do
-not change the production `CaseGraph`, which still returns `CASE_ANALYSIS_NOT_READY`.
+`decision_support/` owns the typed Case Intake vocabulary and adapter, immutable registry,
+missing-fact policy, bounded clarification, refined-issue state, and non-executing evidence-request
+metadata. `refined_issues.py` validates that the supplied missing-fact result still matches the
+latest facts, candidates, and registry. It emits `ACTIVE` only when all configured requirements are
+satisfied and keeps incomplete candidates `POSSIBLE`; the current contracts do not invent the
+reserved `RESOLVED_OUT` or `UNSUPPORTED_SCOPE` states. `evidence_requests.py` selects only
+registry-owned legal-source and calculator-capability metadata, deduplicates shared requirements,
+and preserves per-issue traceability. It is not an `EvidencePlan` and contains no query, ranking,
+source resolution, execution, or tool budget.
+
+`agent/case_graph.py` now owns only the five-node acyclic orchestration. It makes one call through
+the existing `CaseIntakeExtractor`, then calls the deterministic capabilities in dependency order.
+Any missing required field terminates the request with bounded clarification; complete facts reach
+refinement and the evidence-request skeleton before terminating safely. The graph has no back-edge,
+checkpointer, Case Memory, retrieval/calculator/MCP call, legal application, or recommendation.
+`api/` injects the existing structured extractor and explicitly maps an allowlisted `case_analysis`
+projection; it does not contain decision-support rules or expose provider payloads, prompts, raw
+exceptions, or arbitrary graph state.
+
+The mirrored `evaluation/decision_support_week3.py` capability still owns the 17-case offline
+development regression and its pre-registered gates. That dataset remains unfrozen and pending
+human review. Frontend Case Analysis UX and frozen v1.1 release evidence remain later Week-4 work.
 
 `AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
 status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned

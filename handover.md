@@ -1,14 +1,14 @@
 # Tài liệu bàn giao dự án
 
 **Dự án:** Vietnamese Labor Law Assistant
-**Cập nhật:** 2026-08-28
+**Cập nhật:** 2026-08-29
 **Phạm vi tài liệu:** mã nguồn hiện tại, cấu hình, frontend, script vận hành, test và các artefact xác minh trong repository.
 
 ## Trạng thái đọc nhanh
 
 Đây là một trợ lý tra cứu thông tin Bộ luật Lao động Việt Nam theo hướng **source-grounded**. Hệ thống kết hợp tìm kiếm dense và lexical, reranker, các công cụ MCP chạy qua stdio, bộ quy tắc tính toán pháp lý xác định, Agent hữu hạn bằng LangGraph và guardrail kiểm tra trích dẫn. Người dùng cuối chỉ giao tiếp với FastAPI; trình duyệt không gọi trực tiếp Qdrant, MCP server hay LLM.
 
-Trạng thái kỹ thuật hiện tại là **Week 12 đã merge vào main và GitHub Actions được chủ sở hữu xác nhận xanh; v1.0.0 còn các manual release gate**. Week 1–2 của kiến trúc v1.1 đã merge; Week 3 trong nhánh phát triển hiện bổ sung `IssueRegistry` typed, missing-fact detection xác định, bounded clarification và evaluation development offline ở domain level. Production `CaseGraph` vẫn chưa gọi các capability này và tiếp tục fail closed với `CASE_ANALYSIS_NOT_READY`. Release candidate lịch sử được mô tả trong docs/releases/release_checklist.md, docs/releases/final_live_validation.md và evaluation/results/week12/final_release_manifest.json. Các artefact này là nguồn chính cho số liệu xác minh; handover.md chỉ là tài liệu định hướng cho người tiếp nhận. Demo video được chủ sở hữu **cố ý loại khỏi phạm vi v1.0.0** và không được coi là thiếu sót implementation.
+Trạng thái kỹ thuật hiện tại là **Week 12 đã merge vào main và GitHub Actions được chủ sở hữu xác nhận xanh; v1.0.0 còn các manual release gate**. Week 1–3 của kiến trúc v1.1 đã merge. Nhánh Week 4 hiện bổ sung refined issues, evidence-request metadata và production `CaseGraph` hữu hạn ở backend. Case Analysis chạy một Case Intake có cấu trúc, sau đó dùng registry, missing-fact detector và clarification/refinement xác định; nó không gọi retrieval, calculator, MCP hoặc legal rule. Frontend Case Analysis UX và evidence v1.1 frozen/human-reviewed vẫn chưa triển khai. Release candidate lịch sử được mô tả trong docs/releases/release_checklist.md, docs/releases/final_live_validation.md và evaluation/results/week12/final_release_manifest.json. Các artefact này là nguồn chính cho số liệu xác minh; handover.md chỉ là tài liệu định hướng cho người tiếp nhận. Demo video được chủ sở hữu **cố ý loại khỏi phạm vi v1.0.0** và không được coi là thiếu sót implementation.
 
 ## 1. Tổng quan & Công nghệ sử dụng
 
@@ -42,7 +42,9 @@ Browser
                       -> deterministic Article 20/35 rules
                  -> citation guardrail: canonical source + membership + semantic support
                  -> structured LLM router/answer generator
-            -> CASE_ANALYSIS -> finite fail-closed CaseGraph skeleton
+            -> CASE_ANALYSIS -> finite v1.1 CaseGraph
+                 -> Case Intake -> missing facts
+                 -> clarification hoặc refined issues -> evidence-request metadata
             -> OUT_OF_SCOPE -> bounded refusal
 ~~~
 
@@ -236,11 +238,11 @@ Schema SQLite gồm conversations, messages, feedback; chưa có migration frame
 | src/.../agent/protocols.py | Injectable ports cho router, generator, gateways và semantic/guardrail dependencies. | Hỗ trợ unit test offline và giữ bounded-area direction. |
 | src/.../agent/mode_routing.py | Outer RequestMode router trước direct-QA AgentIntent router. | Chỉ trả DIRECT_QA, CASE_ANALYSIS hoặc OUT_OF_SCOPE; không chọn tool hay legal rule. |
 | src/.../agent/assistant_service.py | Outer facade của chat runtime. | Delegate DIRECT_QA nguyên vẹn cho AgentService và fail closed ở các nhánh còn lại. |
-| src/.../agent/case_graph.py | Case Analysis topology hữu hạn của Week 1. | Chỉ trả CASE_ANALYSIS_NOT_READY; chưa gọi Case Intake hoặc MCP. |
+| src/.../agent/case_graph.py | Case Analysis topology hữu hạn v1.1. | Năm node, một Case Intake call; dừng ở clarification hoặc evidence-request metadata, không gọi MCP. |
 
 Agent không import trực tiếp Qdrant hoặc calculator rules. Luồng gọi backend đi qua mcp_clients và process MCP tương ứng.
 
-### 3.3.1 Decision Support Week 2–3
+### 3.3.1 Decision Support Week 2–4
 
 | File | Chức năng chính |
 |---|---|
@@ -251,8 +253,10 @@ Agent không import trực tiếp Qdrant hoặc calculator rules. Luồng gọi 
 | src/.../decision_support/issue_registry.py | Registry immutable cho hai `IssueCode` hiện có, gồm required/critical facts và metadata evidence/calculator không thực thi. |
 | src/.../decision_support/missing_facts.py | So sánh deterministic `CaseFact` với requirement theo issue, giữ assertion/verification policy và critical gate. |
 | src/.../decision_support/clarification.py | Chọn câu hỏi trung tính theo missing-fact output, deduplicate field dùng chung và giới hạn mặc định ba câu mỗi vòng. |
+| src/.../decision_support/refined_issues.py | Re-evaluate candidate issue xác định thành trạng thái typed, không áp legal rule hoặc tạo kết luận. |
+| src/.../decision_support/evidence_requests.py | Materialize evidence/calculator requirement metadata từ registry; không tạo query, budget hoặc thực thi tool. |
 
-Chuỗi domain typed đã được kiểm tra offline từ `CaseIntakeResult` qua registry, detector đến clarification. Các capability này chưa được nối vào production `CaseGraph`; không có retrieval, calculator execution, refined issue, legal rule/application hoặc kết luận pháp lý trong Week 3.
+Chuỗi domain typed đã được nối vào production backend từ `CaseIntakeResult` qua registry, detector, clarification/refinement đến evidence-request skeleton. API chỉ expose projection `case_analysis` đã sanitize. Không có retrieval, calculator execution, legal rule/application hoặc kết luận pháp lý trong Case Analysis Week 4.
 
 ### 3.4 Calculator
 
@@ -419,7 +423,10 @@ POST /api/v1/chat
        workflow verification
        claim-level citation guardrail
        finalize AgentResult
-  -> CASE_ANALYSIS -> finite CASE_ANALYSIS_NOT_READY result
+  -> CASE_ANALYSIS -> finite CaseGraph
+       Case Intake (một structured provider call)
+       -> missing facts -> clarification -> END
+       -> refined issues -> evidence-request metadata -> END
   -> OUT_OF_SCOPE -> bounded refusal
   -> public_mapper
   -> SQLite persist user + assistant message
@@ -491,7 +498,7 @@ Ingestion tạo ID và output deterministic, giữ provenance Điều/Khoản/Đ
 - **Production operations:** SQLite local chưa có migration, auth, tenant ownership, backup/restore hoặc concurrent multi-user design. Qdrant/BM25 index và model cache vẫn cần operational runbook/backup rõ ràng.
 - **Hiệu năng:** CPU reranker/semantic scorer và LLM live latency có thể cao; final live evidence có mean khoảng 11.6 giây và p95 khoảng 25.8 giây. Không được giảm timeout hoặc tắt guardrail chỉ để che latency.
 - **Phạm vi pháp lý:** corpus là snapshot; calculator chưa bao phủ toàn bộ điều luật/tình huống; guardrail fail-closed có thể trả thiếu bằng chứng khi claim gần ngưỡng; faithfulness/relevancy/correctness judge-backed chưa có metric tái lập trong benchmark hiện tại.
-- **Case Analysis v1.1:** Week 3 mới hoàn thiện registry, missing-fact gate, bounded clarification và development metrics ở domain level. Dataset 17 case chưa frozen và chưa human review; production vẫn trả `CASE_ANALYSIS_NOT_READY`. Week 4 mới sở hữu refined issues, topology v1.1 hoàn chỉnh, kết nối production `CaseGraph`, frontend mode/missing-information flow và frozen v1.1 evaluation/release report.
+- **Case Analysis v1.1:** backend Week 4 đã nối registry, missing-fact gate, bounded clarification, refined issues và evidence-request metadata vào topology hữu hạn. Dataset 17 case vẫn chưa frozen và chưa human review. Frontend mode/missing-information flow, EvidencePlan/execution, legal application và frozen v1.1 evaluation/release report vẫn chưa triển khai.
 - **Không phải boilerplate:** agent, retrieval, calculator, guardrails, hai MCP server và test/evidence hiện là implementation thực. Phần cần hoàn thiện chủ yếu là release hygiene, frontend edge cases và production hardening, không phải dựng lại các bounded area này.
 
 ### 5.3 5 đầu việc kỹ thuật tiếp theo

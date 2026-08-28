@@ -55,7 +55,10 @@ Browser
                  -> project-owned MCP stdio child: Legal Calculator
                       -> deterministic Article 20/35 rules
                  -> fail-closed citation / semantic guardrail
-            -> CASE_ANALYSIS -> finite Week-1 not-ready CaseGraph
+            -> CASE_ANALYSIS -> finite v1.1 CaseGraph
+                 -> one structured Case Intake call
+                 -> deterministic missing facts / clarification
+                 -> refined issues / non-executing evidence-request metadata
             -> OUT_OF_SCOPE -> bounded refusal
 ```
 
@@ -76,29 +79,23 @@ planning and the current implementation.
 Week 1 introduces an additive architecture contract for a future legal decision-support path. The
 frozen v1.0 direct-QA behavior remains implemented by the existing `AgentService`. The chat API now
 uses the outer composition `AssistantService -> RequestMode.DIRECT_QA -> existing AgentService`.
-`RequestMode.CASE_ANALYSIS` terminates in the finite Week-1 `CaseGraph` skeleton, and
+`RequestMode.CASE_ANALYSIS` delegates to the finite v1.1 `CaseGraph`, and
 `RequestMode.OUT_OF_SCOPE` returns the established bounded refusal semantics.
 
 `AgentIntent` and `WorkflowStatus` are unchanged v1.0 backend contracts; clarification remains an
-execution outcome, not an outer request mode. `agent/case_graph.py` provides only a finite
-fail-closed `CASE_ANALYSIS_NOT_READY` skeleton; it produces no legal conclusion and invokes no
-capability. Week 2 introduces a typed, user-message Case Intake contract, a two-code preliminary
-issue allowlist for the existing Article 20/35 capability scope, and a one-stage structured provider
-adapter with source-span validation; it is not wired into the runtime. No CaseGraph intake flow,
-document analysis, case memory, temporal versioning, decision-support rules, or additional MCP
-server is implemented. Week 3 adds an immutable issue registry, pure deterministic missing-fact
-detection, and bounded targeted clarification metadata. Clarification uses neutral field-specific
+execution outcome, not an outer request mode. Week 2 introduces a typed, user-message Case Intake
+contract, a two-code preliminary issue allowlist for the existing Article 20/35 capability scope,
+and a one-stage structured provider adapter with source-span validation. Week 3 adds an immutable
+issue registry, pure deterministic missing-fact detection, and bounded targeted clarification
+metadata. Clarification uses neutral field-specific
 templates, prioritizes critical and multi-issue gaps, skips caller-supplied previously requested
 fields, and asks at most three questions per round by default. It adds no LLM, retrieval, calculator,
-or runtime CaseGraph call. The separate 17-case Week-3 offline development regression pre-registers
+or MCP call. The separate 17-case Week-3 offline development regression pre-registers
 exact missing-fact and clarification gates; it remains unfrozen and pending human review until Week
-4. Week 4—not Week 3—owns refined-issue processing, the complete v1.1 topology and production
-`CaseGraph` connection, the frontend Case Analysis/missing-information flow, and the human-reviewed
-frozen v1.1 evaluation set and release report. Week 3 is therefore a domain-level development
-checkpoint, not a v1.1 release. See the
+4. Week 3 is therefore a domain-level development checkpoint, not a v1.1 release. See the
 [Decision Support boundary ADR](docs/architecture/adr_decision_support_boundary.md).
 
-Week 4 now begins with the deterministic refined-issue domain contract only. It marks a supported
+Week 4 adds the deterministic refined-issue domain contract. It marks a supported
 candidate `ACTIVE` when all registry requirements are satisfied and otherwise keeps it `POSSIBLE`,
 while preserving fact provenance and missing-field traceability. It does not infer
 `RESOLVED_OUT` or `UNSUPPORTED_SCOPE` without an explicit deterministic contract, and it emits no
@@ -106,9 +103,12 @@ legal conclusion. The additive Week-4 evidence-request skeleton materializes onl
 legal-source and calculator-capability metadata for `ACTIVE` and `POSSIBLE` issues, deduplicates
 shared requirements with per-issue traceability, and preserves a critical-fact block. It is not the
 Week-5 `EvidencePlan`: it generates no query or budget and performs no retrieval, MCP, or calculator
-execution. Production `CaseGraph` wiring, frontend Case Analysis flow, and frozen v1.1 release
-evidence remain subsequent Week-4 work; `CASE_ANALYSIS_NOT_READY` is still the runtime behavior at
-this checkpoint.
+execution. The production backend now wires a five-node acyclic CaseGraph:
+Case Intake runs once, missing required facts terminate in bounded clarification, and complete facts
+reach refined issues plus the non-executing evidence-request skeleton. The API exposes an optional
+sanitized `case_analysis` object and persists the same projection. It executes no retrieval,
+calculator, MCP tool, legal rule, or legal recommendation. Frontend Case Analysis UX and frozen,
+human-reviewed v1.1 release evidence remain unimplemented at this checkpoint.
 
 ## RAG pipeline
 

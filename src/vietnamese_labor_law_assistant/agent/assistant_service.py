@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict
 
 from vietnamese_labor_law_assistant.guardrails.models import VerificationResult
 
-from .case_graph import CaseAnalysisResult
+from .case_graph import CaseAnalysisResult, CaseAnalysisStatus
 from .enums import AgentIntent, WorkflowStatus
 from .errors import RequestModeRoutingError
 from .mode_routing import RequestMode
@@ -40,6 +40,7 @@ class AssistantResult(BaseModel):
 
     request_mode: RequestMode | None
     agent_result: AgentResult
+    case_analysis: CaseAnalysisResult | None = None
 
 
 class AssistantService:
@@ -76,7 +77,8 @@ class AssistantService:
             case_result = await self.case_graph.run(question)
             return AssistantResult(
                 request_mode=mode,
-                agent_result=self._case_not_ready(question, case_result, started),
+                agent_result=self._case_result(question, case_result, started),
+                case_analysis=case_result,
             )
         return AssistantResult(
             request_mode=RequestMode.OUT_OF_SCOPE,
@@ -88,23 +90,38 @@ class AssistantService:
         )
 
     @staticmethod
-    def _case_not_ready(
-        question: str, case_result: CaseAnalysisResult, started: float
-    ) -> AgentResult:
+    def _case_result(question: str, case_result: CaseAnalysisResult, started: float) -> AgentResult:
         reason = case_result.status.value
+        if case_result.status is CaseAnalysisStatus.CLARIFICATION_REQUIRED:
+            status = WorkflowStatus.CLARIFICATION_REQUIRED
+            verification_status = WorkflowStatus.CLARIFICATION_REQUIRED.value
+            clarification = case_result.clarification
+            assert clarification is not None
+            answer = "\n".join(question.question for question in clarification.questions)
+        elif case_result.status in {
+            CaseAnalysisStatus.EVIDENCE_REQUEST_READY,
+            CaseAnalysisStatus.UNSUPPORTED_SCOPE,
+        }:
+            status = WorkflowStatus.INSUFFICIENT_CONTEXT
+            verification_status = WorkflowStatus.INSUFFICIENT_CONTEXT.value
+            answer = _INSUFFICIENT_EVIDENCE
+        else:
+            status = WorkflowStatus.OUTPUT_INVALID
+            verification_status = WorkflowStatus.OUTPUT_INVALID.value
+            answer = _INSUFFICIENT_EVIDENCE
         return AgentResult(
             request_id=case_result.request_id,
             question=question.strip(),
             router_decision=reason,
-            status=WorkflowStatus.INSUFFICIENT_CONTEXT,
-            answer=_INSUFFICIENT_EVIDENCE,
+            status=status,
+            answer=answer,
             disclaimer=DISCLAIMER,
             citations=[],
             errors=[],
             tool_trace=[],
             workflow_verification={"status": "PASS", "reason": reason},
             verification={
-                "status": "INSUFFICIENT_CONTEXT",
+                "status": verification_status,
                 "reason": reason,
                 "claims": [],
                 "warnings": [],

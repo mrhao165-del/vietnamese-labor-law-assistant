@@ -55,6 +55,97 @@ class VerificationResponse(BaseModel):
     checks: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class CaseSourceSpanResponse(BaseModel):
+    """Source-grounding coordinates safe for the Case Analysis UI."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    start_offset: int = Field(ge=0)
+    end_offset: int = Field(gt=0)
+    text: str = Field(min_length=1, max_length=2000)
+
+
+class CaseFactResponse(BaseModel):
+    """Sanitized source-grounded fact; it does not imply legal verification."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    fact_id: str
+    fact_key: str
+    raw_value: str
+    normalized_value: str | int | float | bool
+    assertion_mode: str
+    verification_status: str
+    source_ref: str
+    source_span: CaseSourceSpanResponse
+
+
+class CaseMissingFieldResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    fact_key: str
+    required_by_issues: tuple[str, ...]
+    critical_for_issues: tuple[str, ...]
+
+
+class CaseClarificationQuestionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    fact_key: str
+    question: str
+    critical: bool
+    related_issue_codes: tuple[str, ...]
+    requirement_reasons: tuple[str, ...]
+    priority: int = Field(ge=1)
+
+
+class CaseRefinedIssueResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    issue_code: str
+    status: str
+    reason_code: str
+    relevant_fact_keys: tuple[str, ...]
+    remaining_missing_fields: tuple[str, ...]
+    critical_missing_fields: tuple[str, ...]
+
+
+class CaseEvidenceRequestResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    document_id: str
+    article: int = Field(gt=0)
+    clause: int = Field(gt=0)
+    source_chunk_id: str
+    related_issue_codes: tuple[str, ...]
+
+
+class CaseCalculatorRequestResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    capability: str
+    input_fact_keys: tuple[str, ...]
+    related_issue_codes: tuple[str, ...]
+
+
+class CaseAnalysisResponse(BaseModel):
+    """Allowlisted Week-4 projection with no provider or legal-application state."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    status: str
+    error_code: str | None = None
+    known_facts: tuple[CaseFactResponse, ...] = ()
+    candidate_issues: tuple[str, ...] = ()
+    missing_fields: tuple[CaseMissingFieldResponse, ...] = ()
+    clarification_reason_code: str | None = None
+    clarification_questions: tuple[CaseClarificationQuestionResponse, ...] = ()
+    refined_issues: tuple[CaseRefinedIssueResponse, ...] = ()
+    evidence_requests: tuple[CaseEvidenceRequestResponse, ...] = ()
+    calculator_requests: tuple[CaseCalculatorRequestResponse, ...] = ()
+    substantive_analysis_blocked: bool
+
+
 class ChatResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -73,6 +164,7 @@ class ChatResponse(BaseModel):
     citations: list[CitationResponse] = Field(default_factory=list)
     tool_trace: list[ToolTraceResponse] = Field(default_factory=list)
     verification: VerificationResponse | None = None
+    case_analysis: CaseAnalysisResponse | None = None
     warnings: list[str] = Field(default_factory=list)
     latency_ms: float = Field(ge=0)
     pipeline_version: str = "week11-agent-guardrail"

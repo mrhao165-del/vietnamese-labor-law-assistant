@@ -2,9 +2,15 @@ from typing import Any, cast
 
 import pytest
 
+from vietnamese_labor_law_assistant.agent.case_graph import (
+    CaseAnalysisErrorCode,
+    CaseAnalysisResult,
+    CaseAnalysisStatus,
+)
 from vietnamese_labor_law_assistant.agent.enums import AgentIntent, ToolName, WorkflowStatus
 from vietnamese_labor_law_assistant.agent.models import AgentResult, ToolTrace
 from vietnamese_labor_law_assistant.api.public_mapper import (
+    case_analysis_for,
     citations_for,
     public_answer,
     public_message_content,
@@ -154,3 +160,20 @@ def test_public_mapping_distinguishes_all_terminal_outcomes() -> None:
     }
     assert len(set(messages.values())) == len(messages)
     assert all(value != "INSUFFICIENT_VERIFIED_EVIDENCE" for value in messages.values())
+
+
+def test_case_analysis_mapper_is_optional_and_redacts_internal_message() -> None:
+    terminal = CaseAnalysisResult(
+        request_id="request",
+        status=CaseAnalysisStatus.CASE_INTAKE_FAILED,
+        message="safe internal orchestration message",
+        error_code=CaseAnalysisErrorCode.CASE_INTAKE_PROVIDER_ERROR,
+    )
+
+    assert case_analysis_for(None) is None
+    public = case_analysis_for(terminal)
+    assert public is not None
+    assert public.status == "CASE_INTAKE_FAILED"
+    assert public.error_code == "CASE_INTAKE_PROVIDER_ERROR"
+    assert public.substantive_analysis_blocked is True
+    assert "message" not in public.model_dump()

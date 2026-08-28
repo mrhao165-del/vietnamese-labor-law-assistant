@@ -7,7 +7,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from vietnamese_labor_law_assistant.agent.assistant_service import AssistantService
-from vietnamese_labor_law_assistant.agent.case_graph import CaseGraph
+from vietnamese_labor_law_assistant.agent.case_graph import (
+    CaseAnalysisResult,
+    CaseAnalysisStatus,
+)
 from vietnamese_labor_law_assistant.agent.enums import AgentIntent, ToolName, WorkflowStatus
 from vietnamese_labor_law_assistant.agent.errors import RequestModeRoutingError
 from vietnamese_labor_law_assistant.agent.mode_routing import RequestMode
@@ -20,6 +23,7 @@ from vietnamese_labor_law_assistant.api.dependencies import (
 )
 from vietnamese_labor_law_assistant.api.main import create_app
 from vietnamese_labor_law_assistant.common.settings import Settings
+from vietnamese_labor_law_assistant.decision_support.models import CaseIntakeResult
 from vietnamese_labor_law_assistant.guardrails.enums import ReasonCode, VerificationStatus
 from vietnamese_labor_law_assistant.guardrails.models import VerificationResult
 
@@ -43,6 +47,17 @@ class FakeDirectAgent:
     async def run(self, question: str, *, include_trace: bool = False) -> AgentResult:
         self.calls.append((question, include_trace))
         return self.result.model_copy(update={"question": question})
+
+
+class FixedCaseRunner:
+    async def run(self, question: str) -> CaseAnalysisResult:
+        del question
+        return CaseAnalysisResult(
+            request_id="case-request",
+            status=CaseAnalysisStatus.UNSUPPORTED_SCOPE,
+            message="Safe unsupported scope.",
+            intake_result=CaseIntakeResult(),
+        )
 
 
 class ReadyScorer:
@@ -130,7 +145,7 @@ def test_direct_capabilities_delegate_and_keep_public_contract(
 ) -> None:
     direct = FakeDirectAgent(result_for(intent, tools))
     service = AssistantService(
-        FixedModeRouter(RequestMode.DIRECT_QA), direct, CaseGraph(), refusal_verification
+        FixedModeRouter(RequestMode.DIRECT_QA), direct, FixedCaseRunner(), refusal_verification
     )
     client, _ = api_client_factory(service)
 
@@ -145,6 +160,7 @@ def test_direct_capabilities_delegate_and_keep_public_contract(
     assert body["answer"] == "Câu trả lời đã được kiểm chứng."
     assert body["answer_text"] == body["answer"]
     assert body["request_id"] == "direct-request"
+    assert body["case_analysis"] is None
     assert direct.calls == [(question, True)]
 
 
@@ -166,7 +182,7 @@ def test_existing_clarification_and_guardrail_fail_closed_mapping_are_preserved(
     clarification_service = AssistantService(
         FixedModeRouter(RequestMode.DIRECT_QA),
         clarification_direct,
-        CaseGraph(),
+        FixedCaseRunner(),
         refusal_verification,
     )
     clarification_client, _ = api_client_factory(clarification_service)
@@ -185,7 +201,7 @@ def test_existing_clarification_and_guardrail_fail_closed_mapping_are_preserved(
     guardrail_service = AssistantService(
         FixedModeRouter(RequestMode.DIRECT_QA),
         guardrail_direct,
-        CaseGraph(),
+        FixedCaseRunner(),
         refusal_verification,
     )
     guardrail_client, _ = api_client_factory(guardrail_service)
@@ -210,7 +226,7 @@ def test_existing_clarification_and_guardrail_fail_closed_mapping_are_preserved(
 def test_case_analysis_is_safe_and_does_not_run_direct_agent(api_client_factory: Any) -> None:
     direct = FakeDirectAgent(result_for(AgentIntent.RETRIEVAL_ONLY))
     service = AssistantService(
-        FixedModeRouter(RequestMode.CASE_ANALYSIS), direct, CaseGraph(), refusal_verification
+        FixedModeRouter(RequestMode.CASE_ANALYSIS), direct, FixedCaseRunner(), refusal_verification
     )
     client, _ = api_client_factory(service)
 
@@ -223,8 +239,9 @@ def test_case_analysis_is_safe_and_does_not_run_direct_agent(api_client_factory:
     body = response.json()
     assert body["route"] == "CASE_ANALYSIS"
     assert body["final_status"] == "INSUFFICIENT_CONTEXT"
-    assert body["router_decision"] == "CASE_ANALYSIS_NOT_READY"
-    assert body["verification_code"] == "CASE_ANALYSIS_NOT_READY"
+    assert body["router_decision"] == "UNSUPPORTED_SCOPE"
+    assert body["verification_code"] == "UNSUPPORTED_SCOPE"
+    assert body["case_analysis"]["status"] == "UNSUPPORTED_SCOPE"
     assert body["answer"] != "INSUFFICIENT_VERIFIED_EVIDENCE"
     assert body["citations"] == [] and body["tool_trace"] == []
     assert direct.calls == []
@@ -235,7 +252,7 @@ def test_outer_out_of_scope_reuses_public_route_without_direct_agent(
 ) -> None:
     direct = FakeDirectAgent(result_for(AgentIntent.RETRIEVAL_ONLY))
     service = AssistantService(
-        FixedModeRouter(RequestMode.OUT_OF_SCOPE), direct, CaseGraph(), refusal_verification
+        FixedModeRouter(RequestMode.OUT_OF_SCOPE), direct, FixedCaseRunner(), refusal_verification
     )
     client, _ = api_client_factory(service)
 
@@ -257,7 +274,7 @@ def test_mode_router_failure_returns_503_and_persists_nothing(api_client_factory
     service = AssistantService(
         FixedModeRouter(RequestModeRoutingError("REQUEST_MODE_SCHEMA_INVALID")),
         direct,
-        CaseGraph(),
+        FixedCaseRunner(),
         refusal_verification,
     )
     client, repository = api_client_factory(service)

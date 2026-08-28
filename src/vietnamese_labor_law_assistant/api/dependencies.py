@@ -12,6 +12,9 @@ from vietnamese_labor_law_assistant.agent.mode_routing import (
 )
 from vietnamese_labor_law_assistant.agent.service import AgentService
 from vietnamese_labor_law_assistant.common.settings import get_settings
+from vietnamese_labor_law_assistant.decision_support.intake import (
+    OpenAIStructuredCaseIntakeExtractor,
+)
 from vietnamese_labor_law_assistant.generation.llm import OpenAICompatibleLegalAnswerGenerator
 from vietnamese_labor_law_assistant.generation.service import RagService
 from vietnamese_labor_law_assistant.guardrails.judge import OpenAIStructuredClaimJudge
@@ -84,7 +87,7 @@ def get_assistant_service() -> AssistantService:
     return AssistantService(
         OuterRequestModeRouter(OpenAIStructuredRequestModeRouter(settings)),
         get_agent_service(),
-        CaseGraph(),
+        CaseGraph(OpenAIStructuredCaseIntakeExtractor(settings)),
         lambda: get_guardrail_service().verify([], [], out_of_scope_refusal=True),
     )
 

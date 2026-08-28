@@ -55,6 +55,7 @@ from .dependencies import (
     readiness,
 )
 from .public_mapper import (
+    case_analysis_for,
     citations_for,
     public_answer,
     public_message_content,
@@ -233,6 +234,7 @@ def create_app(
         except SourceRegistryError:
             citations = []
         verification = verification_for(result)
+        case_analysis = case_analysis_for(assistant_result.case_analysis)
         warnings = list(verification.warnings) if verification else []
         answer_text = public_answer(result.answer, result.verification, result.status.value)
         machine_code = verification_code(result.verification)
@@ -259,6 +261,9 @@ def create_app(
             "request_id": result.request_id,
             "latency_ms": result.latency_ms,
             "pipeline_version": "week11-agent-guardrail",
+            "case_analysis": (
+                case_analysis.model_dump(mode="json") if case_analysis is not None else None
+            ),
         }
         user = repository.add_message(conversation["id"], "user", question, {})
         assistant = repository.add_message(conversation["id"], "assistant", answer_text, metadata)
@@ -278,6 +283,7 @@ def create_app(
             citations=citations,
             tool_trace=tool_trace_for(result),
             verification=verification,
+            case_analysis=case_analysis,
             warnings=warnings,
             latency_ms=result.latency_ms,
             created_at=assistant["created_at"],
