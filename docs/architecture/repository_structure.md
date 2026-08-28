@@ -97,7 +97,12 @@ exceptions, or arbitrary graph state.
 
 The mirrored `evaluation/decision_support_week3.py` capability still owns the 17-case offline
 development regression and its pre-registered gates. That dataset remains unfrozen and pending
-human review. Frontend Case Analysis UX and frozen v1.1 release evidence remain later Week-4 work.
+human review. The frontend now renders only the sanitized backend-selected Direct QA/Case Analysis
+mode and public known/missing/clarification/refined/error projection; it does not select the mode or
+perform decision-support work. `frontend/tests/e2e/` supplies three deterministic Playwright
+`page.route` flows against the real Vite UI and API client. A Week-5 `EvidencePlan`,
+retrieval/calculator execution, legal application/recommendations, and frozen human-reviewed v1.1
+release evidence remain absent.
 
 `AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
 status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned
@@ -166,6 +171,8 @@ deterministic components but cannot synthesize actual reason codes from expected
 frontend/                         # independent React/Vite/TypeScript app
   Dockerfile                      # Node build stage -> Nginx static stage
   nginx.conf                      # SPA fallback and FastAPI proxy
+  src/components/                 # direct-QA and sanitized Case Analysis presentation
+  tests/e2e/                      # three offline Chromium flows with test-only API fixtures
 src/vietnamese_labor_law_assistant/api/
   main.py                         # HTTP routes and error envelopes
   conversation_repository.py      # mutable SQLite adapter only

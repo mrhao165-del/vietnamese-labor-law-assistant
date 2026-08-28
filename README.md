@@ -26,7 +26,8 @@ strategy, or legal representation.
 ## Key features
 
 - React/Vite/TypeScript browser chat with history, citations, verification, sanitized tool traces,
-  and up/down feedback.
+  up/down feedback, and a backend-driven Direct QA/Case Analysis mode badge with no manual mode
+  selector.
 - Nginx static hosting, SPA fallback, and same-origin proxy to FastAPI.
 - Dense BGE-M3 and Vietnamese BM25S/Underthesea retrieval, project-controlled RRF, and BGE reranking.
 - Locked production configuration: `R2_H2_C10_O5_L512_B1`.
@@ -106,9 +107,13 @@ Week-5 `EvidencePlan`: it generates no query or budget and performs no retrieval
 execution. The production backend now wires a five-node acyclic CaseGraph:
 Case Intake runs once, missing required facts terminate in bounded clarification, and complete facts
 reach refined issues plus the non-executing evidence-request skeleton. The API exposes an optional
-sanitized `case_analysis` object and persists the same projection. It executes no retrieval,
-calculator, MCP tool, legal rule, or legal recommendation. Frontend Case Analysis UX and frozen,
-human-reviewed v1.1 release evidence remain unimplemented at this checkpoint.
+sanitized `case_analysis` object and persists the same projection. The frontend presents the
+backend-selected Direct QA or Case Analysis mode without a manual selector and renders safe
+known-fact, missing-field, clarification, refined-issue, and fixed error states inline. Existing
+direct-QA answers, citations, verification, and public error sanitization remain intact. Case
+Analysis still executes no retrieval, calculator, MCP tool, legal rule/application, or legal
+recommendation. A Week-5 `EvidencePlan` and frozen, human-reviewed v1.1 evaluation/release evidence
+remain future scope.
 
 ## RAG pipeline
 
@@ -139,8 +144,18 @@ of an ungrounded answer. Thresholds remain 0.35/0.75; the optional LLM judge is 
 ## Browser UI
 
 The UI provides conversation navigation, message persistence, citation cards, verification details,
-sanitized tool traces, and feedback. The browser calls only FastAPI through Nginx. It never receives
-an API key or calls the LLM, Qdrant, or MCP directly.
+sanitized tool traces, and feedback. The response's backend route selects a visible Direct QA or
+Case Analysis badge; there is no user-controlled mode selector. Case Analysis state is a public,
+sanitized presentation of known facts, missing information, bounded clarification questions,
+refined issue status, and fixed safe errors. It does not present legal application or
+recommendations. The browser calls only FastAPI through Nginx. It never receives an API key or
+calls the LLM, Qdrant, or MCP directly.
+
+Vitest and React Testing Library cover the frontend components. Playwright covers exactly three
+critical Chromium flows—direct statutory lookup, Case Analysis clarification, and sanitized error
+handling—using deterministic test-only `page.route` FastAPI fixtures. These browser tests exercise
+the real Vite UI and API client offline without a backend, provider credential, LLM, MCP process, or
+Qdrant.
 
 The required UI evidence was captured from a real local runtime and manually verified:
 
@@ -303,6 +318,9 @@ npm ci
 npm run typecheck
 npm run lint
 npm run build
+npm run test:unit
+npx playwright install chromium
+npm run test:e2e
 npm audit --omit dev --audit-level high
 ```
 
