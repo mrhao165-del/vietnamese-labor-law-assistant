@@ -118,7 +118,7 @@ def test_checksum_contract_uses_the_v1_tag_blob_only_for_the_historical_frontend
         },
         versioned_sources={
             "frontend/package-lock.json": VersionedChecksumSource(
-                revision="v1.0.0",
+                revision="refs/tags/v1.0.0",
                 content=b"historical lock\r\n",
             )
         },
@@ -137,7 +137,7 @@ def test_checksum_contract_rejects_a_versioned_override_for_a_current_worktree_t
             {"uv.lock": ("72853fc9e2c7d825d317d3b7949e577c57a105ade0ea276192901734c77ce20c")},
             versioned_sources={
                 "uv.lock": VersionedChecksumSource(
-                    revision="v1.0.0",
+                    revision="refs/tags/v1.0.0",
                     content=b"historical lock\r\n",
                 )
             },
@@ -150,7 +150,10 @@ def test_checksum_contract_rejects_a_missing_historical_frontend_lock_source(
 ) -> None:
     with pytest.raises(
         ValueError,
-        match=r"versioned checksum source is missing: frontend/package-lock\.json@v1\.0\.0",
+        match=(
+            r"versioned checksum source is missing: "
+            r"frontend/package-lock\.json@refs/tags/v1\.0\.0"
+        ),
     ):
         validate_checksum_contract(
             tmp_path,
@@ -197,7 +200,7 @@ def test_checksum_contract_rejects_a_missing_expected_digest(tmp_path: Path) -> 
             {"frontend/package-lock.json": None},
             versioned_sources={
                 "frontend/package-lock.json": VersionedChecksumSource(
-                    revision="v1.0.0",
+                    revision="refs/tags/v1.0.0",
                     content=b"historical lock\r\n",
                 )
             },
@@ -221,7 +224,7 @@ def test_checksum_contract_rejects_a_wrong_historical_frontend_lock_digest(
             },
             versioned_sources={
                 "frontend/package-lock.json": VersionedChecksumSource(
-                    revision="v1.0.0",
+                    revision="refs/tags/v1.0.0",
                     content=b"historical lock\r\n",
                 )
             },

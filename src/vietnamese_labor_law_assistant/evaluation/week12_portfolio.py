@@ -18,7 +18,7 @@ PHASE_MANIFEST_NAMES = {
     "final": "final_release_manifest.json",
 }
 HISTORICAL_FRONTEND_LOCK_PATH = "frontend/package-lock.json"
-HISTORICAL_FRONTEND_LOCK_REF = "v1.0.0"
+HISTORICAL_FRONTEND_LOCK_REF = "refs/tags/v1.0.0"
 
 REQUIRED_BENCHMARK_FIELDS = {
     "tier",

@@ -75,7 +75,7 @@ def test_validation_uses_exact_v1_tag_bytes_for_historical_frontend_lock(
         ],
         versioned_sources={
             "frontend/package-lock.json": VersionedChecksumSource(
-                revision="v1.0.0",
+                revision="refs/tags/v1.0.0",
                 content=historical,
             )
         },
@@ -100,7 +100,7 @@ def test_validation_reports_wrong_v1_tag_bytes_as_mismatch(tmp_path: Path) -> No
         ],
         versioned_sources={
             "frontend/package-lock.json": VersionedChecksumSource(
-                revision="v1.0.0",
+                revision="refs/tags/v1.0.0",
                 content=b"wrong tagged bytes\r\n",
             )
         },
@@ -113,7 +113,10 @@ def test_validation_reports_wrong_v1_tag_bytes_as_mismatch(tmp_path: Path) -> No
 def test_validation_rejects_missing_historical_frontend_lock_source(tmp_path: Path) -> None:
     with pytest.raises(
         ValueError,
-        match=r"versioned checksum source is missing: frontend/package-lock\.json@v1\.0\.0",
+        match=(
+            r"versioned checksum source is missing: "
+            r"frontend/package-lock\.json@refs/tags/v1\.0\.0"
+        ),
     ):
         validate_frozen_evidence(
             tmp_path,
@@ -159,7 +162,7 @@ def test_validation_rejects_versioned_source_for_current_worktree_target(
             [FrozenEvidence("uv.lock", "0" * 64, "final_release_manifest.json:checksums")],
             versioned_sources={
                 "uv.lock": VersionedChecksumSource(
-                    revision="v1.0.0",
+                    revision="refs/tags/v1.0.0",
                     content=b"historical uv lock\n",
                 )
             },
