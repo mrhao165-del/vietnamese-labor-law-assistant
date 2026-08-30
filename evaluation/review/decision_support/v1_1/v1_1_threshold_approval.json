@@ -1,0 +1,21 @@
+{
+  "schema_version": "v1_1_threshold_approval_v1",
+  "spec_id": "v1_1_week4_complete_candidate_thresholds_proposed",
+  "threshold_spec_path": "data/evaluation/decision_support/v1_1/v1_1_proposed_thresholds.json",
+  "threshold_spec_sha256": "373aa3d4512e6d5cb75e7bcba3dbcc6ef2541ced8603b67b18e6bcd80b31ad5c",
+  "thresholds_sha256": "da81ef0eac7934e5c70ecfcff2119f4b39c6b689c483f0f6f0fed9805f9b77b5",
+  "threshold_count": 18,
+  "registered_spec_status": "PROPOSED_PENDING_HUMAN_APPROVAL",
+  "approval_status": "HUMAN_APPROVED",
+  "approval_decision": "APPROVE_UNCHANGED",
+  "human_approved": true,
+  "reviewer_identifier": "tran-phu-hao",
+  "reviewer_name": "Trần Phú Hào",
+  "reviewer_role": "INDEPENDENT_LEGAL_REVIEWER",
+  "approved_at": "2026-08-30T19:59:16+07:00",
+  "independent_from_project_author": true,
+  "used_ai_as_reviewer": false,
+  "changed_after_final_results": false,
+  "frozen_evaluation_run_at_approval": false,
+  "frozen_final": false
+}

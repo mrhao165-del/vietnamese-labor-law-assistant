@@ -88,6 +88,16 @@ class CaseMissingFieldResponse(BaseModel):
     critical_for_issues: tuple[str, ...]
 
 
+class CaseFactConflictResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    code: str
+    issue_code: str
+    involved_fact_keys: tuple[str, ...]
+    matched_fact_ids: tuple[str, ...]
+    resolution_fact_keys: tuple[str, ...]
+
+
 class CaseClarificationQuestionResponse(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -108,6 +118,7 @@ class CaseRefinedIssueResponse(BaseModel):
     relevant_fact_keys: tuple[str, ...]
     remaining_missing_fields: tuple[str, ...]
     critical_missing_fields: tuple[str, ...]
+    conflict_codes: tuple[str, ...]
 
 
 class CaseEvidenceRequestResponse(BaseModel):
@@ -138,6 +149,7 @@ class CaseAnalysisResponse(BaseModel):
     known_facts: tuple[CaseFactResponse, ...] = ()
     candidate_issues: tuple[str, ...] = ()
     missing_fields: tuple[CaseMissingFieldResponse, ...] = ()
+    fact_conflicts: tuple[CaseFactConflictResponse, ...] = ()
     clarification_reason_code: str | None = None
     clarification_questions: tuple[CaseClarificationQuestionResponse, ...] = ()
     refined_issues: tuple[CaseRefinedIssueResponse, ...] = ()

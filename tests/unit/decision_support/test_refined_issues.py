@@ -110,8 +110,21 @@ def _contract_registry(
     )
     replacement = IssueDefinition(
         issue_code=contract.issue_code,
-        required_facts=(contract_type, *contract.required_facts[1:]),
+        required_facts=(
+            contract_type,
+            FactRequirement(
+                fact_key=FactKey.CONTRACT_START_DATE,
+                role="Test-only optional interval start.",
+            ),
+            FactRequirement(
+                fact_key=FactKey.CONTRACT_END_DATE,
+                role="Test-only optional interval end.",
+            ),
+        ),
         critical_facts=critical_facts or contract.critical_facts,
+        conditional_requirement_branches=contract.conditional_requirement_branches,
+        context_fact_keys=contract.context_fact_keys,
+        conflict_rules=contract.conflict_rules,
         evidence_needs=contract.evidence_needs,
         calculator_needs=contract.calculator_needs,
         applicability_scope=contract.applicability_scope,
@@ -141,6 +154,7 @@ def test_refined_issue_status_and_reason_vocabularies_are_exact_and_stable() -> 
         "REQUIREMENTS_SATISFIED",
         "CRITICAL_FACTS_MISSING",
         "REQUIRED_FACTS_MISSING",
+        "CONFLICTING_FACTS",
         "DETERMINISTIC_EXCLUSION_ESTABLISHED",
         "APPLICABILITY_SCOPE_UNSUPPORTED",
     ]
@@ -247,11 +261,7 @@ def test_unknown_fact_is_not_promoted_into_relevant_issue_state() -> None:
     assert refined.status is RefinedIssueStatus.POSSIBLE
     assert refined.relevant_fact_keys == ()
     assert refined.relevant_facts == ()
-    assert refined.remaining_missing_fields == (
-        FactKey.CONTRACT_TYPE,
-        FactKey.CONTRACT_START_DATE,
-        FactKey.CONTRACT_END_DATE,
-    )
+    assert refined.remaining_missing_fields == (FactKey.CONTRACT_TYPE,)
 
 
 def test_multi_issue_output_is_unique_and_follows_registry_order() -> None:

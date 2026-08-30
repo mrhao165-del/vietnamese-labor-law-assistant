@@ -97,7 +97,18 @@ exceptions, or arbitrary graph state.
 
 The mirrored `evaluation/decision_support_week3.py` capability still owns the 17-case offline
 development regression and its pre-registered gates. That dataset remains unfrozen and pending
-human review. The frontend now renders only the sanitized backend-selected Direct QA/Case Analysis
+human review. `evaluation/decision_support_v1_1.py` additively owns the complete candidate schema,
+offline Week 1-4 metric contracts, proposed-threshold validation, deterministic packet rendering,
+non-mutating independent-review validation, and corrected-candidate materialization from the
+ten-row human correction contract. `evaluation/decision_support_v1_1_approval.py` owns the
+one-time review-timestamp finalizer and the checksum-bound `APPROVE_UNCHANGED` threshold sidecar;
+it preserves the registered threshold proposal and cannot run or freeze evaluation. Its scripts
+are thin file/CLI adapters. `evaluation/decision_support_v1_1_artifacts.py`,
+`decision_support_v1_1_freeze.py`, and `decision_support_v1_1_capture.py` own the canonical
+write-once release-evaluation boundary. Freeze validates and binds the reviewed labels and unchanged
+threshold approval offline; capture projects only `CaseIntakeInput` into the production extractor.
+No downstream evaluation stage may make another provider call. The frontend now
+renders only the sanitized backend-selected Direct QA/Case Analysis
 mode and public known/missing/clarification/refined/error projection; it does not select the mode or
 perform decision-support work. `frontend/tests/e2e/` supplies three deterministic Playwright
 `page.route` flows against the real Vite UI and API client. A Week-5 `EvidencePlan`,

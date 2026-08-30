@@ -108,6 +108,7 @@ def _shared_requirement_registry() -> IssueRegistry:
         issue_code=termination.issue_code,
         required_facts=contract.required_facts,
         critical_facts=contract.critical_facts,
+        context_fact_keys=contract.context_fact_keys,
         evidence_needs=(
             EvidenceNeed(
                 document_id=contract_evidence.document_id,
@@ -248,11 +249,7 @@ def test_possible_issue_with_critical_gaps_remains_blocked_without_status_upgrad
     assert refined.issues[0].status is RefinedIssueStatus.POSSIBLE
     assert result.issue_states[0].status is RefinedIssueStatus.POSSIBLE
     assert result.issue_states[0].contributes_requirements is True
-    assert result.issue_states[0].critical_missing_fields == (
-        FactKey.CONTRACT_TYPE,
-        FactKey.CONTRACT_START_DATE,
-        FactKey.CONTRACT_END_DATE,
-    )
+    assert result.issue_states[0].critical_missing_fields == (FactKey.CONTRACT_TYPE,)
     assert result.substantive_analysis_blocked is True
     assert result.evidence_requests
     assert result.calculator_requests

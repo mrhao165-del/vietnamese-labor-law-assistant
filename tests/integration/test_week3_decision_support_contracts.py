@@ -92,6 +92,9 @@ def _explicit_contract_type_registry() -> IssueRegistry:
         issue_code=contract.issue_code,
         required_facts=(explicit_contract_type, *contract.required_facts[1:]),
         critical_facts=contract.critical_facts,
+        conditional_requirement_branches=contract.conditional_requirement_branches,
+        context_fact_keys=contract.context_fact_keys,
+        conflict_rules=contract.conflict_rules,
         evidence_needs=contract.evidence_needs,
         calculator_needs=contract.calculator_needs,
         applicability_scope=contract.applicability_scope,
@@ -102,7 +105,7 @@ def _explicit_contract_type_registry() -> IssueRegistry:
 def test_complete_typed_intake_produces_no_gap_or_clarification() -> None:
     intake = CaseIntakeResult(
         facts=[
-            _fact(FactKey.CONTRACT_TYPE, fact_id="CF-flow-type", raw_value="INDEFINITE"),
+            _fact(FactKey.CONTRACT_TYPE, fact_id="CF-flow-type", raw_value="FIXED_TERM"),
             _fact(
                 FactKey.CONTRACT_START_DATE,
                 fact_id="CF-flow-start",

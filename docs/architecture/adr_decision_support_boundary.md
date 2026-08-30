@@ -2,8 +2,8 @@
 
 ## Status
 
-Accepted and implemented through the Week 1 outer-facade boundary. This ADR does not claim that
-substantive case analysis, document analysis, or decision-support domain rules are implemented.
+Accepted and implemented through the Week 4 finite CaseGraph and deterministic decision-support
+domain boundary. This ADR still does not claim document analysis or downstream legal application.
 
 ## Context
 
@@ -49,9 +49,9 @@ It is not a replacement for the existing contracts:
 
 `agent/mode_routing.py` provides the outer-mode contract and its deterministic direct-statute fast
 path. The chat API now resolves `AssistantService`, which delegates `DIRECT_QA` to the existing
-`AgentService` without copying or replacing its graph. `agent/case_graph.py` provides the fixed
-`START -> case_analysis_not_ready -> END` fail-closed skeleton only. It owns finite orchestration
-and does not call a capability or provide a legal conclusion. Domain rules and domain models belong in
+`AgentService` without copying or replacing its graph. `agent/case_graph.py` owns only the finite
+Case Intake -> Missing Facts -> Clarification/Refinement -> Evidence Request Skeleton orchestration;
+it does not provide a legal conclusion. Domain rules and domain models belong in
 `src/vietnamese_labor_law_assistant/decision_support/`, with mirrored offline unit tests under
 `tests/unit/decision_support/`. The existing direct graph and `AgentService` are not rewritten as
 part of this boundary decision.
@@ -67,7 +67,8 @@ api (HTTP adapter)
 
 - `api` wires services and maps HTTP contracts; it owns no decision-support rules.
 - `agent` coordinates finite graphs and existing capabilities; it does not host case-domain rules.
-- `decision_support` owns future case-analysis domain rules, not HTTP, MCP transport, or retrieval
+- `decision_support` owns case facts, conditional requirements, typed conflicts, clarification,
+  refined issues, and evidence-request metadata; it does not own HTTP, MCP transport, or retrieval
   ranking.
 - Retrieval and calculator continue through their existing capability boundary. Case orchestration
   must not directly access Qdrant or calculator rule functions.
@@ -80,9 +81,9 @@ All new paths must retain a finite graph, explicit allowlists, bounded inputs, s
 evidence, and fail-closed behavior. A missing, unsupported, ambiguous, or unsafe case-analysis
 result must not be promoted to an unverified legal conclusion.
 
-This ADR deliberately does not create `CaseFact`, `IssueRegistry`, evidence plans, case memory,
-document analysis, temporal versioning, or domain rules. Those require separate implementation
-decisions and offline tests.
+This boundary deliberately excludes Week-5 `EvidencePlan`, case memory, document analysis,
+temporal-law versioning, `DecisionRule`, and downstream legal execution. Those require separate
+implementation decisions and offline tests.
 
 ## Consequences
 

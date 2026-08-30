@@ -67,11 +67,14 @@ V11_FREEZE_CODE_RELATIVE_PATHS = (
     "src/vietnamese_labor_law_assistant/decision_support/missing_facts.py",
     "src/vietnamese_labor_law_assistant/decision_support/clarification.py",
     "src/vietnamese_labor_law_assistant/decision_support/refined_issues.py",
+    "src/vietnamese_labor_law_assistant/decision_support/evidence_requests.py",
     "src/vietnamese_labor_law_assistant/agent/case_graph.py",
     "src/vietnamese_labor_law_assistant/evaluation/decision_support_v1_1.py",
     "src/vietnamese_labor_law_assistant/evaluation/decision_support_v1_1_approval.py",
     "src/vietnamese_labor_law_assistant/evaluation/decision_support_v1_1_artifacts.py",
     "src/vietnamese_labor_law_assistant/evaluation/decision_support_v1_1_freeze.py",
+    "src/vietnamese_labor_law_assistant/evaluation/decision_support_week3.py",
+    "src/vietnamese_labor_law_assistant/evaluation/decision_support_v1_1_release.py",
 )
 
 

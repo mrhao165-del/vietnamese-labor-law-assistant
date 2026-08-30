@@ -75,9 +75,19 @@ def _contract_registry(
         issue_code=contract.issue_code,
         required_facts=(
             first_requirement or contract.required_facts[0],
-            *contract.required_facts[1:],
+            FactRequirement(
+                fact_key=FactKey.CONTRACT_START_DATE,
+                role="Test-only optional interval start.",
+            ),
+            FactRequirement(
+                fact_key=FactKey.CONTRACT_END_DATE,
+                role="Test-only optional interval end.",
+            ),
         ),
         critical_facts=critical_facts or contract.critical_facts,
+        conditional_requirement_branches=contract.conditional_requirement_branches,
+        context_fact_keys=contract.context_fact_keys,
+        conflict_rules=contract.conflict_rules,
         evidence_needs=contract.evidence_needs,
         calculator_needs=contract.calculator_needs,
         applicability_scope=contract.applicability_scope,
@@ -95,11 +105,7 @@ def test_candidate_issue_without_facts_reports_all_requirements_missing() -> Non
     issue = result.issue_results[0]
     assert issue.issue_code is IssueCode.CONTRACT_TERM
     assert issue.satisfied_fields == ()
-    assert issue.missing_fields == (
-        FactKey.CONTRACT_TYPE,
-        FactKey.CONTRACT_START_DATE,
-        FactKey.CONTRACT_END_DATE,
-    )
+    assert issue.missing_fields == (FactKey.CONTRACT_TYPE,)
     assert issue.critical_missing_fields == issue.missing_fields
     assert issue.critical_missing is True
     assert result.critical_missing is True
@@ -124,11 +130,7 @@ def test_all_required_facts_satisfy_one_issue() -> None:
     )
 
     issue = result.issue_results[0]
-    assert issue.satisfied_fields == (
-        FactKey.CONTRACT_TYPE,
-        FactKey.CONTRACT_START_DATE,
-        FactKey.CONTRACT_END_DATE,
-    )
+    assert issue.satisfied_fields == (FactKey.CONTRACT_TYPE,)
     assert issue.missing_fields == ()
     assert issue.critical_missing_fields == ()
     assert issue.critical_missing is False
@@ -183,8 +185,6 @@ def test_multi_issue_shared_fact_is_deduplicated_with_traceability() -> None:
     assert tuple(issue.issue_code for issue in result.issue_results) == tuple(IssueCode)
     assert tuple(need.fact_key for need in result.fields_needed) == (
         FactKey.CONTRACT_TYPE,
-        FactKey.CONTRACT_START_DATE,
-        FactKey.CONTRACT_END_DATE,
         FactKey.NOTICE_SPECIAL_CASE,
         FactKey.EMPLOYEE_ROLE,
     )
@@ -259,11 +259,7 @@ def test_unknown_fact_key_does_not_satisfy_a_required_fact() -> None:
     )
 
     assert result.issue_results[0].satisfied_fields == ()
-    assert result.issue_results[0].missing_fields == (
-        FactKey.CONTRACT_TYPE,
-        FactKey.CONTRACT_START_DATE,
-        FactKey.CONTRACT_END_DATE,
-    )
+    assert result.issue_results[0].missing_fields == (FactKey.CONTRACT_TYPE,)
     assert result.critical_missing is True
 
 
@@ -351,3 +347,71 @@ def test_detector_module_is_pure_domain_logic() -> None:
         "vietnamese_labor_law_assistant.retrieval",
     )
     assert not any(module.startswith(prohibited_prefixes) for module in imported_modules)
+
+
+def test_indefinite_contract_type_does_not_require_contract_dates() -> None:
+    result = MissingFactDetector().detect(
+        known_facts=(
+            _fact(
+                FactKey.CONTRACT_TYPE,
+                fact_id="CF-indefinite-type",
+                raw_value="INDEFINITE",
+            ),
+        ),
+        candidate_issues=(_candidate(IssueCode.CONTRACT_TERM),),
+        registry=ISSUE_REGISTRY,
+    )
+
+    issue = result.issue_results[0]
+    assert issue.missing_fields == ()
+    assert issue.critical_missing_fields == ()
+
+
+def test_explicit_24_month_duration_satisfies_contract_classification_scope() -> None:
+    duration = CaseFact(
+        fact_id="CF-duration-24",
+        fact_key=FactKey.CONTRACT_DURATION.value,
+        fact_type="DURATION",
+        raw_value="24 tháng",
+        normalized_value=24,
+        assertion_mode=AssertionMode.EXPLICIT,
+        verification_status=VerificationStatus.UNVERIFIED,
+        source_type=SourceType.USER_MESSAGE,
+        source_ref="user_message:missing-facts",
+        source_span=SourceSpan(start_offset=0, end_offset=8, text="24 tháng"),
+    )
+
+    result = MissingFactDetector().detect(
+        known_facts=(duration,),
+        candidate_issues=(_candidate(IssueCode.CONTRACT_TERM),),
+        registry=ISSUE_REGISTRY,
+    )
+
+    assessment = result.issue_results[0].requirements[0]
+    assert assessment.status is RequirementStatus.SATISFIED
+    assert assessment.matched_fact_ids == ("CF-duration-24",)
+    assert result.fields_needed == ()
+
+
+def test_unpaid_wage_signal_selects_wage_delay_clarification_branch() -> None:
+    wage_problem = _fact(
+        "WAGE_PAYMENT_PROBLEM",
+        fact_id="CF-wage-problem",
+        raw_value="WAGE_PAYMENT_PROBLEM_REPORTED",
+    )
+
+    result = MissingFactDetector().detect(
+        known_facts=(wage_problem,),
+        candidate_issues=(_candidate(IssueCode.EMPLOYEE_UNILATERAL_TERMINATION),),
+        registry=ISSUE_REGISTRY,
+    )
+
+    assert tuple(field.fact_key.value for field in result.fields_needed) == (
+        "WAGE_PAYMENT_DUE_DATE",
+        "WAGE_PAYMENT_STATUS",
+        "WAGE_DELAY_FORCE_MAJEURE",
+    )
+    assert all(
+        field.fact_key not in {FactKey.CONTRACT_TYPE, FactKey.EMPLOYEE_ROLE}
+        for field in result.fields_needed
+    )

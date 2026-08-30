@@ -13,6 +13,7 @@ from .chat_models import (
     CaseCalculatorRequestResponse,
     CaseClarificationQuestionResponse,
     CaseEvidenceRequestResponse,
+    CaseFactConflictResponse,
     CaseFactResponse,
     CaseMissingFieldResponse,
     CaseRefinedIssueResponse,
@@ -199,6 +200,18 @@ def case_analysis_for(result: CaseAnalysisResult | None) -> CaseAnalysisResponse
         )
         if missing
         else (),
+        fact_conflicts=tuple(
+            CaseFactConflictResponse(
+                code=conflict.code.value,
+                issue_code=conflict.issue_code.value,
+                involved_fact_keys=tuple(key.value for key in conflict.involved_fact_keys),
+                matched_fact_ids=conflict.matched_fact_ids,
+                resolution_fact_keys=tuple(key.value for key in conflict.resolution_fact_keys),
+            )
+            for conflict in missing.conflicts
+        )
+        if missing
+        else (),
         clarification_reason_code=clarification.reason_code.value if clarification else None,
         clarification_questions=tuple(
             CaseClarificationQuestionResponse(
@@ -221,6 +234,7 @@ def case_analysis_for(result: CaseAnalysisResult | None) -> CaseAnalysisResponse
                 relevant_fact_keys=tuple(key.value for key in issue.relevant_fact_keys),
                 remaining_missing_fields=tuple(key.value for key in issue.remaining_missing_fields),
                 critical_missing_fields=tuple(key.value for key in issue.critical_missing_fields),
+                conflict_codes=tuple(code.value for code in issue.conflict_codes),
             )
             for issue in refined.issues
         )
@@ -251,7 +265,7 @@ def case_analysis_for(result: CaseAnalysisResult | None) -> CaseAnalysisResponse
         substantive_analysis_blocked=(
             evidence.substantive_analysis_blocked
             if evidence
-            else bool(missing.fields_needed)
+            else bool(missing.fields_needed or missing.conflicts)
             if missing
             else True
         ),

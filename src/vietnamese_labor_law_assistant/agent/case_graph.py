@@ -84,7 +84,7 @@ class CaseAnalysisResult(BaseModel):
                 self.intake_result is None
                 or self.missing_facts is None
                 or self.clarification is None
-                or not self.missing_facts.fields_needed
+                or not (self.missing_facts.fields_needed or self.missing_facts.conflicts)
                 or not self.clarification.questions
                 or self.refined_issues is not None
                 or self.evidence_request is not None
@@ -98,6 +98,7 @@ class CaseAnalysisResult(BaseModel):
                 self.intake_result is None
                 or self.missing_facts is None
                 or self.missing_facts.fields_needed
+                or self.missing_facts.conflicts
                 or self.clarification is not None
                 or self.refined_issues is None
                 or self.evidence_request is None
@@ -296,7 +297,7 @@ def _route_after_missing_facts(
     missing_facts = state.get("missing_facts")
     if missing_facts is None:
         return "__end__"
-    if missing_facts.fields_needed:
+    if missing_facts.fields_needed or missing_facts.conflicts:
         return "build_clarification"
     return "refine_issues"
 

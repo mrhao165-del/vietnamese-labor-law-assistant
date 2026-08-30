@@ -22,6 +22,7 @@ from vietnamese_labor_law_assistant.decision_support.enums import (
 from vietnamese_labor_law_assistant.decision_support.issue_registry import (
     ISSUE_REGISTRY,
     FactKey,
+    FactRequirement,
     IssueDefinition,
     IssueRegistry,
 )
@@ -81,8 +82,21 @@ def _registry_with_contract_critical_facts(
     contract = ISSUE_REGISTRY.definitions[0]
     replacement = IssueDefinition(
         issue_code=contract.issue_code,
-        required_facts=contract.required_facts,
+        required_facts=(
+            contract.required_facts[0],
+            FactRequirement(
+                fact_key=FactKey.CONTRACT_START_DATE,
+                role="Test-only optional interval start.",
+            ),
+            FactRequirement(
+                fact_key=FactKey.CONTRACT_END_DATE,
+                role="Test-only optional interval end.",
+            ),
+        ),
         critical_facts=critical_facts,
+        conditional_requirement_branches=contract.conditional_requirement_branches,
+        context_fact_keys=contract.context_fact_keys,
+        conflict_rules=contract.conflict_rules,
         evidence_needs=contract.evidence_needs,
         calculator_needs=contract.calculator_needs,
         applicability_scope=contract.applicability_scope,
@@ -127,10 +141,7 @@ def test_satisfied_fact_is_never_asked() -> None:
 
     result = TargetedClarificationBuilder().build(missing, max_questions=3)
 
-    assert tuple(field.fact_key for field in result.fields_needed) == (
-        FactKey.CONTRACT_START_DATE,
-        FactKey.CONTRACT_END_DATE,
-    )
+    assert result.fields_needed == ()
     assert all(question.fact_key is not FactKey.CONTRACT_TYPE for question in result.questions)
 
 
@@ -142,13 +153,11 @@ def test_previously_requested_field_is_not_repeated_but_remains_an_unresolved_ga
     )
 
     assert result.fields_needed[0].fact_key is FactKey.CONTRACT_TYPE
-    assert tuple(question.fact_key for question in result.questions) == (
-        FactKey.CONTRACT_START_DATE,
-    )
+    assert result.questions == ()
 
 
 def test_explicit_question_budget_is_respected() -> None:
-    result = TargetedClarificationBuilder().build(_detect(), max_questions=2)
+    result = TargetedClarificationBuilder().build(_detect(issues=tuple(IssueCode)), max_questions=2)
 
     assert len(result.questions) == 2
     assert tuple(question.priority for question in result.questions) == (1, 2)
@@ -226,7 +235,7 @@ def test_multiple_issues_rank_shared_field_by_information_value_after_criticalit
 
     assert tuple(question.fact_key for question in result.questions) == (
         FactKey.CONTRACT_TYPE,
-        FactKey.CONTRACT_START_DATE,
+        FactKey.NOTICE_SPECIAL_CASE,
     )
     assert result.questions[0].related_issue_codes == tuple(IssueCode)
 
@@ -235,11 +244,7 @@ def test_output_contains_typed_reason_fields_and_requirement_reasons() -> None:
     result = TargetedClarificationBuilder().build(_detect(), max_questions=1)
 
     assert result.reason_code is ClarificationReasonCode.CRITICAL_FACTS_MISSING
-    assert tuple(field.fact_key for field in result.fields_needed) == (
-        FactKey.CONTRACT_TYPE,
-        FactKey.CONTRACT_START_DATE,
-        FactKey.CONTRACT_END_DATE,
-    )
+    assert tuple(field.fact_key for field in result.fields_needed) == (FactKey.CONTRACT_TYPE,)
     assert result.questions[0].requirement_reasons == (RequirementGapReason.FACT_NOT_PROVIDED,)
     assert result.questions[0].question.strip()
 

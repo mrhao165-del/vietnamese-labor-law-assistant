@@ -1,0 +1,46 @@
+{
+  "dataset_id": "decision_support_v1_1_evaluation_candidate",
+  "dataset_version": "v1_1_candidate",
+  "dataset_path": "data/evaluation/decision_support/v1_1/v1_1_evaluation_candidate.jsonl",
+  "record_count": 26,
+  "candidate_sources": [
+    "data/evaluation/decision_support/v1_1/case_intake_dev.jsonl",
+    "data/evaluation/decision_support/v1_1/missing_facts_clarification_dev.jsonl"
+  ],
+  "excluded_historical_cases": [
+    {
+      "case_id": "dsw3-dev-013",
+      "reason": "The Week-3 development-only fail-closed fixture intentionally uses UNKNOWN_ISSUE. It remains unchanged in Week-3 history but is excluded from the typed v1.1 candidate, whose expected IssueCode labels must all be known."
+    }
+  ],
+  "capabilities_covered": [
+    "Case Intake facts",
+    "Candidate Issues",
+    "Missing Facts",
+    "Clarification",
+    "Refined Issues",
+    "CaseGraph routing/state contract"
+  ],
+  "out_of_scope_metrics": [
+    "EvidencePlan",
+    "DecisionRule",
+    "legal application",
+    "legal recommendation"
+  ],
+  "label_provenance": "Authored Week-2 and Week-3 development labels plus independently authored typed Week-4 contract annotations. No model, component prediction file, or final evaluation result was copied into expected labels.",
+  "prediction_label_leakage_assessment": "PENDING_HUMAN_PROVENANCE_CONFIRMATION_NO_PREDICTION_INPUT",
+  "quality_status": "SCHEMA_VALID_CANDIDATE_PENDING_HUMAN_REVIEW",
+  "human_validated": false,
+  "human_validated_true_count": 0,
+  "review_status": "PENDING",
+  "pending_count": 26,
+  "frozen_final": false,
+  "release_evidence": false,
+  "live_evaluation": {
+    "status": "NOT_RUN",
+    "reason": "Prompt 5 permits only offline candidate validation and review-packet preparation."
+  },
+  "threshold_spec": "data/evaluation/decision_support/v1_1/v1_1_proposed_thresholds.json",
+  "threshold_approval_status": "PROPOSED_PENDING_HUMAN_APPROVAL",
+  "review_packet": "evaluation/review/decision_support/v1_1/v1_1_human_review_packet.csv"
+}

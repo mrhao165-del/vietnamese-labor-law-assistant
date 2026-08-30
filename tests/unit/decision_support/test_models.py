@@ -10,6 +10,7 @@ from vietnamese_labor_law_assistant.decision_support.enums import (
     SourceType,
     VerificationStatus,
 )
+from vietnamese_labor_law_assistant.decision_support.issue_registry import FactKey
 from vietnamese_labor_law_assistant.decision_support.issues import IssueCode
 from vietnamese_labor_law_assistant.decision_support.models import (
     CandidateIssue,
@@ -251,6 +252,24 @@ def test_unicode_vietnamese_span_is_preserved_without_normalization() -> None:
     )
 
     assert fact.source_span.text == source_text[start : start + len(raw_value)]
+
+
+def test_intended_termination_temporal_expression_has_a_typed_fact_key() -> None:
+    assert "INTENDED_TERMINATION_DATE" in {fact_key.value for fact_key in FactKey}
+
+    raw_value = "cuối tháng sau"
+    fact = CaseFact.model_validate(
+        fact_payload(
+            fact_id="CF-intended-termination",
+            fact_key="INTENDED_TERMINATION_DATE",
+            fact_type="TEMPORAL_EXPRESSION",
+            raw_value=raw_value,
+            normalized_value=raw_value,
+            source_span={"start_offset": 0, "end_offset": len(raw_value), "text": raw_value},
+        )
+    )
+
+    assert fact.normalized_value == raw_value
 
 
 def test_case_input_enforces_the_documented_unicode_length_bound() -> None:

@@ -8,8 +8,11 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict
 
 from vietnamese_labor_law_assistant.decision_support.issue_registry import (
+    AlternativeFactSatisfier,
+    FactConflictCode,
     FactKey,
     FactRequirement,
+    FactSatisfactionRule,
     IssueDefinition,
     IssueRegistry,
 )
@@ -31,6 +34,8 @@ class RequirementGapReason(StrEnum):
     FACT_NOT_PROVIDED = "FACT_NOT_PROVIDED"
     ASSERTION_MODE_NOT_ACCEPTED = "ASSERTION_MODE_NOT_ACCEPTED"
     VERIFICATION_STATUS_NOT_ACCEPTED = "VERIFICATION_STATUS_NOT_ACCEPTED"
+    ALTERNATIVE_RULE_NOT_SATISFIED = "ALTERNATIVE_RULE_NOT_SATISFIED"
+    CONFLICTING_FACTS = "CONFLICTING_FACTS"
 
 
 class MissingFactDetectionErrorCode(StrEnum):
@@ -87,6 +92,18 @@ class AggregatedFieldNeed(BaseModel):
     critical_for_issues: tuple[IssueCode, ...]
 
 
+class FactConflict(BaseModel):
+    """A source-preserving cross-field conflict that blocks substantive routing."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    code: FactConflictCode
+    issue_code: IssueCode
+    involved_fact_keys: tuple[FactKey, ...]
+    matched_fact_ids: tuple[str, ...]
+    resolution_fact_keys: tuple[FactKey, ...]
+
+
 class MissingFactResult(BaseModel):
     """Deterministic multi-issue gap result; it carries no legal conclusion."""
 
@@ -94,6 +111,7 @@ class MissingFactResult(BaseModel):
 
     issue_results: tuple[IssueMissingFactResult, ...]
     fields_needed: tuple[AggregatedFieldNeed, ...]
+    conflicts: tuple[FactConflict, ...] = ()
     critical_missing: bool
 
 
@@ -117,9 +135,11 @@ class MissingFactDetector:
             if definition.issue_code in selected_issue_codes
         )
         fields_needed = _aggregate_fields_needed(issue_results)
+        conflicts = _detect_conflicts(registry, selected_issue_codes, facts)
         return MissingFactResult(
             issue_results=issue_results,
             fields_needed=fields_needed,
+            conflicts=conflicts,
             critical_missing=any(result.critical_missing for result in issue_results),
         )
 
@@ -164,10 +184,11 @@ def _validate_unique_fact_representations(facts: tuple[CaseFact, ...]) -> None:
 def _assess_issue(
     definition: IssueDefinition, facts: tuple[CaseFact, ...]
 ) -> IssueMissingFactResult:
-    critical_keys = set(definition.critical_facts)
+    required_facts, critical_facts = _active_requirements(definition, facts)
+    critical_keys = set(critical_facts)
     assessments = tuple(
         _assess_requirement(definition.issue_code, requirement, critical_keys, facts)
-        for requirement in definition.required_facts
+        for requirement in required_facts
     )
     satisfied_fields = tuple(
         assessment.fact_key
@@ -212,29 +233,44 @@ def _assess_requirement(
         if fact.assertion_mode in requirement.accepted_assertion_modes
         and fact.verification_status in requirement.accepted_verification_statuses
     )
-    if satisfying:
+    alternative_matching = tuple(
+        fact
+        for alternative in requirement.alternative_satisfiers
+        for fact in sorted(
+            (fact for fact in facts if fact.fact_key == alternative.fact_key.value),
+            key=lambda fact: fact.fact_id,
+        )
+    )
+    alternative_satisfying = tuple(
+        fact
+        for alternative in requirement.alternative_satisfiers
+        for fact in alternative_matching
+        if fact.fact_key == alternative.fact_key.value and _alternative_satisfies(fact, alternative)
+    )
+    if satisfying or alternative_satisfying:
         return RequirementAssessment(
             issue_code=issue_code,
             fact_key=requirement.fact_key,
             role=requirement.role,
             critical=requirement.fact_key in critical_keys,
             status=RequirementStatus.SATISFIED,
-            matched_fact_ids=tuple(fact.fact_id for fact in satisfying),
+            matched_fact_ids=tuple(fact.fact_id for fact in (*satisfying, *alternative_satisfying)),
             gap_reasons=(),
         )
-    if not matching:
+    all_matching = (*matching, *alternative_matching)
+    if not all_matching:
         status = RequirementStatus.MISSING
         reasons = (RequirementGapReason.FACT_NOT_PROVIDED,)
     else:
         status = RequirementStatus.POLICY_REJECTED
-        reasons = _policy_rejection_reasons(matching, requirement)
+        reasons = _requirement_rejection_reasons(matching, requirement, alternative_matching)
     return RequirementAssessment(
         issue_code=issue_code,
         fact_key=requirement.fact_key,
         role=requirement.role,
         critical=requirement.fact_key in critical_keys,
         status=status,
-        matched_fact_ids=tuple(fact.fact_id for fact in matching),
+        matched_fact_ids=tuple(fact.fact_id for fact in all_matching),
         gap_reasons=reasons,
     )
 
@@ -251,6 +287,102 @@ def _policy_rejection_reasons(
     ):
         reasons.append(RequirementGapReason.VERIFICATION_STATUS_NOT_ACCEPTED)
     return tuple(reasons)
+
+
+def _active_requirements(
+    definition: IssueDefinition,
+    facts: tuple[CaseFact, ...],
+) -> tuple[tuple[FactRequirement, ...], tuple[FactKey, ...]]:
+    for branch in definition.conditional_requirement_branches:
+        if any(fact.fact_key == branch.trigger_fact_key.value for fact in facts):
+            return branch.required_facts, branch.critical_facts
+    return definition.required_facts, definition.critical_facts
+
+
+def _alternative_satisfies(
+    fact: CaseFact,
+    alternative: AlternativeFactSatisfier,
+) -> bool:
+    if (
+        fact.assertion_mode not in alternative.accepted_assertion_modes
+        or fact.verification_status not in alternative.accepted_verification_statuses
+    ):
+        return False
+    if alternative.rule is FactSatisfactionRule.FIXED_TERM_DURATION_MONTHS_1_TO_36:
+        value = fact.normalized_value
+        return not isinstance(value, bool) and isinstance(value, (int, float)) and 1 <= value <= 36
+    return False
+
+
+def _requirement_rejection_reasons(
+    matching: tuple[CaseFact, ...],
+    requirement: FactRequirement,
+    alternative_matching: tuple[CaseFact, ...],
+) -> tuple[RequirementGapReason, ...]:
+    reasons = list(_policy_rejection_reasons(matching, requirement))
+    if alternative_matching:
+        if any(
+            fact.assertion_mode not in alternative.accepted_assertion_modes
+            for alternative in requirement.alternative_satisfiers
+            for fact in alternative_matching
+            if fact.fact_key == alternative.fact_key.value
+        ):
+            reasons.append(RequirementGapReason.ASSERTION_MODE_NOT_ACCEPTED)
+        if any(
+            fact.verification_status not in alternative.accepted_verification_statuses
+            for alternative in requirement.alternative_satisfiers
+            for fact in alternative_matching
+            if fact.fact_key == alternative.fact_key.value
+        ):
+            reasons.append(RequirementGapReason.VERIFICATION_STATUS_NOT_ACCEPTED)
+        if not any(
+            _alternative_satisfies(fact, alternative)
+            for alternative in requirement.alternative_satisfiers
+            for fact in alternative_matching
+            if fact.fact_key == alternative.fact_key.value
+        ):
+            reasons.append(RequirementGapReason.ALTERNATIVE_RULE_NOT_SATISFIED)
+    return tuple(dict.fromkeys(reasons))
+
+
+def _detect_conflicts(
+    registry: IssueRegistry,
+    selected_issue_codes: frozenset[IssueCode],
+    facts: tuple[CaseFact, ...],
+) -> tuple[FactConflict, ...]:
+    conflicts: list[FactConflict] = []
+    for definition in registry.definitions:
+        if definition.issue_code not in selected_issue_codes:
+            continue
+        for rule in definition.conflict_rules:
+            guard_facts = tuple(
+                fact
+                for fact in facts
+                if fact.fact_key == rule.guard_fact_key.value
+                and fact.assertion_mode in rule.accepted_assertion_modes
+                and str(fact.normalized_value).upper() in rule.guard_normalized_values
+            )
+            conflicting_facts = tuple(
+                fact
+                for fact in facts
+                if fact.fact_key == rule.conflicting_fact_key.value
+                and fact.assertion_mode in rule.accepted_assertion_modes
+            )
+            if not guard_facts or not conflicting_facts:
+                continue
+            matched = tuple(
+                sorted((*guard_facts, *conflicting_facts), key=lambda fact: fact.fact_id)
+            )
+            conflicts.append(
+                FactConflict(
+                    code=rule.code,
+                    issue_code=definition.issue_code,
+                    involved_fact_keys=(rule.guard_fact_key, rule.conflicting_fact_key),
+                    matched_fact_ids=tuple(fact.fact_id for fact in matched),
+                    resolution_fact_keys=rule.resolution_fact_keys,
+                )
+            )
+    return tuple(conflicts)
 
 
 def _aggregate_fields_needed(

@@ -211,6 +211,30 @@ def test_case_analysis_complete_facts_returns_nonexecuting_evidence_metadata(
     assert direct.calls == []
 
 
+@pytest.mark.asyncio
+async def test_indefinite_contract_with_explicit_end_date_requires_conflict_clarification() -> None:
+    question = "INDEFINITE starts 2026-01-01 and ends 2026-12-31."
+    extractor = IntakeExtractorStub(
+        lambda case_input: _intake_for(
+            case_input,
+            issue_codes=(IssueCode.CONTRACT_TERM,),
+            fact_values=(
+                (FactKey.CONTRACT_TYPE, "INDEFINITE"),
+                (FactKey.CONTRACT_START_DATE, "2026-01-01"),
+                (FactKey.CONTRACT_END_DATE, "2026-12-31"),
+            ),
+        )
+    )
+
+    result = await CaseGraph(extractor).run(question)
+
+    assert result.status.value == "CLARIFICATION_REQUIRED"
+    assert result.clarification is not None
+    assert result.clarification.reason_code.value == "CONFLICTING_FACTS"
+    assert result.refined_issues is None
+    assert result.evidence_request is None
+
+
 def test_case_analysis_multi_issue_shared_field_is_exposed_once(
     case_client_factory,
 ) -> None:
@@ -252,6 +276,7 @@ def test_case_analysis_provider_failure_is_allowlisted_and_redacted(
         "known_facts": [],
         "candidate_issues": [],
         "missing_fields": [],
+        "fact_conflicts": [],
         "clarification_reason_code": None,
         "clarification_questions": [],
         "refined_issues": [],

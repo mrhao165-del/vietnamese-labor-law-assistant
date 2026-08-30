@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from vietnamese_labor_law_assistant.decision_support.issue_registry import (
     ApplicabilityScope,
+    FactConflictCode,
     FactKey,
     IssueDefinition,
     IssueRegistry,
@@ -63,6 +64,7 @@ class RefinedIssue(BaseModel):
     relevant_facts: tuple[CaseFact, ...]
     remaining_missing_fields: tuple[FactKey, ...]
     critical_missing_fields: tuple[FactKey, ...]
+    conflict_codes: tuple[FactConflictCode, ...] = ()
 
     @model_validator(mode="after")
     def validate_refined_issue_contract(self) -> RefinedIssue:
@@ -74,6 +76,8 @@ class RefinedIssue(BaseModel):
             raise ValueError("remaining missing fields must be unique")
         if len(self.critical_missing_fields) != len(set(self.critical_missing_fields)):
             raise ValueError("critical missing fields must be unique")
+        if len(self.conflict_codes) != len(set(self.conflict_codes)):
+            raise ValueError("conflict codes must be unique")
         if not set(self.critical_missing_fields).issubset(self.remaining_missing_fields):
             raise ValueError("critical missing fields must remain missing")
 
@@ -94,17 +98,23 @@ class RefinedIssue(BaseModel):
         }.get(self.status)
         if self.status is RefinedIssueStatus.POSSIBLE:
             expected_reason = (
-                IssueRefinementReasonCode.CRITICAL_FACTS_MISSING
+                IssueRefinementReasonCode.CONFLICTING_FACTS
+                if self.conflict_codes
+                else IssueRefinementReasonCode.CRITICAL_FACTS_MISSING
                 if self.critical_missing_fields
                 else IssueRefinementReasonCode.REQUIRED_FACTS_MISSING
             )
         if self.reason_code is not expected_reason:
             raise ValueError("refined status and reason code must be consistent")
 
-        if self.status is RefinedIssueStatus.ACTIVE and self.remaining_missing_fields:
-            raise ValueError("active issue cannot have remaining missing fields")
-        if self.status is RefinedIssueStatus.POSSIBLE and not self.remaining_missing_fields:
-            raise ValueError("possible issue must have remaining missing fields")
+        if self.status is RefinedIssueStatus.ACTIVE and (
+            self.remaining_missing_fields or self.conflict_codes
+        ):
+            raise ValueError("active issue cannot have gaps or conflicts")
+        if self.status is RefinedIssueStatus.POSSIBLE and not (
+            self.remaining_missing_fields or self.conflict_codes
+        ):
+            raise ValueError("possible issue must have gaps or conflicts")
         if (
             self.status
             in {
@@ -162,6 +172,11 @@ class RefinedIssueEvaluator:
                 issue_result,
                 _definition_or_raise(registry, issue_result.issue_code),
                 facts,
+                tuple(
+                    conflict.code
+                    for conflict in expected_missing.conflicts
+                    if conflict.issue_code is issue_result.issue_code
+                ),
             )
             for issue_result in expected_missing.issue_results
         )
@@ -183,9 +198,13 @@ def _refine_supported_issue(
     missing: IssueMissingFactResult,
     definition: IssueDefinition,
     facts: tuple[CaseFact, ...],
+    conflict_codes: tuple[FactConflictCode, ...],
 ) -> RefinedIssue:
     relevant_fact_keys, relevant_facts = _relevant_fact_trace(definition, facts)
-    if missing.critical_missing:
+    if conflict_codes:
+        status = RefinedIssueStatus.POSSIBLE
+        reason = IssueRefinementReasonCode.CONFLICTING_FACTS
+    elif missing.critical_missing:
         status = RefinedIssueStatus.POSSIBLE
         reason = IssueRefinementReasonCode.CRITICAL_FACTS_MISSING
     elif missing.missing_fields:
@@ -204,6 +223,7 @@ def _refine_supported_issue(
         relevant_facts=relevant_facts,
         remaining_missing_fields=missing.missing_fields,
         critical_missing_fields=missing.critical_missing_fields,
+        conflict_codes=conflict_codes,
     )
 
 
@@ -212,15 +232,26 @@ def _relevant_fact_trace(
     facts: tuple[CaseFact, ...],
 ) -> tuple[tuple[FactKey, ...], tuple[CaseFact, ...]]:
     facts_by_key: dict[FactKey, tuple[CaseFact, ...]] = {}
+    trace_keys: list[FactKey] = []
     for requirement in definition.required_facts:
+        trace_keys.append(requirement.fact_key)
+        trace_keys.extend(
+            alternative.fact_key for alternative in requirement.alternative_satisfiers
+        )
+    for branch in definition.conditional_requirement_branches:
+        trace_keys.append(branch.trigger_fact_key)
+        trace_keys.extend(requirement.fact_key for requirement in branch.required_facts)
+    trace_keys.extend(definition.context_fact_keys)
+    ordered_trace_keys = tuple(dict.fromkeys(trace_keys))
+    for fact_key in ordered_trace_keys:
         matches = tuple(
             sorted(
-                (fact for fact in facts if fact.fact_key == requirement.fact_key.value),
+                (fact for fact in facts if fact.fact_key == fact_key.value),
                 key=lambda fact: fact.fact_id,
             )
         )
         if matches:
-            facts_by_key[requirement.fact_key] = matches
+            facts_by_key[fact_key] = matches
     relevant_keys = tuple(facts_by_key)
     relevant_facts = tuple(fact for fact_key in relevant_keys for fact in facts_by_key[fact_key])
     return relevant_keys, relevant_facts

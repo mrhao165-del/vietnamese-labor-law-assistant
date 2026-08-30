@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from vietnamese_labor_law_assistant.decision_support.clarification import (
     ClarificationError,
     ClarificationErrorCode,
+    ClarificationPriorityPolicy,
     ClarificationReasonCode,
     TargetedClarificationBuilder,
 )
@@ -481,6 +482,7 @@ def run_week3_evaluation(
                 missing,
                 previously_requested_fields=case.previously_requested_fields,
                 max_questions=case.max_questions,
+                priority_policy=ClarificationPriorityPolicy.LEGACY_REGISTRY_ORDER,
             )
             predictions.append(
                 Week3EvaluationPrediction(
@@ -525,6 +527,52 @@ def _predictions_by_case(
 
 
 def _registry_for_profile(profile: EvaluationRegistryProfile) -> IssueRegistry:
+    """Return the immutable Week-3 registry snapshot used by historical evidence."""
+
+    registry = _legacy_week3_registry()
+    if profile is EvaluationRegistryProfile.DEFAULT:
+        return registry
+    definitions: list[IssueDefinition] = []
+    for definition in registry.definitions:
+        requirements = definition.required_facts
+        critical_facts = definition.critical_facts
+        if profile is EvaluationRegistryProfile.CONTRACT_TYPE_EXPLICIT_ONLY:
+            requirements = tuple(
+                FactRequirement(
+                    fact_key=requirement.fact_key,
+                    role=requirement.role,
+                    accepted_assertion_modes=(AssertionMode.EXPLICIT,)
+                    if requirement.fact_key is FactKey.CONTRACT_TYPE
+                    else requirement.accepted_assertion_modes,
+                    accepted_verification_statuses=requirement.accepted_verification_statuses,
+                    alternative_satisfiers=requirement.alternative_satisfiers,
+                )
+                for requirement in requirements
+            )
+        elif (
+            profile is EvaluationRegistryProfile.CONTRACT_TYPE_ONLY_CRITICAL
+            and definition.issue_code is IssueCode.CONTRACT_TERM
+        ):
+            critical_facts = (FactKey.CONTRACT_TYPE,)
+        definitions.append(
+            IssueDefinition(
+                issue_code=definition.issue_code,
+                required_facts=requirements,
+                critical_facts=critical_facts,
+                conditional_requirement_branches=definition.conditional_requirement_branches,
+                context_fact_keys=definition.context_fact_keys,
+                conflict_rules=definition.conflict_rules,
+                evidence_needs=definition.evidence_needs,
+                calculator_needs=definition.calculator_needs,
+                applicability_scope=definition.applicability_scope,
+            )
+        )
+    return IssueRegistry(definitions=tuple(definitions))
+
+
+def v1_1_registry_for_profile(profile: EvaluationRegistryProfile) -> IssueRegistry:
+    """Return the corrected v1.1 registry, including one explicit synthetic profile."""
+
     if profile is EvaluationRegistryProfile.DEFAULT:
         return ISSUE_REGISTRY
     definitions: list[IssueDefinition] = []
@@ -540,6 +588,7 @@ def _registry_for_profile(profile: EvaluationRegistryProfile) -> IssueRegistry:
                     if requirement.fact_key is FactKey.CONTRACT_TYPE
                     else requirement.accepted_assertion_modes,
                     accepted_verification_statuses=requirement.accepted_verification_statuses,
+                    alternative_satisfiers=requirement.alternative_satisfiers,
                 )
                 for requirement in requirements
             )
@@ -547,18 +596,83 @@ def _registry_for_profile(profile: EvaluationRegistryProfile) -> IssueRegistry:
             profile is EvaluationRegistryProfile.CONTRACT_TYPE_ONLY_CRITICAL
             and definition.issue_code is IssueCode.CONTRACT_TERM
         ):
+            requirements = (
+                *requirements,
+                FactRequirement(
+                    fact_key=FactKey.CONTRACT_END_DATE,
+                    role=(
+                        "Synthetic evaluation-only fixed-term expiry requirement; "
+                        "it is not a production universal requirement."
+                    ),
+                ),
+            )
             critical_facts = (FactKey.CONTRACT_TYPE,)
         definitions.append(
             IssueDefinition(
                 issue_code=definition.issue_code,
                 required_facts=requirements,
                 critical_facts=critical_facts,
+                conditional_requirement_branches=definition.conditional_requirement_branches,
+                context_fact_keys=definition.context_fact_keys,
+                conflict_rules=definition.conflict_rules,
                 evidence_needs=definition.evidence_needs,
                 calculator_needs=definition.calculator_needs,
                 applicability_scope=definition.applicability_scope,
             )
         )
     return IssueRegistry(definitions=tuple(definitions))
+
+
+def _legacy_week3_registry() -> IssueRegistry:
+    """Snapshot the historical Week-3 universal-date contract without changing evidence."""
+
+    contract = ISSUE_REGISTRY.definitions[0]
+    termination = ISSUE_REGISTRY.definitions[1]
+    return IssueRegistry(
+        definitions=(
+            IssueDefinition(
+                issue_code=contract.issue_code,
+                required_facts=(
+                    FactRequirement(
+                        fact_key=FactKey.CONTRACT_TYPE,
+                        role="Select the bounded Article 20 contract-type rule.",
+                    ),
+                    FactRequirement(
+                        fact_key=FactKey.CONTRACT_START_DATE,
+                        role="Provide the historical Week-3 interval start.",
+                    ),
+                    FactRequirement(
+                        fact_key=FactKey.CONTRACT_END_DATE,
+                        role="Provide the historical Week-3 interval end.",
+                    ),
+                ),
+                critical_facts=(
+                    FactKey.CONTRACT_TYPE,
+                    FactKey.CONTRACT_START_DATE,
+                    FactKey.CONTRACT_END_DATE,
+                ),
+                evidence_needs=contract.evidence_needs,
+                calculator_needs=contract.calculator_needs,
+                applicability_scope=contract.applicability_scope,
+            ),
+            IssueDefinition(
+                issue_code=termination.issue_code,
+                required_facts=tuple(
+                    FactRequirement(
+                        fact_key=requirement.fact_key,
+                        role=requirement.role,
+                        accepted_assertion_modes=requirement.accepted_assertion_modes,
+                        accepted_verification_statuses=(requirement.accepted_verification_statuses),
+                    )
+                    for requirement in termination.required_facts
+                ),
+                critical_facts=termination.critical_facts,
+                evidence_needs=termination.evidence_needs,
+                calculator_needs=termination.calculator_needs,
+                applicability_scope=termination.applicability_scope,
+            ),
+        )
+    )
 
 
 def _candidate_from_code(code: str) -> CandidateIssue:

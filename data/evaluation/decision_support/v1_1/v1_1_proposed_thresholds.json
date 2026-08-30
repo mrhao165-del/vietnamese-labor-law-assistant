@@ -1,0 +1,202 @@
+{
+  "spec_id": "v1_1_week4_complete_candidate_thresholds_proposed",
+  "dataset_id": "decision_support_v1_1_evaluation_candidate",
+  "dataset_path": "data/evaluation/decision_support/v1_1/v1_1_evaluation_candidate.jsonl",
+  "dataset_version": "v1_1_candidate",
+  "split_status": "CANDIDATE_UNFROZEN",
+  "registered_on": "2026-08-29",
+  "registration_status": "PROPOSED_PENDING_HUMAN_APPROVAL",
+  "week3_threshold_source": "data/evaluation/decision_support/v1_1/week3_evaluation_spec.json",
+  "thresholds": {
+    "overall_fact_f1_min": 0.9,
+    "minimum_applicable_fact_field_f1_min": 0.8,
+    "critical_field_recall_min": 1.0,
+    "date_exact_match_min": 1.0,
+    "money_exact_match_min": 1.0,
+    "source_span_accuracy_min": 0.95,
+    "hallucinated_fact_rate_max": 0.0,
+    "candidate_issue_macro_f1_min": 0.9,
+    "critical_issue_recall_min": 1.0,
+    "refined_issue_macro_f1_min": 1.0,
+    "refined_issue_status_accuracy_min": 1.0,
+    "refined_issue_payload_accuracy_min": 1.0,
+    "missing_fact_precision_min": 1.0,
+    "missing_fact_recall_min": 1.0,
+    "duplicate_question_rate_max": 0.0,
+    "critical_fact_leakage_max": 0.0,
+    "graph_route_accuracy_min": 1.0,
+    "graph_state_contract_accuracy_min": 1.0
+  },
+  "threshold_entries": [
+    {
+      "metric": "overall_fact_f1_min",
+      "proposed_threshold": ">= 0.90",
+      "rationale": "Case Intake must recover the large majority of authored facts before a release candidate can be considered.",
+      "applicable_split_cases": "All candidate cases with at least one expected or predicted CaseFact.",
+      "failure_semantics": "Below threshold or N/A blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "minimum_applicable_fact_field_f1_min",
+      "proposed_threshold": ">= 0.80",
+      "rationale": "The aggregate score must not conceal a poorly extracted fact field.",
+      "applicable_split_cases": "Each fact_key having a non-zero expected or predicted denominator.",
+      "failure_semantics": "Any applicable field below threshold, or no applicable fields, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "critical_field_recall_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "A missing critical field can invalidate downstream gating.",
+      "applicable_split_cases": "Candidate cases with authored critical_fact_ids.",
+      "failure_semantics": "Any missed critical fact, or an N/A denominator, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "date_exact_match_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "Date normalization feeds deterministic interval decisions and must be exact.",
+      "applicable_split_cases": "Candidate cases with authored date_fact_ids.",
+      "failure_semantics": "Any non-exact date, or an N/A denominator, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "money_exact_match_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "Money normalization must not introduce numeric drift.",
+      "applicable_split_cases": "Candidate cases with authored money_fact_ids.",
+      "failure_semantics": "Any non-exact money value, or an N/A denominator, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "source_span_accuracy_min",
+      "proposed_threshold": ">= 0.95",
+      "rationale": "Nearly all extracted facts must remain traceable to exact user-message spans.",
+      "applicable_split_cases": "All expected CaseFacts.",
+      "failure_semantics": "Below threshold or N/A blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "hallucinated_fact_rate_max",
+      "proposed_threshold": "<= 0.00",
+      "rationale": "A release candidate must not invent case facts absent from authored labels.",
+      "applicable_split_cases": "All predicted CaseFacts.",
+      "failure_semantics": "Any hallucinated fact, or an N/A denominator, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "candidate_issue_macro_f1_min",
+      "proposed_threshold": ">= 0.90",
+      "rationale": "Macro averaging prevents the two supported IssueCode classes from masking each other.",
+      "applicable_split_cases": "All candidate cases across the complete IssueCode taxonomy.",
+      "failure_semantics": "Below threshold or N/A blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "critical_issue_recall_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "Authored critical preliminary issues must never be omitted.",
+      "applicable_split_cases": "Candidate cases with critical_issue_codes.",
+      "failure_semantics": "Any missed critical issue, or an N/A denominator, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "refined_issue_macro_f1_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "Week-4 refinement is deterministic over a closed typed taxonomy.",
+      "applicable_split_cases": "Successful supported-issue cases, macro-averaged over IssueCode and reachable status.",
+      "failure_semantics": "Any typed refinement mismatch, or an N/A denominator, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "refined_issue_status_accuracy_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "Every expected ACTIVE or POSSIBLE status must match exactly.",
+      "applicable_split_cases": "Every authored refined issue label.",
+      "failure_semantics": "Any wrong status, or an N/A denominator, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "refined_issue_payload_accuracy_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "Typed status alone must not conceal an incorrect reason or missing-field trace.",
+      "applicable_split_cases": "Every authored refined issue label, including reason and remaining/critical missing fields.",
+      "failure_semantics": "Any non-exact refined payload, or an N/A denominator, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "missing_fact_precision_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "Inherited unchanged from the pre-registered deterministic Week-3 gate.",
+      "applicable_split_cases": "Successful missing-fact cases in the v1.1 candidate.",
+      "failure_semantics": "Any false-positive missing field, or an N/A denominator, blocks final PASS.",
+      "provenance": "INHERITED_WEEK3_UNCHANGED"
+    },
+    {
+      "metric": "missing_fact_recall_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "Inherited unchanged from the pre-registered deterministic Week-3 gate.",
+      "applicable_split_cases": "Successful missing-fact cases in the v1.1 candidate.",
+      "failure_semantics": "Any missed missing field, or an N/A denominator, blocks final PASS.",
+      "provenance": "INHERITED_WEEK3_UNCHANGED"
+    },
+    {
+      "metric": "duplicate_question_rate_max",
+      "proposed_threshold": "<= 0.00",
+      "rationale": "Inherited unchanged from the pre-registered deterministic Week-3 gate.",
+      "applicable_split_cases": "All emitted clarification questions, including prior-request history.",
+      "failure_semantics": "Any duplicate question, or an N/A denominator, blocks final PASS.",
+      "provenance": "INHERITED_WEEK3_UNCHANGED"
+    },
+    {
+      "metric": "critical_fact_leakage_max",
+      "proposed_threshold": "<= 0.00",
+      "rationale": "Inherited unchanged; a critical gap must always block substantive readiness.",
+      "applicable_split_cases": "All candidate cases labelled with at least one critical missing fact.",
+      "failure_semantics": "Any gated case marked substantive-ready, or an N/A denominator, blocks final PASS.",
+      "provenance": "INHERITED_WEEK3_UNCHANGED"
+    },
+    {
+      "metric": "graph_route_accuracy_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "The finite CaseGraph route is a deterministic safety contract.",
+      "applicable_split_cases": "All candidate cases.",
+      "failure_semantics": "Any wrong terminal route, or an N/A denominator, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    },
+    {
+      "metric": "graph_state_contract_accuracy_min",
+      "proposed_threshold": ">= 1.00",
+      "rationale": "Every graph terminal must satisfy its typed state invariant.",
+      "applicable_split_cases": "All candidate cases.",
+      "failure_semantics": "Any invalid terminal state, or an N/A denominator, blocks final PASS.",
+      "provenance": "NEW_PROPOSAL"
+    }
+  ],
+  "metric_definitions": {
+    "overall_fact_f1": "Micro F1 over exact per-case (fact_key, fact_type, raw_value) CaseFact signatures.",
+    "fact_field_f1": "F1 computed separately for every applicable fact_key; zero denominators are N/A.",
+    "critical_field_recall": "Recovered authored critical fact signatures divided by authored critical facts.",
+    "date_exact_match": "Exact normalized-value match for authored date_fact_ids.",
+    "money_exact_match": "Exact normalized-value match for authored money_fact_ids.",
+    "source_span_accuracy": "Expected facts whose predicted exact signature also has an identical typed source span, divided by expected facts.",
+    "hallucinated_fact_rate": "Predicted fact signatures absent from the case labels divided by predicted facts.",
+    "candidate_issue_macro_f1": "Binary F1 per supported IssueCode, macro-averaged over applicable classes.",
+    "critical_issue_recall": "Recovered authored critical IssueCode labels divided by authored critical issues.",
+    "refined_issue_macro_f1": "Macro F1 over exact per-case (IssueCode, reachable RefinedIssueStatus) labels.",
+    "refined_issue_status_accuracy": "Exact IssueCode/status matches divided by expected refined issues.",
+    "refined_issue_payload_accuracy": "Exact IssueCode, status, reason, remaining-field, and critical-field payload matches divided by expected refined issues.",
+    "missing_fact_precision": "Exact per-case semantic missing FactKey true positives divided by predicted missing fields.",
+    "missing_fact_recall": "Exact per-case semantic missing FactKey true positives divided by expected missing fields.",
+    "duplicate_question_rate": "Questions whose FactKey repeats in the round or prior-request history divided by emitted questions.",
+    "critical_fact_leakage": "Critical-gap cases marked substantive-ready divided by critical-gap cases.",
+    "graph_route_accuracy": "Cases reaching the exact authored CaseAnalysisStatus divided by candidate cases.",
+    "graph_state_contract_accuracy": "Cases whose typed graph terminal passes all state invariants divided by candidate cases."
+  },
+  "threshold_change_policy": "Do not run FINAL/FROZEN evaluation until a human approves this proposal. Never lower the inherited Week-3 gates. Any later change requires a new versioned pre-registration created before seeing final frozen results.",
+  "changed_after_final_results": false,
+  "human_approved": false,
+  "human_validated": false,
+  "review_status": "PENDING",
+  "frozen_final": false
+}

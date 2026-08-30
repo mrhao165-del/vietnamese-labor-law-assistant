@@ -1,0 +1,47 @@
+{
+  "candidate_sha256": "dc23d32e524cd83f62f37b1ca0771b7955922cecf7cb0fc851a8c5d126ef7341",
+  "correction_contract": {
+    "case_ids": [
+      "dsi-dev-001",
+      "dsi-dev-002",
+      "dsi-dev-003",
+      "dsi-dev-005",
+      "dsi-dev-007",
+      "dsw3-dev-001",
+      "dsw3-dev-002",
+      "dsw3-dev-004",
+      "dsw3-dev-007",
+      "dsw3-dev-015"
+    ],
+    "path": "evaluation/review/decision_support/v1_1/v1_1_correction_targets_for_codex.csv",
+    "sha256": "c8294c36fa1698c49893a3b8e9926ada58e4fbff8ece8b70afdb2f248580ecf1"
+  },
+  "correction_count": 10,
+  "critical_fact_leakage_check": {
+    "blocking_case_count": 16,
+    "critical_fact_leakage": 0.0,
+    "leaked_case_ids": [],
+    "status": "PASS"
+  },
+  "dataset_id": "decision_support_v1_1_evaluation_candidate_corrected",
+  "dataset_path": "data/evaluation/decision_support/v1_1/v1_1_evaluation_candidate_corrected.jsonl",
+  "dataset_version": "v1_1_candidate_corrected",
+  "frozen_final": false,
+  "human_validated": false,
+  "prediction_to_label_leakage_check": {
+    "assessment": "CHECKED_NO_PREDICTION_ARTIFACT_INPUT",
+    "inspected_input_paths": [
+      "data/evaluation/decision_support/v1_1/v1_1_evaluation_candidate.jsonl",
+      "evaluation/review/decision_support/v1_1/v1_1_correction_targets_for_codex.csv"
+    ],
+    "prediction_artifact_inputs": [],
+    "status": "PASS"
+  },
+  "record_count": 26,
+  "release_evidence": false,
+  "review_status": "PENDING",
+  "source_candidate": {
+    "path": "data/evaluation/decision_support/v1_1/v1_1_evaluation_candidate.jsonl",
+    "sha256": "e4e802559f9a3f1c0acecb571ed12327bf474e1f19a4cf0fab5d481c6f19f498"
+  }
+}
