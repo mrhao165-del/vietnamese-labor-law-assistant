@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import ctypes
+import errno
 import os
 import stat
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -591,7 +594,23 @@ def _require_canonical_paths(paths: V11ArtifactPaths) -> None:
 
 
 def _require_no_existing_capture_artifact(paths: V11ArtifactPaths) -> None:
-    for path in (paths.capture_intent, paths.predictions, paths.snapshot_manifest):
+    for path in (
+        paths.capture_intent,
+        paths.predictions,
+        paths.snapshot_manifest,
+        _manifest_staging_path(paths),
+    ):
+        if os.path.lexists(path):
+            raise FileExistsError(f"capture artifact already exists: {path}")
+        _require_safe_output_path(paths.repo_root, path)
+
+
+def _manifest_staging_path(paths: V11ArtifactPaths) -> Path:
+    return paths.snapshot_manifest.with_name(f"{paths.snapshot_manifest.name}.staging")
+
+
+def _require_no_existing_manifest_claim(paths: V11ArtifactPaths) -> None:
+    for path in (paths.snapshot_manifest, _manifest_staging_path(paths)):
         if os.path.lexists(path):
             raise FileExistsError(f"capture artifact already exists: {path}")
         _require_safe_output_path(paths.repo_root, path)
@@ -891,9 +910,7 @@ def _revalidate_execution_boundary(
     _require_prediction_stream_binding(paths, handle, stream_binding)
     if os.fstat(handle.fileno()).st_size:
         raise ValueError("prediction stream was not empty after exclusive claim")
-    if os.path.lexists(paths.snapshot_manifest):
-        raise FileExistsError(f"capture artifact already exists: {paths.snapshot_manifest}")
-    _require_safe_output_path(paths.repo_root, paths.snapshot_manifest)
+    _require_no_existing_manifest_claim(paths)
 
     snapshot = _snapshot_governed_files(paths)
     manifest_file = snapshot.captured(paths.freeze_manifest, paths.repo_root)
@@ -977,8 +994,7 @@ def _revalidate_execution_boundary(
     if final_intent.identity != intent.identity:
         raise ValueError("capture intent identity changed during execution revalidation")
     _require_prediction_stream_binding(paths, handle, stream_binding)
-    if os.path.lexists(paths.snapshot_manifest):
-        raise FileExistsError(f"capture artifact already exists: {paths.snapshot_manifest}")
+    _require_no_existing_manifest_claim(paths)
     return plan.runtime_cases
 
 
@@ -1175,10 +1191,36 @@ def _publish_prediction_manifest(
     success_count: int,
     failure_count: int,
 ) -> None:
-    """Revalidate exact final prediction bytes and publish through the bound parent."""
+    """Durably stage, atomically claim, and revalidate the final manifest."""
 
     manifest_payload = canonical_json_bytes(manifest.model_dump(mode="json"))
     _require_capture_output_directory_binding(paths, output_directory)
+    descriptor = _open_bound_manifest_staging_descriptor(paths, output_directory)
+    created_identity = _FileIdentity.from_stat(os.fstat(descriptor))
+    staging_path = _manifest_staging_path(paths)
+    try:
+        if not stat.S_ISREG(created_identity.mode):
+            raise ValueError("prediction snapshot manifest staging claim is not a regular file")
+        _require_capture_output_directory_binding(paths, output_directory)
+        _require_prediction_stream_binding(paths, prediction_handle, stream_binding)
+        path_identity = _path_identity(staging_path)
+        if not _same_filesystem_object(path_identity, created_identity):
+            raise ValueError("prediction snapshot manifest staging path identity changed")
+    except Exception:
+        os.close(descriptor)
+        raise
+
+    with os.fdopen(descriptor, "wb") as handle:
+        handle.write(manifest_payload)
+        handle.flush()
+        os.fsync(handle.fileno())
+
+    staged_manifest = _snapshot_file(paths.repo_root, staging_path)
+    if not _same_filesystem_object(staged_manifest.identity, created_identity):
+        raise ValueError("prediction snapshot manifest staging path identity changed")
+    if staged_manifest.payload != manifest_payload:
+        raise ValueError("prediction snapshot manifest staging content changed")
+
     publication_checksum = _validate_final_prediction_stream(
         paths,
         prediction_handle,
@@ -1190,25 +1232,13 @@ def _publish_prediction_manifest(
     )
     if publication_checksum != manifest.predictions_sha256:
         raise ValueError("prediction stream checksum changed before manifest publication")
-
-    descriptor = _open_bound_manifest_descriptor(paths, output_directory)
-    created_identity = _FileIdentity.from_stat(os.fstat(descriptor))
-    try:
-        if not stat.S_ISREG(created_identity.mode):
-            raise ValueError("prediction snapshot manifest is not a regular file")
-        _require_capture_output_directory_binding(paths, output_directory)
-        _require_prediction_stream_binding(paths, prediction_handle, stream_binding)
-        path_identity = _path_identity(paths.snapshot_manifest)
-        if not _same_filesystem_object(path_identity, created_identity):
-            raise ValueError("prediction snapshot manifest path identity changed")
-    except Exception:
-        os.close(descriptor)
-        raise
-
-    with os.fdopen(descriptor, "wb") as handle:
-        handle.write(manifest_payload)
-        handle.flush()
-        os.fsync(handle.fileno())
+    _require_capture_output_directory_binding(paths, output_directory)
+    _atomic_claim_manifest_name(
+        paths,
+        output_directory,
+        staged_manifest.identity,
+        expected_payload=manifest_payload,
+    )
 
     persisted_checksum = _validate_final_prediction_stream(
         paths,
@@ -1223,16 +1253,19 @@ def _publish_prediction_manifest(
         raise ValueError("prediction stream checksum changed during manifest publication")
     _require_capture_output_directory_binding(paths, output_directory)
     persisted_manifest = _snapshot_file(paths.repo_root, paths.snapshot_manifest)
-    if not _same_filesystem_object(persisted_manifest.identity, created_identity):
+    if not _same_filesystem_object(persisted_manifest.identity, staged_manifest.identity):
         raise ValueError("prediction snapshot manifest path identity changed")
     if persisted_manifest.payload != manifest_payload:
         raise ValueError("prediction snapshot manifest content changed during publication")
+    if os.path.lexists(staging_path):
+        raise ValueError("prediction snapshot manifest staging claim reappeared")
 
 
-def _open_bound_manifest_descriptor(
+def _open_bound_manifest_staging_descriptor(
     paths: V11ArtifactPaths,
     output_directory: _CaptureOutputDirectoryBinding,
 ) -> int:
+    staging_path = _manifest_staging_path(paths)
     flags = (
         os.O_WRONLY
         | os.O_CREAT
@@ -1243,14 +1276,114 @@ def _open_bound_manifest_descriptor(
     )
     if output_directory.descriptor is not None:
         return os.open(
-            paths.snapshot_manifest.name,
+            staging_path.name,
             flags,
             0o600,
             dir_fd=output_directory.descriptor,
         )
     if os.name != "nt":
         raise OSError("safe directory-relative manifest publication is unavailable")
-    return os.open(paths.snapshot_manifest, flags, 0o600)
+    return os.open(staging_path, flags, 0o600)
+
+
+def _atomic_claim_manifest_name(
+    paths: V11ArtifactPaths,
+    output_directory: _CaptureOutputDirectoryBinding,
+    staging_identity: _FileIdentity,
+    *,
+    expected_payload: bytes,
+) -> None:
+    """Consume the durable staging name through an atomic no-replace claim."""
+
+    staging_path = _manifest_staging_path(paths)
+    _require_capture_output_directory_binding(paths, output_directory)
+    staged_manifest = _snapshot_file(paths.repo_root, staging_path)
+    if not _same_filesystem_object(staged_manifest.identity, staging_identity):
+        raise ValueError("prediction snapshot manifest staging path identity changed")
+    if staged_manifest.payload != expected_payload:
+        raise ValueError("prediction snapshot manifest staging content changed")
+    if os.path.lexists(paths.snapshot_manifest):
+        raise FileExistsError(f"capture artifact already exists: {paths.snapshot_manifest}")
+    _require_safe_output_path(paths.repo_root, paths.snapshot_manifest)
+
+    _atomic_no_replace_manifest(paths, output_directory)
+
+    if output_directory.descriptor is not None:
+        os.fsync(output_directory.descriptor)
+    _require_capture_output_directory_binding(paths, output_directory)
+    if os.path.lexists(staging_path):
+        raise ValueError("prediction snapshot manifest staging claim was not consumed")
+    published = _snapshot_file(paths.repo_root, paths.snapshot_manifest)
+    if not _same_filesystem_object(published.identity, staging_identity):
+        raise ValueError("prediction snapshot manifest path identity changed")
+    if published.payload != expected_payload:
+        raise ValueError("prediction snapshot manifest content changed during atomic claim")
+
+
+def _atomic_no_replace_manifest(
+    paths: V11ArtifactPaths,
+    output_directory: _CaptureOutputDirectoryBinding,
+) -> None:
+    """Atomically rename staging to final without replacing an existing claim."""
+
+    staging_path = _manifest_staging_path(paths)
+    if os.name == "posix":
+        if output_directory.descriptor is None:
+            raise OSError("atomic no-replace manifest publication is unavailable")
+        _renameat2_no_replace(
+            output_directory.descriptor,
+            staging_path.name,
+            paths.snapshot_manifest.name,
+        )
+        return
+    if os.name == "nt":
+        # Unlike os.replace(), os.rename() on Windows atomically refuses an
+        # existing destination instead of overwriting its write-once claim.
+        os.rename(staging_path, paths.snapshot_manifest)
+        return
+    raise OSError("atomic no-replace manifest publication is unavailable")
+
+
+def _renameat2_no_replace(
+    directory_descriptor: int,
+    source_name: str,
+    destination_name: str,
+) -> None:
+    if not sys.platform.startswith("linux"):
+        raise OSError(
+            errno.ENOTSUP,
+            "atomic no-replace manifest publication is unavailable",
+        )
+
+    runtime = ctypes.CDLL(None, use_errno=True)
+    renameat2 = getattr(runtime, "renameat2", None)
+    if renameat2 is None:
+        raise OSError(
+            errno.ENOTSUP,
+            "atomic no-replace manifest publication is unavailable",
+        )
+    renameat2.argtypes = (
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_uint,
+    )
+    renameat2.restype = ctypes.c_int
+    rename_no_replace = 1
+    result = renameat2(
+        directory_descriptor,
+        os.fsencode(source_name),
+        directory_descriptor,
+        os.fsencode(destination_name),
+        rename_no_replace,
+    )
+    if result == 0:
+        return
+    error_code = ctypes.get_errno()
+    if error_code == errno.EEXIST:
+        raise FileExistsError(error_code, os.strerror(error_code), destination_name)
+    raise OSError(error_code, os.strerror(error_code), destination_name)
 
 
 def _capture_start_timestamp(value: datetime | None) -> datetime:

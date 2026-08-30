@@ -8,7 +8,7 @@ import tempfile
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
-from typing import BinaryIO
+from typing import BinaryIO, cast
 
 import pytest
 from pydantic import SecretStr
@@ -752,7 +752,9 @@ async def test_capture_constructs_production_extractor_and_fsyncs_each_canonical
     assert [record.case_id for record in records] == [case.case_id for case in plan.runtime_cases]
     assert all(record.status == "SUCCESS" for record in records)
     assert sha256_file(paths.predictions) == manifest.predictions_sha256
-    assert len(fsync_calls) == 28  # intent + 26 prediction rows + final manifest
+    assert not _manifest_staging_path(paths).exists()
+    expected_fsync_count = 29 if os.name == "posix" else 28
+    assert len(fsync_calls) == expected_fsync_count
     assert paths.predictions.read_bytes() == b"".join(
         canonical_json_bytes(record.model_dump(mode="json")) for record in records
     )
@@ -1408,6 +1410,7 @@ async def test_capture_preserves_durable_manifest_when_prediction_drifts_after_f
     manifest_bytes = paths.snapshot_manifest.read_bytes()
     persisted = capture_module.V11PredictionSnapshotManifest.model_validate_json(manifest_bytes)
     assert manifest_bytes == canonical_json_bytes(persisted.model_dump(mode="json"))
+    assert not _manifest_staging_path(paths).exists()
     assert persisted.status == "COMPLETE"
     assert persisted.success_count == 26
     assert persisted.failure_count == 0
@@ -1504,6 +1507,222 @@ async def test_capture_never_deletes_unrelated_manifest_substituted_at_cleanup_s
     assert persisted.status == "COMPLETE"
 
 
+@pytest.mark.parametrize("failure_phase", ("write", "flush", "fsync"))
+@pytest.mark.asyncio
+async def test_capture_staging_io_failure_never_publishes_official_manifest(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+    failure_phase: str,
+) -> None:
+    paths, plan, settings = ready_capture
+    staging = _manifest_staging_path(paths)
+    actual_fdopen = os.fdopen
+    actual_fsync = os.fsync
+
+    def failing_fdopen(descriptor: int, mode: str) -> BinaryIO | _FailingStageHandle:
+        handle = cast(BinaryIO, actual_fdopen(descriptor, mode))
+        if failure_phase in {"write", "flush"} and _descriptor_matches_path(descriptor, staging):
+            return _FailingStageHandle(handle, failure_phase)
+        return handle
+
+    def failing_fsync(descriptor: int) -> None:
+        if failure_phase == "fsync" and _descriptor_matches_path(descriptor, staging):
+            raise OSError("simulated manifest staging fsync failure")
+        actual_fsync(descriptor)
+
+    class SuccessfulExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(capture_module.os, "fdopen", failing_fdopen)
+    monkeypatch.setattr(capture_module.os, "fsync", failing_fsync)
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        SuccessfulExtractor,
+    )
+
+    with pytest.raises(OSError, match=f"simulated manifest staging {failure_phase} failure"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert staging.exists()
+    assert not paths.snapshot_manifest.exists()
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+
+@pytest.mark.asyncio
+async def test_capture_atomic_final_name_race_preserves_stage_and_unrelated_final(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    staging = _manifest_staging_path(paths)
+    unrelated_bytes = b'{"owner":"unrelated-final","must_survive":true}\n'
+    actual_atomic_no_replace = getattr(
+        capture_module,
+        "_atomic_no_replace_manifest",
+        None,
+    )
+
+    def racing_atomic_no_replace(
+        actual_paths: V11ArtifactPaths,
+        output_directory: capture_module._CaptureOutputDirectoryBinding,
+    ) -> None:
+        actual_paths.snapshot_manifest.write_bytes(unrelated_bytes)
+        if actual_atomic_no_replace is None:
+            raise AssertionError("production did not attempt atomic final-name claim")
+        actual_atomic_no_replace(actual_paths, output_directory)
+
+    class SuccessfulExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(
+        capture_module,
+        "_atomic_no_replace_manifest",
+        racing_atomic_no_replace,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        SuccessfulExtractor,
+    )
+
+    with pytest.raises(FileExistsError):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert staging.exists()
+    assert paths.snapshot_manifest.read_bytes() == unrelated_bytes
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+    assert paths.snapshot_manifest.read_bytes() == unrelated_bytes
+
+
+@pytest.mark.asyncio
+async def test_capture_fails_closed_when_atomic_no_replace_is_unavailable(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    staging = _manifest_staging_path(paths)
+
+    def unavailable_atomic_no_replace(
+        actual_paths: V11ArtifactPaths,
+        output_directory: capture_module._CaptureOutputDirectoryBinding,
+    ) -> None:
+        raise OSError("atomic no-replace manifest publication is unavailable")
+
+    class SuccessfulExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(
+        capture_module,
+        "_atomic_no_replace_manifest",
+        unavailable_atomic_no_replace,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        SuccessfulExtractor,
+    )
+
+    with pytest.raises(OSError, match="atomic no-replace manifest publication is unavailable"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert staging.exists()
+    assert not paths.snapshot_manifest.exists()
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+
+def test_preflight_rejects_leftover_manifest_staging_claim(
+    captured_paths: V11ArtifactPaths,
+) -> None:
+    staging = _manifest_staging_path(captured_paths)
+    staging.parent.mkdir(parents=True, exist_ok=True)
+    staging.write_bytes(b"durable staging audit evidence\n")
+
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        preflight_v1_1_capture(
+            captured_paths,
+            configured_settings(),
+            project_author_name="mrhao165-del",
+            repository_state=capture_repository_state(captured_paths),
+        )
+
+
+@pytest.mark.asyncio
+async def test_capture_rejects_leftover_manifest_staging_before_extractor(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    staging = _manifest_staging_path(paths)
+    staging.write_bytes(b"durable staging audit evidence\n")
+
+    class ForbiddenExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            raise AssertionError("leftover staging must block before extractor construction")
+
+    monkeypatch.setattr(capture_module, "OpenAIStructuredCaseIntakeExtractor", ForbiddenExtractor)
+
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert staging.read_bytes() == b"durable staging audit evidence\n"
+    assert not paths.capture_intent.exists()
+    assert not paths.predictions.exists()
+    assert not paths.snapshot_manifest.exists()
+
+
 @pytest.mark.skipif(
     os.name != "posix",
     reason="POSIX-only: replacing an open prediction pathname is denied on Windows",
@@ -1525,7 +1744,7 @@ async def test_capture_rejects_real_posix_prediction_replacement_before_publicat
         dir_fd: int | None = None,
     ) -> int:
         nonlocal replaced
-        if path == paths.snapshot_manifest.name and dir_fd is not None:
+        if path == _manifest_staging_path(paths).name and dir_fd is not None:
             replacement = paths.predictions.with_suffix(".replacement")
             replacement.write_bytes(paths.predictions.read_bytes())
             os.replace(replacement, paths.predictions)
@@ -1562,7 +1781,8 @@ async def test_capture_rejects_real_posix_prediction_replacement_before_publicat
 
     assert replaced
     assert paths.predictions.exists()
-    assert paths.snapshot_manifest.read_bytes() == b""
+    assert not paths.snapshot_manifest.exists()
+    assert _manifest_staging_path(paths).read_bytes() == b""
     with pytest.raises(FileExistsError, match="capture artifact already exists"):
         await capture_v1_1_predictions(
             paths,
@@ -1595,7 +1815,7 @@ async def test_capture_rejects_real_posix_parent_substitution_before_publication
         dir_fd: int | None = None,
     ) -> int:
         nonlocal substituted
-        if path == paths.snapshot_manifest.name and dir_fd is not None:
+        if path == _manifest_staging_path(paths).name and dir_fd is not None:
             original_parent.rename(moved_parent)
             original_parent.mkdir(parents=True)
             shutil.copyfile(moved_parent / paths.predictions.name, paths.predictions)
@@ -1633,7 +1853,8 @@ async def test_capture_rejects_real_posix_parent_substitution_before_publication
     assert substituted
     assert paths.predictions.exists()
     assert not paths.snapshot_manifest.exists()
-    assert (moved_parent / paths.snapshot_manifest.name).read_bytes() == b""
+    assert not (moved_parent / paths.snapshot_manifest.name).exists()
+    assert (moved_parent / _manifest_staging_path(paths).name).read_bytes() == b""
     with pytest.raises(FileExistsError, match="capture artifact already exists"):
         await capture_v1_1_predictions(
             paths,
@@ -1815,6 +2036,51 @@ def _recursive_numbers(value: object) -> list[float]:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return []
     return [float(value)]
+
+
+def _manifest_staging_path(paths: V11ArtifactPaths) -> Path:
+    return paths.snapshot_manifest.with_name(f"{paths.snapshot_manifest.name}.staging")
+
+
+def _descriptor_matches_path(descriptor: int, path: Path) -> bool:
+    if not os.path.lexists(path):
+        return False
+    descriptor_stat = os.fstat(descriptor)
+    path_stat = os.lstat(path)
+    return (descriptor_stat.st_dev, descriptor_stat.st_ino) == (
+        path_stat.st_dev,
+        path_stat.st_ino,
+    )
+
+
+class _FailingStageHandle:
+    def __init__(self, wrapped: BinaryIO, phase: str) -> None:
+        self._wrapped = wrapped
+        self._phase = phase
+
+    def __enter__(self) -> _FailingStageHandle:
+        return self
+
+    def __exit__(
+        self,
+        exception_type: object,
+        exception: object,
+        traceback: object,
+    ) -> None:
+        self._wrapped.close()
+
+    def write(self, payload: bytes) -> int:
+        if self._phase == "write":
+            raise OSError("simulated manifest staging write failure")
+        return self._wrapped.write(payload)
+
+    def flush(self) -> None:
+        if self._phase == "flush":
+            raise OSError("simulated manifest staging flush failure")
+        self._wrapped.flush()
+
+    def fileno(self) -> int:
+        return self._wrapped.fileno()
 
 
 def _assert_empty_claimed_failure(paths: V11ArtifactPaths) -> None:
