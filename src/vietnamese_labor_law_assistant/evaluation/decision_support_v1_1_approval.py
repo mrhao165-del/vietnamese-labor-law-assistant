@@ -19,6 +19,8 @@ from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1 import (
     V11ReviewValidation,
     V11ThresholdSpec,
     load_v1_1_threshold_spec,
+    load_v1_1_threshold_spec_bytes,
+    resolve_v1_1_week3_threshold_source,
     validate_v1_1_review_packet,
 )
 from vietnamese_labor_law_assistant.evaluation.review_policy import (
@@ -171,24 +173,56 @@ def validate_v1_1_threshold_approval(
 ) -> V11ThresholdApprovalValidation:
     """Validate the approval identity, state, and unchanged threshold checksums."""
 
+    try:
+        threshold_spec_bytes = threshold_spec_path.read_bytes()
+        unresolved_spec = V11ThresholdSpec.model_validate_json(threshold_spec_bytes)
+        inherited_path = resolve_v1_1_week3_threshold_source(
+            unresolved_spec,
+            repo_root=repo_root,
+        )
+        inherited_threshold_source_bytes = inherited_path.read_bytes()
+        approval_bytes = approval_path.read_bytes()
+    except (OSError, ValueError) as exc:
+        return _failed_threshold_validation(f"invalid threshold specification: {exc}")
+    return validate_v1_1_threshold_approval_bytes(
+        threshold_spec_bytes,
+        approval_bytes,
+        inherited_threshold_source_bytes=inherited_threshold_source_bytes,
+        project_author_name=project_author_name,
+        threshold_spec_identity=threshold_spec_identity or threshold_spec_path.as_posix(),
+    )
+
+
+def validate_v1_1_threshold_approval_bytes(
+    threshold_spec_bytes: bytes,
+    approval_bytes: bytes,
+    *,
+    inherited_threshold_source_bytes: bytes,
+    project_author_name: str,
+    threshold_spec_identity: str,
+) -> V11ThresholdApprovalValidation:
+    """Validate approval evidence from one captured set of governed payloads."""
+
     errors: list[str] = []
     try:
-        spec = load_v1_1_threshold_spec(threshold_spec_path, repo_root=repo_root)
+        spec = load_v1_1_threshold_spec_bytes(
+            threshold_spec_bytes,
+            inherited_threshold_source_bytes=inherited_threshold_source_bytes,
+        )
     except (OSError, ValueError) as exc:
         return _failed_threshold_validation(f"invalid threshold specification: {exc}")
     try:
-        evidence = V11ThresholdApprovalEvidence.model_validate_json(
-            approval_path.read_text(encoding="utf-8")
-        )
+        evidence = V11ThresholdApprovalEvidence.model_validate_json(approval_bytes)
     except (OSError, ValueError) as exc:
         return _failed_threshold_validation(f"invalid threshold approval evidence: {exc}")
 
-    spec_checksum_matches = evidence.threshold_spec_sha256 == _file_sha256(threshold_spec_path)
+    spec_checksum_matches = (
+        evidence.threshold_spec_sha256 == hashlib.sha256(threshold_spec_bytes).hexdigest()
+    )
     threshold_values_match = evidence.thresholds_sha256 == _thresholds_sha256(spec)
     if evidence.spec_id != spec.spec_id:
         errors.append("approval spec_id differs from the registered proposal")
-    expected_identity = threshold_spec_identity or threshold_spec_path.as_posix()
-    if evidence.threshold_spec_path != expected_identity:
+    if evidence.threshold_spec_path != threshold_spec_identity:
         errors.append("approval threshold_spec_path differs from the validated proposal")
     if not spec_checksum_matches:
         errors.append("threshold specification checksum differs from the approved proposal")

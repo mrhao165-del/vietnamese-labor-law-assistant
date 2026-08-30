@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import shutil
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -417,6 +419,37 @@ def test_preflight_rechecks_capture_artifact_absence_before_return(
         )
 
 
+@pytest.mark.parametrize("artifact_name", ("capture_intent", "predictions", "snapshot_manifest"))
+def test_preflight_makes_output_absence_the_final_check(
+    captured_paths: V11ArtifactPaths,
+    artifact_name: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clean = capture_repository_state(captured_paths)
+    observations = 0
+
+    def observe_repository_state(root: Path) -> RepositoryState:
+        nonlocal observations
+        assert root == captured_paths.repo_root
+        observations += 1
+        if observations == 2:
+            write_exclusive(getattr(captured_paths, artifact_name), b"{}\n")
+        return clean
+
+    monkeypatch.setattr(
+        capture_module,
+        "inspect_repository_state",
+        observe_repository_state,
+    )
+
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        preflight_v1_1_capture(
+            captured_paths,
+            configured_settings(),
+            project_author_name="mrhao165-del",
+        )
+
+
 @pytest.mark.parametrize("target_kind", ("frozen_dataset", "freeze_manifest", "code_file"))
 def test_preflight_rejects_file_mutated_and_restored_during_validation(
     captured_paths: V11ArtifactPaths,
@@ -449,6 +482,93 @@ def test_preflight_rejects_file_mutated_and_restored_during_validation(
             project_author_name="mrhao165-del",
             repository_state=capture_repository_state(captured_paths),
         )
+
+
+def test_preflight_rejects_metadata_preserving_same_size_mutation(
+    captured_paths: V11ArtifactPaths,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = captured_paths.frozen_dataset
+    original_bytes = target.read_bytes()
+    original_stat = target.stat()
+    original = capture_module.candidate_quality_report
+    mutated = False
+
+    def mutate_with_restored_metadata(cases: object) -> object:
+        nonlocal mutated
+        if not mutated:
+            mutated = True
+            replacement = bytes((original_bytes[0] ^ 1,)) + original_bytes[1:]
+            target.write_bytes(replacement)
+            os.utime(
+                target,
+                ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns),
+            )
+        return original(cases)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(
+        capture_module,
+        "candidate_quality_report",
+        mutate_with_restored_metadata,
+    )
+
+    with pytest.raises(ValueError, match="governed file bytes changed"):
+        preflight_v1_1_capture(
+            captured_paths,
+            configured_settings(),
+            project_author_name="mrhao165-del",
+            repository_state=capture_repository_state(captured_paths),
+        )
+
+
+def test_preflight_performs_only_reads_and_in_memory_reconstruction(
+    captured_paths: V11ArtifactPaths,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original_open = Path.open
+    original_os_open = os.open
+
+    def reject_temporary_directory(*args: object, **kwargs: object) -> object:
+        raise AssertionError("preflight must not create a temporary directory")
+
+    def reject_directory_creation(*args: object, **kwargs: object) -> None:
+        raise AssertionError("preflight must not create directories")
+
+    def allow_os_reads_only(
+        path: str | bytes | os.PathLike[str] | os.PathLike[bytes],
+        flags: int,
+        mode: int = 0o777,
+        *,
+        dir_fd: int | None = None,
+    ) -> int:
+        write_flags = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_APPEND | os.O_TRUNC
+        if flags & write_flags:
+            raise AssertionError("preflight must not open files for writing")
+        return original_os_open(path, flags, mode, dir_fd=dir_fd)
+
+    def allow_reads_only(
+        path: Path,
+        mode: str = "r",
+        *args: object,
+        **kwargs: object,
+    ) -> object:
+        if any(flag in mode for flag in "wax+"):
+            raise AssertionError("preflight must not open files for writing")
+        return original_open(path, mode, *args, **kwargs)  # type: ignore
+
+    monkeypatch.setattr(tempfile, "TemporaryDirectory", reject_temporary_directory)
+    monkeypatch.setattr(Path, "mkdir", reject_directory_creation)
+    monkeypatch.setattr(Path, "open", allow_reads_only)
+    monkeypatch.setattr(os, "open", allow_os_reads_only)
+
+    plan = preflight_v1_1_capture(
+        captured_paths,
+        configured_settings(),
+        project_author_name="mrhao165-del",
+        repository_state=capture_repository_state(captured_paths),
+    )
+
+    assert len(plan.runtime_cases) == 26
 
 
 def test_preflight_rechecks_repository_state_before_return(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
@@ -12,15 +13,15 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1 import (
     V11EvaluationCandidateCase,
+    V11ThresholdSpec,
     candidate_quality_report,
-    load_v1_1_candidate,
-    load_v1_1_threshold_spec,
+    load_v1_1_candidate_bytes,
     resolve_v1_1_week3_threshold_source,
-    validate_v1_1_review_packet,
+    validate_v1_1_review_packet_bytes,
 )
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_approval import (
     V11ThresholdApprovalEvidence,
-    validate_v1_1_threshold_approval,
+    validate_v1_1_threshold_approval_bytes,
 )
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_artifacts import (
     V11_FREEZE_CODE_RELATIVE_PATHS,
@@ -30,7 +31,6 @@ from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_artifacts i
     inspect_repository_state,
     require_pre_freeze_repository_state,
     sha256_bytes,
-    sha256_file,
     write_exclusive,
 )
 
@@ -91,9 +91,47 @@ def prepare_v1_1_freeze(
 ) -> V11FreezeBundle:
     """Validate every immutable prerequisite and build, but do not write, a frozen bundle."""
 
+    threshold_spec_bytes = paths.threshold_spec.read_bytes()
+    unresolved_spec = V11ThresholdSpec.model_validate_json(threshold_spec_bytes)
+    evaluation_spec_path = resolve_v1_1_week3_threshold_source(
+        unresolved_spec,
+        repo_root=paths.repo_root,
+    )
+    return prepare_v1_1_freeze_from_bytes(
+        corrected_candidate_bytes=paths.corrected_candidate.read_bytes(),
+        review_packet_bytes=paths.review_packet.read_bytes(),
+        threshold_spec_bytes=threshold_spec_bytes,
+        threshold_approval_bytes=paths.threshold_approval.read_bytes(),
+        inherited_evaluation_spec_bytes=evaluation_spec_path.read_bytes(),
+        code_file_bytes={
+            relative_path: (paths.repo_root / relative_path).read_bytes()
+            for relative_path in V11_FREEZE_CODE_RELATIVE_PATHS
+        },
+        threshold_spec_identity=paths.threshold_spec.relative_to(paths.repo_root).as_posix(),
+        project_author_name=project_author_name,
+        repository_state=repository_state,
+        frozen_at=frozen_at,
+    )
+
+
+def prepare_v1_1_freeze_from_bytes(
+    *,
+    corrected_candidate_bytes: bytes,
+    review_packet_bytes: bytes,
+    threshold_spec_bytes: bytes,
+    threshold_approval_bytes: bytes,
+    inherited_evaluation_spec_bytes: bytes,
+    code_file_bytes: Mapping[str, bytes],
+    threshold_spec_identity: str,
+    project_author_name: str,
+    repository_state: RepositoryState,
+    frozen_at: datetime | None = None,
+) -> V11FreezeBundle:
+    """Build a freeze bundle from one captured, wholly in-memory input set."""
+
     require_pre_freeze_repository_state(repository_state)
     frozen_timestamp = _timezone_aware_timestamp(frozen_at, name="frozen timestamp")
-    cases = load_v1_1_candidate(paths.corrected_candidate)
+    cases = load_v1_1_candidate_bytes(corrected_candidate_bytes)
     if len(cases) != 26:
         raise ValueError("frozen v1.1 evaluation requires exactly 26 cases")
     quality = candidate_quality_report(cases)
@@ -104,37 +142,33 @@ def prepare_v1_1_freeze(
     ):
         raise ValueError("candidate quality or prediction-input audit failed canonical validation")
 
-    review = validate_v1_1_review_packet(
+    review = validate_v1_1_review_packet_bytes(
         cases,
-        paths.review_packet,
+        review_packet_bytes,
         project_author_name=project_author_name,
     )
     if not review.policy_satisfied or review.total_rows != 26 or review.pass_count != 26:
         raise ValueError("review packet failed canonical validation: " + "; ".join(review.errors))
-    reviewed_at = _review_timestamp(paths.review_packet)
+    reviewed_at = _review_timestamp_bytes(review_packet_bytes)
 
-    threshold_identity = paths.threshold_spec.relative_to(paths.repo_root).as_posix()
-    threshold_validation = validate_v1_1_threshold_approval(
-        paths.threshold_spec,
-        paths.threshold_approval,
+    threshold_validation = validate_v1_1_threshold_approval_bytes(
+        threshold_spec_bytes,
+        threshold_approval_bytes,
+        inherited_threshold_source_bytes=inherited_evaluation_spec_bytes,
         project_author_name=project_author_name,
-        threshold_spec_identity=threshold_identity,
-        repo_root=paths.repo_root,
+        threshold_spec_identity=threshold_spec_identity,
     )
-    if not threshold_validation.policy_satisfied or not _is_canonical_approval_bytes(
-        paths.threshold_approval
-    ):
+    canonical_approval = _is_canonical_approval_payload(threshold_approval_bytes)
+    if not threshold_validation.policy_satisfied or not canonical_approval:
         errors = list(threshold_validation.errors)
-        if not _is_canonical_approval_bytes(paths.threshold_approval):
+        if not canonical_approval:
             errors.append("threshold approval bytes are not canonical")
         raise ValueError("threshold approval failed canonical validation: " + "; ".join(errors))
-    approval = V11ThresholdApprovalEvidence.model_validate_json(
-        paths.threshold_approval.read_text(encoding="utf-8")
-    )
+    approval = V11ThresholdApprovalEvidence.model_validate_json(threshold_approval_bytes)
     if approval.approved_at >= frozen_timestamp:
         raise ValueError("threshold approval must precede frozen timestamp")
 
-    review_sha256 = sha256_file(paths.review_packet)
+    review_sha256 = sha256_bytes(review_packet_bytes)
     frozen_cases = tuple(
         V11FrozenEvaluationCase.model_validate(
             {
@@ -151,25 +185,22 @@ def prepare_v1_1_freeze(
     dataset_bytes = b"".join(
         canonical_json_bytes(case.model_dump(mode="json")) for case in frozen_cases
     )
-    threshold_spec = load_v1_1_threshold_spec(paths.threshold_spec, repo_root=paths.repo_root)
-    evaluation_spec_path = resolve_v1_1_week3_threshold_source(
-        threshold_spec,
-        repo_root=paths.repo_root,
-    )
+    if set(code_file_bytes) != set(V11_FREEZE_CODE_RELATIVE_PATHS):
+        raise ValueError("freeze code-file identity set differs from the canonical contract")
     manifest = V11FrozenDatasetManifest(
         ordered_case_ids_sha256=sha256_bytes(
             canonical_json_bytes([case.case_id for case in frozen_cases])
         ),
-        corrected_candidate_sha256=sha256_file(paths.corrected_candidate),
+        corrected_candidate_sha256=sha256_bytes(corrected_candidate_bytes),
         frozen_dataset_sha256=sha256_bytes(dataset_bytes),
         review_packet_sha256=review_sha256,
         reviewed_at=reviewed_at,
-        threshold_spec_sha256=sha256_file(paths.threshold_spec),
-        threshold_approval_sha256=sha256_file(paths.threshold_approval),
+        threshold_spec_sha256=sha256_bytes(threshold_spec_bytes),
+        threshold_approval_sha256=sha256_bytes(threshold_approval_bytes),
         threshold_approved_at=approval.approved_at,
-        evaluation_spec_sha256=sha256_file(evaluation_spec_path),
+        evaluation_spec_sha256=sha256_bytes(inherited_evaluation_spec_bytes),
         code_file_sha256={
-            relative_path: sha256_file(paths.repo_root / relative_path)
+            relative_path: sha256_bytes(code_file_bytes[relative_path])
             for relative_path in V11_FREEZE_CODE_RELATIVE_PATHS
         },
         git_commit_sha=repository_state.commit_sha,
@@ -205,9 +236,15 @@ def freeze_v1_1_evaluation(
 def load_v1_1_frozen_dataset(path: Path) -> list[V11FrozenEvaluationCase]:
     """Load final rows and reject empty or duplicate frozen case identifiers."""
 
+    return load_v1_1_frozen_dataset_bytes(path.read_bytes())
+
+
+def load_v1_1_frozen_dataset_bytes(payload: bytes) -> list[V11FrozenEvaluationCase]:
+    """Load final rows from one already-captured byte payload."""
+
     cases = [
         V11FrozenEvaluationCase.model_validate_json(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
+        for line in payload.splitlines()
         if line.strip()
     ]
     case_ids = [case.case_id for case in cases]
@@ -217,8 +254,12 @@ def load_v1_1_frozen_dataset(path: Path) -> list[V11FrozenEvaluationCase]:
 
 
 def _review_timestamp(review_packet_path: Path) -> datetime:
-    with review_packet_path.open(encoding="utf-8", newline="") as handle:
-        timestamps = {row.get("reviewed_at", "").strip() for row in csv.DictReader(handle)}
+    return _review_timestamp_bytes(review_packet_path.read_bytes())
+
+
+def _review_timestamp_bytes(payload: bytes) -> datetime:
+    lines = payload.decode("utf-8").splitlines()
+    timestamps = {row.get("reviewed_at", "").strip() for row in csv.DictReader(lines)}
     if len(timestamps) != 1:
         raise ValueError("review packet requires exactly one reviewed_at timestamp")
     value = timestamps.pop()
@@ -238,10 +279,16 @@ def _timezone_aware_timestamp(value: datetime | None, *, name: str) -> datetime:
 
 def _is_canonical_approval_bytes(path: Path) -> bool:
     try:
-        evidence = V11ThresholdApprovalEvidence.model_validate_json(
-            path.read_text(encoding="utf-8")
-        )
-    except (OSError, ValueError):
+        return _is_canonical_approval_payload(path.read_bytes())
+    except OSError:
+        return False
+
+
+def _is_canonical_approval_payload(payload: bytes) -> bool:
+    try:
+        evidence = V11ThresholdApprovalEvidence.model_validate_json(payload)
+        normalized_text = payload.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    except (UnicodeDecodeError, ValueError):
         return False
     expected = json.dumps(evidence.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n"
-    return path.read_text(encoding="utf-8") == expected
+    return normalized_text == expected

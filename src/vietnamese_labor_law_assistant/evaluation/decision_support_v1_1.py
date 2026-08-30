@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import io
 import json
 import re
 from collections import Counter
@@ -619,9 +620,15 @@ _IMMUTABLE_REVIEW_FIELDS = tuple(
 def load_v1_1_candidate(path: Path) -> list[V11EvaluationCandidateCase]:
     """Load the candidate and reject duplicate IDs before any review or run."""
 
+    return load_v1_1_candidate_bytes(path.read_bytes())
+
+
+def load_v1_1_candidate_bytes(payload: bytes) -> list[V11EvaluationCandidateCase]:
+    """Load candidate rows from one already-captured byte payload."""
+
     cases = [
         V11EvaluationCandidateCase.model_validate_json(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
+        for line in payload.splitlines()
         if line.strip()
     ]
     identifiers = [case.case_id for case in cases]
@@ -997,9 +1004,24 @@ def load_v1_1_threshold_spec(
 ) -> V11ThresholdSpec:
     """Load the proposal and prove the four Week-3 thresholds were not changed."""
 
-    spec = V11ThresholdSpec.model_validate_json(path.read_text(encoding="utf-8"))
+    payload = path.read_bytes()
+    spec = V11ThresholdSpec.model_validate_json(payload)
     week3_path = resolve_v1_1_week3_threshold_source(spec, repo_root=repo_root)
-    week3_payload = json.loads(week3_path.read_text(encoding="utf-8"))
+    return load_v1_1_threshold_spec_bytes(
+        payload,
+        inherited_threshold_source_bytes=week3_path.read_bytes(),
+    )
+
+
+def load_v1_1_threshold_spec_bytes(
+    payload: bytes,
+    *,
+    inherited_threshold_source_bytes: bytes,
+) -> V11ThresholdSpec:
+    """Validate a proposal against one captured inherited-threshold payload."""
+
+    spec = V11ThresholdSpec.model_validate_json(payload)
+    week3_payload = json.loads(inherited_threshold_source_bytes)
     inherited = week3_payload["thresholds"]
     for name in (
         "missing_fact_precision_min",
@@ -1185,10 +1207,25 @@ def validate_v1_1_review_packet(
 ) -> V11ReviewValidation:
     """Validate complete independent review without changing labels or freeze metadata."""
 
-    with path.open(encoding="utf-8", newline="") as handle:
-        reader = csv.DictReader(handle)
-        rows = list(reader)
-        fields = tuple(reader.fieldnames or ())
+    return validate_v1_1_review_packet_bytes(
+        cases,
+        path.read_bytes(),
+        project_author_name=project_author_name,
+    )
+
+
+def validate_v1_1_review_packet_bytes(
+    cases: Sequence[V11EvaluationCandidateCase],
+    payload: bytes,
+    *,
+    project_author_name: str,
+) -> V11ReviewValidation:
+    """Validate review evidence from one already-captured byte payload."""
+
+    handle = io.StringIO(payload.decode("utf-8"), newline="")
+    reader = csv.DictReader(handle)
+    rows = list(reader)
+    fields = tuple(reader.fieldnames or ())
     errors: list[str] = []
     if fields != _REVIEW_PACKET_FIELDS:
         errors.append("review packet columns differ from the canonical schema")

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -16,11 +15,11 @@ from vietnamese_labor_law_assistant.decision_support.models import CaseIntakeInp
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1 import (
     V11ThresholdSpec,
     candidate_quality_report,
-    load_v1_1_candidate,
-    validate_v1_1_review_packet,
+    load_v1_1_candidate_bytes,
+    validate_v1_1_review_packet_bytes,
 )
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_approval import (
-    validate_v1_1_threshold_approval,
+    validate_v1_1_threshold_approval_bytes,
 )
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_artifacts import (
     V11_FREEZE_CODE_RELATIVE_PATHS,
@@ -34,8 +33,8 @@ from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_artifacts i
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_freeze import (
     V11FrozenDatasetManifest,
     V11FrozenEvaluationCase,
-    load_v1_1_frozen_dataset,
-    prepare_v1_1_freeze,
+    load_v1_1_frozen_dataset_bytes,
+    prepare_v1_1_freeze_from_bytes,
 )
 
 _EXTRACTOR_CLASS = (
@@ -212,75 +211,91 @@ def preflight_v1_1_capture(
     )
 
     _require_code_identity(snapshot, paths, manifest)
-    with tempfile.TemporaryDirectory(prefix="v11-capture-preflight-") as temporary_directory:
-        snapshot_root = Path(temporary_directory).resolve()
-        _materialize_private_snapshot(snapshot, snapshot_root)
-        snapshot_paths = V11ArtifactPaths.from_root(snapshot_root)
-        candidate_cases = load_v1_1_candidate(snapshot_paths.corrected_candidate)
-        quality = candidate_quality_report(candidate_cases)
-        if (
-            len(candidate_cases) != 26
-            or quality.schema_validation != "PASS"
-            or quality.prediction_label_leakage_case_ids
-            or quality.prediction_label_leakage_assessment != "CHECKED_NO_PREDICTION_ARTIFACT_INPUT"
-        ):
-            raise ValueError("corrected candidate failed canonical capture validation")
+    candidate_payload = snapshot.captured(paths.corrected_candidate, paths.repo_root).payload
+    review_payload = snapshot.captured(paths.review_packet, paths.repo_root).payload
+    threshold_payload = snapshot.captured(paths.threshold_spec, paths.repo_root).payload
+    approval_payload = snapshot.captured(paths.threshold_approval, paths.repo_root).payload
+    frozen_payload = snapshot.captured(paths.frozen_dataset, paths.repo_root).payload
+    threshold_spec = V11ThresholdSpec.model_validate_json(threshold_payload)
+    inherited_path = paths.repo_root / Path(threshold_spec.week3_threshold_source)
+    inherited_payload = snapshot.captured(inherited_path, paths.repo_root).payload
 
-        review = validate_v1_1_review_packet(
-            candidate_cases,
-            snapshot_paths.review_packet,
-            project_author_name=project_author_name,
-        )
-        if (
-            not review.policy_satisfied
-            or review.total_rows != 26
-            or review.pass_count != 26
-            or review.status != "PASS"
-        ):
-            raise ValueError("human review is no longer 26/26 PASS")
+    candidate_cases = load_v1_1_candidate_bytes(candidate_payload)
+    quality = candidate_quality_report(candidate_cases)
+    if (
+        len(candidate_cases) != 26
+        or quality.schema_validation != "PASS"
+        or quality.prediction_label_leakage_case_ids
+        or quality.prediction_label_leakage_assessment != "CHECKED_NO_PREDICTION_ARTIFACT_INPUT"
+    ):
+        raise ValueError("corrected candidate failed canonical capture validation")
 
-        threshold_identity = paths.threshold_spec.relative_to(paths.repo_root).as_posix()
-        approval = validate_v1_1_threshold_approval(
-            snapshot_paths.threshold_spec,
-            snapshot_paths.threshold_approval,
-            project_author_name=project_author_name,
-            threshold_spec_identity=threshold_identity,
-            repo_root=snapshot_root,
-        )
-        if (
-            not approval.policy_satisfied
-            or approval.status != "PASS"
-            or approval.approval_decision != "APPROVE_UNCHANGED"
-            or not approval.thresholds_unchanged
-            or not approval.registration_approval_state_valid
-        ):
-            raise ValueError("threshold approval state is invalid")
+    review = validate_v1_1_review_packet_bytes(
+        candidate_cases,
+        review_payload,
+        project_author_name=project_author_name,
+    )
+    if (
+        not review.policy_satisfied
+        or review.total_rows != 26
+        or review.pass_count != 26
+        or review.status != "PASS"
+    ):
+        raise ValueError("human review is no longer 26/26 PASS")
 
-        frozen_cases = load_v1_1_frozen_dataset(snapshot_paths.frozen_dataset)
-        ordered_case_ids = [case.case_id for case in frozen_cases]
-        ordered_case_ids_sha256 = sha256_bytes(canonical_json_bytes(ordered_case_ids))
-        if ordered_case_ids_sha256 != manifest.ordered_case_ids_sha256:
-            raise ValueError("ordered frozen case IDs changed")
-        if ordered_case_ids != sorted(case.case_id for case in candidate_cases):
-            raise ValueError("frozen case IDs differ from the corrected candidate")
+    threshold_identity = paths.threshold_spec.relative_to(paths.repo_root).as_posix()
+    approval = validate_v1_1_threshold_approval_bytes(
+        threshold_payload,
+        approval_payload,
+        inherited_threshold_source_bytes=inherited_payload,
+        project_author_name=project_author_name,
+        threshold_spec_identity=threshold_identity,
+    )
+    if (
+        not approval.policy_satisfied
+        or approval.status != "PASS"
+        or approval.approval_decision != "APPROVE_UNCHANGED"
+        or not approval.thresholds_unchanged
+        or not approval.registration_approval_state_valid
+    ):
+        raise ValueError("threshold approval state is invalid")
 
-        regenerated = prepare_v1_1_freeze(
-            snapshot_paths,
-            project_author_name=project_author_name,
-            repository_state=RepositoryState(
-                commit_sha=manifest.git_commit_sha,
-                tracked_dirty=False,
-                untracked_paths=(),
-                git_top_level=snapshot_root,
-            ),
-            frozen_at=manifest.frozen_at,
-        )
-        frozen_payload = snapshot.captured(paths.frozen_dataset, paths.repo_root).payload
-        if regenerated.dataset_bytes != frozen_payload:
-            raise ValueError("frozen dataset differs from the governed freeze inputs")
-        if regenerated.manifest != manifest:
-            raise ValueError("freeze manifest differs from revalidated governance state")
-        runtime_cases = tuple(project_runtime_case(case) for case in frozen_cases)
+    frozen_cases = load_v1_1_frozen_dataset_bytes(frozen_payload)
+    ordered_case_ids = [case.case_id for case in frozen_cases]
+    ordered_case_ids_sha256 = sha256_bytes(canonical_json_bytes(ordered_case_ids))
+    if ordered_case_ids_sha256 != manifest.ordered_case_ids_sha256:
+        raise ValueError("ordered frozen case IDs changed")
+    if ordered_case_ids != sorted(case.case_id for case in candidate_cases):
+        raise ValueError("frozen case IDs differ from the corrected candidate")
+
+    regenerated = prepare_v1_1_freeze_from_bytes(
+        corrected_candidate_bytes=candidate_payload,
+        review_packet_bytes=review_payload,
+        threshold_spec_bytes=threshold_payload,
+        threshold_approval_bytes=approval_payload,
+        inherited_evaluation_spec_bytes=inherited_payload,
+        code_file_bytes={
+            relative_path: snapshot.captured(
+                paths.repo_root / relative_path,
+                paths.repo_root,
+            ).payload
+            for relative_path in V11_FREEZE_CODE_RELATIVE_PATHS
+        },
+        threshold_spec_identity=threshold_identity,
+        project_author_name=project_author_name,
+        repository_state=RepositoryState(
+            commit_sha=manifest.git_commit_sha,
+            tracked_dirty=False,
+            untracked_paths=(),
+            git_top_level=paths.repo_root,
+        ),
+        frozen_at=manifest.frozen_at,
+    )
+    if regenerated.dataset_bytes != frozen_payload:
+        raise ValueError("frozen dataset differs from the governed freeze inputs")
+    if regenerated.manifest != manifest:
+        raise ValueError("freeze manifest differs from revalidated governance state")
+    runtime_cases = tuple(project_runtime_case(case) for case in frozen_cases)
 
     plan = V11CapturePlan(
         runtime_cases=runtime_cases,
@@ -383,14 +398,6 @@ def _snapshot_file(repo_root: Path, path: Path) -> _CapturedFile:
     )
 
 
-def _materialize_private_snapshot(snapshot: _CaptureSnapshot, snapshot_root: Path) -> None:
-    for relative_path, captured in snapshot.files.items():
-        target = snapshot_root / relative_path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with target.open("xb") as handle:
-            handle.write(captured.payload)
-
-
 def _revalidate_before_return(
     paths: V11ArtifactPaths,
     snapshot: _CaptureSnapshot,
@@ -399,15 +406,21 @@ def _revalidate_before_return(
     repository_state: RepositoryState | None,
 ) -> None:
     _require_canonical_paths(paths)
-    _require_no_existing_capture_artifact(paths)
+    final_files: dict[str, _CapturedFile] = {}
     for captured in snapshot.files.values():
-        _require_safe_existing_file(paths.repo_root, captured.path)
-        if _FileIdentity.from_stat(os.lstat(captured.path)) != captured.identity:
+        final = _snapshot_file(paths.repo_root, captured.path)
+        final_files[final.relative_path] = final
+    for relative_path, captured in snapshot.files.items():
+        final = final_files[relative_path]
+        if final.payload != captured.payload:
+            raise ValueError(f"governed file bytes changed during preflight: {captured.path}")
+        if final.identity != captured.identity:
             raise ValueError(f"governed file identity changed during preflight: {captured.path}")
     final_state = repository_state or inspect_repository_state(paths.repo_root)
     _require_repository_identity(final_state, paths)
     if final_state.commit_sha != manifest.git_commit_sha:
         raise ValueError("Git source commit changed during capture preflight")
+    _require_no_existing_capture_artifact(paths)
 
 
 def _require_repository_identity(state: RepositoryState, paths: V11ArtifactPaths) -> None:
