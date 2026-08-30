@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 import stat
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -100,6 +102,13 @@ class _CaptureSnapshot:
 class _PredictionStreamBinding:
     parent_identity: _FileIdentity
     file_identity: _FileIdentity
+
+
+@dataclass(frozen=True)
+class _CaptureOutputDirectoryBinding:
+    path: Path
+    identity: _FileIdentity
+    descriptor: int | None
 
 
 class V11RuntimeCase(BaseModel):
@@ -312,75 +321,86 @@ async def capture_v1_1_predictions(
     _require_no_existing_capture_artifact(paths)
 
     paths.capture_intent.parent.mkdir(parents=True, exist_ok=True)
-    parent_identity = _path_identity(paths.capture_intent.parent)
-    intent = _capture_intent(plan, started_at)
-    intent_bytes = canonical_json_bytes(intent.model_dump(mode="json"))
-    write_exclusive(paths.capture_intent, intent_bytes)
+    with _bind_capture_output_directory(paths) as output_directory:
+        intent = _capture_intent(plan, started_at)
+        intent_bytes = canonical_json_bytes(intent.model_dump(mode="json"))
+        write_exclusive(paths.capture_intent, intent_bytes)
 
-    _require_safe_output_path(paths.repo_root, paths.predictions)
-    with paths.predictions.open("x+b") as handle:
-        stream_binding = _bind_prediction_stream(paths, handle, parent_identity)
-        runtime_cases = _revalidate_execution_boundary(
-            paths,
-            plan,
-            intent_bytes,
-            handle,
-            stream_binding,
-        )
-        extractor = OpenAIStructuredCaseIntakeExtractor(settings)
-        success_count = 0
-        failure_count = 0
-        row_payloads: list[bytes] = []
-        for sequence, runtime_case in enumerate(runtime_cases, start=1):
-            try:
-                extracted = await extractor.extract(runtime_case.case_input)
-                result = validate_case_intake_result(runtime_case.case_input, extracted)
-                record = V11CaseIntakePredictionRecord(
-                    sequence=sequence,
-                    case_id=runtime_case.case_id,
-                    status=V11PredictionStatus.SUCCESS,
-                    result=result,
-                )
-                success_count += 1
-            except CaseIntakeError as exc:
-                record = _failure_record(sequence, runtime_case.case_id, exc.reason)
-                failure_count += 1
-            except Exception:
-                record = _failure_record(
-                    sequence,
-                    runtime_case.case_id,
-                    V11PredictionFailureReason.UNEXPECTED_ERROR,
-                )
-                failure_count += 1
-            row_payload = canonical_json_bytes(record.model_dump(mode="json"))
-            row_payloads.append(row_payload)
-            handle.write(row_payload)
-            handle.flush()
-            os.fsync(handle.fileno())
+        _require_safe_output_path(paths.repo_root, paths.predictions)
+        with paths.predictions.open("x+b") as handle:
+            stream_binding = _bind_prediction_stream(
+                paths,
+                handle,
+                output_directory.identity,
+            )
+            runtime_cases = _revalidate_execution_boundary(
+                paths,
+                plan,
+                intent_bytes,
+                handle,
+                stream_binding,
+            )
+            extractor = OpenAIStructuredCaseIntakeExtractor(settings)
+            success_count = 0
+            failure_count = 0
+            row_payloads: list[bytes] = []
+            for sequence, runtime_case in enumerate(runtime_cases, start=1):
+                try:
+                    extracted = await extractor.extract(runtime_case.case_input)
+                    result = validate_case_intake_result(runtime_case.case_input, extracted)
+                    record = V11CaseIntakePredictionRecord(
+                        sequence=sequence,
+                        case_id=runtime_case.case_id,
+                        status=V11PredictionStatus.SUCCESS,
+                        result=result,
+                    )
+                    success_count += 1
+                except CaseIntakeError as exc:
+                    record = _failure_record(sequence, runtime_case.case_id, exc.reason)
+                    failure_count += 1
+                except Exception:
+                    record = _failure_record(
+                        sequence,
+                        runtime_case.case_id,
+                        V11PredictionFailureReason.UNEXPECTED_ERROR,
+                    )
+                    failure_count += 1
+                row_payload = canonical_json_bytes(record.model_dump(mode="json"))
+                row_payloads.append(row_payload)
+                handle.write(row_payload)
+                handle.flush()
+                os.fsync(handle.fileno())
 
-        predictions_sha256 = _validate_final_prediction_stream(
-            paths,
-            handle,
-            stream_binding,
-            expected_payload=b"".join(row_payloads),
-            runtime_cases=runtime_cases,
-            success_count=success_count,
-            failure_count=failure_count,
-        )
-        manifest = _prediction_snapshot_manifest(
-            plan,
-            started_at=started_at,
-            completed_at=_timestamp_value(None),
-            predictions_sha256=predictions_sha256,
-            success_count=success_count,
-            failure_count=failure_count,
-        )
-        _require_prediction_stream_binding(paths, handle, stream_binding)
-        write_exclusive(
-            paths.snapshot_manifest,
-            canonical_json_bytes(manifest.model_dump(mode="json")),
-        )
-        return manifest
+            expected_payload = b"".join(row_payloads)
+            predictions_sha256 = _validate_final_prediction_stream(
+                paths,
+                handle,
+                stream_binding,
+                expected_payload=expected_payload,
+                runtime_cases=runtime_cases,
+                success_count=success_count,
+                failure_count=failure_count,
+            )
+            manifest = _prediction_snapshot_manifest(
+                plan,
+                started_at=started_at,
+                completed_at=_timestamp_value(None),
+                predictions_sha256=predictions_sha256,
+                success_count=success_count,
+                failure_count=failure_count,
+            )
+            _publish_prediction_manifest(
+                paths,
+                handle,
+                stream_binding,
+                output_directory,
+                manifest,
+                expected_payload=expected_payload,
+                runtime_cases=runtime_cases,
+                success_count=success_count,
+                failure_count=failure_count,
+            )
+            return manifest
 
 
 def preflight_v1_1_capture(
@@ -1018,6 +1038,59 @@ def _same_filesystem_object(left: _FileIdentity, right: _FileIdentity) -> bool:
     return (left.device, left.inode, left.mode) == (right.device, right.inode, right.mode)
 
 
+@contextmanager
+def _bind_capture_output_directory(
+    paths: V11ArtifactPaths,
+) -> Iterator[_CaptureOutputDirectoryBinding]:
+    parent = paths.predictions.parent
+    _require_safe_output_path(paths.repo_root, paths.predictions)
+    parent_identity = _path_identity(parent)
+    if not stat.S_ISDIR(parent_identity.mode):
+        raise ValueError("capture output parent is not a directory")
+
+    descriptor: int | None = None
+    if os.name == "posix":
+        directory_flag = getattr(os, "O_DIRECTORY", 0)
+        no_follow_flag = getattr(os, "O_NOFOLLOW", 0)
+        if os.open not in os.supports_dir_fd or not directory_flag or not no_follow_flag:
+            raise OSError("safe directory-relative capture publication is unavailable")
+        descriptor = os.open(
+            parent,
+            os.O_RDONLY | directory_flag | no_follow_flag | getattr(os, "O_CLOEXEC", 0),
+        )
+        descriptor_identity = _FileIdentity.from_stat(os.fstat(descriptor))
+        if not _same_filesystem_object(descriptor_identity, parent_identity):
+            os.close(descriptor)
+            raise ValueError("capture output parent changed while being bound")
+    elif os.name != "nt":
+        raise OSError("safe capture publication is unsupported on this platform")
+
+    binding = _CaptureOutputDirectoryBinding(
+        path=parent,
+        identity=parent_identity,
+        descriptor=descriptor,
+    )
+    try:
+        yield binding
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
+def _require_capture_output_directory_binding(
+    paths: V11ArtifactPaths,
+    binding: _CaptureOutputDirectoryBinding,
+) -> None:
+    _require_safe_output_path(paths.repo_root, paths.snapshot_manifest)
+    current_identity = _path_identity(binding.path)
+    if not _same_filesystem_object(current_identity, binding.identity):
+        raise ValueError("prediction output parent identity changed")
+    if binding.descriptor is not None:
+        descriptor_identity = _FileIdentity.from_stat(os.fstat(binding.descriptor))
+        if not _same_filesystem_object(descriptor_identity, binding.identity):
+            raise ValueError("capture output directory descriptor identity changed")
+
+
 def _bind_prediction_stream(
     paths: V11ArtifactPaths,
     handle: BinaryIO,
@@ -1088,6 +1161,128 @@ def _validate_final_prediction_stream(
     if canonical.payload != durable_payload:
         raise ValueError("prediction stream canonical path content changed")
     return sha256_bytes(durable_payload)
+
+
+def _publish_prediction_manifest(
+    paths: V11ArtifactPaths,
+    prediction_handle: BinaryIO,
+    stream_binding: _PredictionStreamBinding,
+    output_directory: _CaptureOutputDirectoryBinding,
+    manifest: V11PredictionSnapshotManifest,
+    *,
+    expected_payload: bytes,
+    runtime_cases: tuple[V11RuntimeCase, ...],
+    success_count: int,
+    failure_count: int,
+) -> None:
+    """Revalidate exact final prediction bytes and publish through the bound parent."""
+
+    manifest_payload = canonical_json_bytes(manifest.model_dump(mode="json"))
+    _require_capture_output_directory_binding(paths, output_directory)
+    publication_checksum = _validate_final_prediction_stream(
+        paths,
+        prediction_handle,
+        stream_binding,
+        expected_payload=expected_payload,
+        runtime_cases=runtime_cases,
+        success_count=success_count,
+        failure_count=failure_count,
+    )
+    if publication_checksum != manifest.predictions_sha256:
+        raise ValueError("prediction stream checksum changed before manifest publication")
+
+    descriptor = _open_bound_manifest_descriptor(paths, output_directory)
+    created_identity = _FileIdentity.from_stat(os.fstat(descriptor))
+    try:
+        if not stat.S_ISREG(created_identity.mode):
+            raise ValueError("prediction snapshot manifest is not a regular file")
+        _require_capture_output_directory_binding(paths, output_directory)
+        _require_prediction_stream_binding(paths, prediction_handle, stream_binding)
+        path_identity = _path_identity(paths.snapshot_manifest)
+        if not _same_filesystem_object(path_identity, created_identity):
+            raise ValueError("prediction snapshot manifest path identity changed")
+    except Exception:
+        os.close(descriptor)
+        _remove_created_manifest(paths, output_directory, created_identity)
+        raise
+
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(manifest_payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+
+        persisted_checksum = _validate_final_prediction_stream(
+            paths,
+            prediction_handle,
+            stream_binding,
+            expected_payload=expected_payload,
+            runtime_cases=runtime_cases,
+            success_count=success_count,
+            failure_count=failure_count,
+        )
+        if persisted_checksum != manifest.predictions_sha256:
+            raise ValueError("prediction stream checksum changed during manifest publication")
+        _require_capture_output_directory_binding(paths, output_directory)
+        persisted_manifest = _snapshot_file(paths.repo_root, paths.snapshot_manifest)
+        if not _same_filesystem_object(persisted_manifest.identity, created_identity):
+            raise ValueError("prediction snapshot manifest path identity changed")
+        if persisted_manifest.payload != manifest_payload:
+            raise ValueError("prediction snapshot manifest content changed during publication")
+    except Exception:
+        _remove_created_manifest(paths, output_directory, created_identity)
+        raise
+
+
+def _open_bound_manifest_descriptor(
+    paths: V11ArtifactPaths,
+    output_directory: _CaptureOutputDirectoryBinding,
+) -> int:
+    flags = (
+        os.O_WRONLY
+        | os.O_CREAT
+        | os.O_EXCL
+        | getattr(os, "O_BINARY", 0)
+        | getattr(os, "O_CLOEXEC", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+    )
+    if output_directory.descriptor is not None:
+        return os.open(
+            paths.snapshot_manifest.name,
+            flags,
+            0o600,
+            dir_fd=output_directory.descriptor,
+        )
+    if os.name != "nt":
+        raise OSError("safe directory-relative manifest publication is unavailable")
+    return os.open(paths.snapshot_manifest, flags, 0o600)
+
+
+def _remove_created_manifest(
+    paths: V11ArtifactPaths,
+    output_directory: _CaptureOutputDirectoryBinding,
+    created_identity: _FileIdentity,
+) -> None:
+    try:
+        if output_directory.descriptor is not None:
+            current_identity = _FileIdentity.from_stat(
+                os.stat(
+                    paths.snapshot_manifest.name,
+                    dir_fd=output_directory.descriptor,
+                    follow_symlinks=False,
+                )
+            )
+            if _same_filesystem_object(current_identity, created_identity):
+                os.unlink(
+                    paths.snapshot_manifest.name,
+                    dir_fd=output_directory.descriptor,
+                )
+            return
+        current_identity = _path_identity(paths.snapshot_manifest)
+        if _same_filesystem_object(current_identity, created_identity):
+            paths.snapshot_manifest.unlink()
+    except OSError:
+        return
 
 
 def _capture_start_timestamp(value: datetime | None) -> datetime:

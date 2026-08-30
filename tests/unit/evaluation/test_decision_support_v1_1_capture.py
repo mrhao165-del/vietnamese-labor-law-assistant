@@ -750,6 +750,7 @@ async def test_capture_constructs_production_extractor_and_fsyncs_each_canonical
     assert [record.sequence for record in records] == list(range(1, 27))
     assert [record.case_id for record in records] == [case.case_id for case in plan.runtime_cases]
     assert all(record.status == "SUCCESS" for record in records)
+    assert sha256_file(paths.predictions) == manifest.predictions_sha256
     assert len(fsync_calls) == 28  # intent + 26 prediction rows + final manifest
     assert paths.predictions.read_bytes() == b"".join(
         canonical_json_bytes(record.model_dump(mode="json")) for record in records
@@ -1276,6 +1277,193 @@ async def test_capture_rejects_prediction_content_changed_outside_claimed_stream
     assert paths.capture_intent.exists()
     assert paths.predictions.exists()
     assert not paths.snapshot_manifest.exists()
+
+
+@pytest.mark.asyncio
+async def test_capture_revalidates_same_inode_tamper_at_manifest_publication(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    actual_manifest_builder = capture_module._prediction_snapshot_manifest
+
+    def tampering_manifest_builder(
+        actual_plan: V11CapturePlan,
+        *,
+        started_at: datetime,
+        completed_at: datetime,
+        predictions_sha256: str,
+        success_count: int,
+        failure_count: int,
+    ) -> capture_module.V11PredictionSnapshotManifest:
+        manifest = actual_manifest_builder(
+            actual_plan,
+            started_at=started_at,
+            completed_at=completed_at,
+            predictions_sha256=predictions_sha256,
+            success_count=success_count,
+            failure_count=failure_count,
+        )
+        with paths.predictions.open("ab") as second_handle:
+            second_handle.write(b"\n")
+            second_handle.flush()
+            os.fsync(second_handle.fileno())
+        return manifest
+
+    class SuccessfulExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(
+        capture_module,
+        "_prediction_snapshot_manifest",
+        tampering_manifest_builder,
+    )
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        SuccessfulExtractor,
+    )
+
+    with pytest.raises(ValueError, match="prediction stream content changed"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert paths.capture_intent.exists()
+    assert paths.predictions.exists()
+    assert not paths.snapshot_manifest.exists()
+
+
+@pytest.mark.skipif(
+    os.name != "posix",
+    reason="POSIX-only: replacing an open prediction pathname is denied on Windows",
+)
+@pytest.mark.asyncio
+async def test_capture_rejects_real_posix_prediction_replacement_before_publication(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    actual_open = os.open
+    replaced = False
+
+    def replacing_open(
+        path: str | bytes | os.PathLike[str],
+        flags: int,
+        mode: int = 0o777,
+        *,
+        dir_fd: int | None = None,
+    ) -> int:
+        nonlocal replaced
+        if path == paths.snapshot_manifest.name and dir_fd is not None:
+            replacement = paths.predictions.with_suffix(".replacement")
+            replacement.write_bytes(paths.predictions.read_bytes())
+            os.replace(replacement, paths.predictions)
+            replaced = True
+        if dir_fd is None:
+            return actual_open(path, flags, mode)
+        return actual_open(path, flags, mode, dir_fd=dir_fd)
+
+    class SuccessfulExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(
+        capture_module.os,
+        "open",
+        replacing_open,
+    )
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        SuccessfulExtractor,
+    )
+
+    with pytest.raises(ValueError, match="prediction stream path identity changed"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert replaced
+    assert paths.predictions.exists()
+    assert not paths.snapshot_manifest.exists()
+
+
+@pytest.mark.skipif(
+    os.name != "posix",
+    reason="POSIX-only: renaming a parent containing an open file is denied on Windows",
+)
+@pytest.mark.asyncio
+async def test_capture_rejects_real_posix_parent_substitution_before_publication(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    actual_open = os.open
+    original_parent = paths.predictions.parent
+    moved_parent = original_parent.with_name(f"{original_parent.name}_moved")
+    substituted = False
+
+    def substituting_open(
+        path: str | bytes | os.PathLike[str],
+        flags: int,
+        mode: int = 0o777,
+        *,
+        dir_fd: int | None = None,
+    ) -> int:
+        nonlocal substituted
+        if path == paths.snapshot_manifest.name and dir_fd is not None:
+            original_parent.rename(moved_parent)
+            original_parent.mkdir(parents=True)
+            shutil.copyfile(moved_parent / paths.predictions.name, paths.predictions)
+            substituted = True
+        if dir_fd is None:
+            return actual_open(path, flags, mode)
+        return actual_open(path, flags, mode, dir_fd=dir_fd)
+
+    class SuccessfulExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(
+        capture_module.os,
+        "open",
+        substituting_open,
+    )
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        SuccessfulExtractor,
+    )
+
+    with pytest.raises(ValueError, match="prediction output parent identity changed"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert substituted
+    assert paths.predictions.exists()
+    assert not paths.snapshot_manifest.exists()
+    assert not (moved_parent / paths.snapshot_manifest.name).exists()
 
 
 @pytest.mark.parametrize(
