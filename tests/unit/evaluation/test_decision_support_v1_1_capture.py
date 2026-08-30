@@ -8,6 +8,7 @@ import tempfile
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
+from typing import BinaryIO
 
 import pytest
 from pydantic import SecretStr
@@ -1341,6 +1342,168 @@ async def test_capture_revalidates_same_inode_tamper_at_manifest_publication(
     assert not paths.snapshot_manifest.exists()
 
 
+@pytest.mark.asyncio
+async def test_capture_preserves_durable_manifest_when_prediction_drifts_after_fsync(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    actual_validation = capture_module._validate_final_prediction_stream
+    validation_calls = 0
+
+    def drifting_validation(
+        actual_paths: V11ArtifactPaths,
+        handle: BinaryIO,
+        binding: capture_module._PredictionStreamBinding,
+        *,
+        expected_payload: bytes,
+        runtime_cases: tuple[capture_module.V11RuntimeCase, ...],
+        success_count: int,
+        failure_count: int,
+    ) -> str:
+        nonlocal validation_calls
+        validation_calls += 1
+        if validation_calls == 3:
+            with actual_paths.predictions.open("ab") as second_handle:
+                second_handle.write(b"\n")
+                second_handle.flush()
+                os.fsync(second_handle.fileno())
+        return actual_validation(
+            actual_paths,
+            handle,
+            binding,
+            expected_payload=expected_payload,
+            runtime_cases=runtime_cases,
+            success_count=success_count,
+            failure_count=failure_count,
+        )
+
+    class SuccessfulExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(
+        capture_module,
+        "_validate_final_prediction_stream",
+        drifting_validation,
+    )
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        SuccessfulExtractor,
+    )
+
+    with pytest.raises(ValueError, match="prediction stream content changed"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert validation_calls == 3
+    manifest_bytes = paths.snapshot_manifest.read_bytes()
+    persisted = capture_module.V11PredictionSnapshotManifest.model_validate_json(manifest_bytes)
+    assert manifest_bytes == canonical_json_bytes(persisted.model_dump(mode="json"))
+    assert persisted.status == "COMPLETE"
+    assert persisted.success_count == 26
+    assert persisted.failure_count == 0
+    assert sha256_file(paths.predictions) != persisted.predictions_sha256
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+
+@pytest.mark.asyncio
+async def test_capture_never_deletes_unrelated_manifest_substituted_at_cleanup_seam(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    actual_validation = capture_module._validate_final_prediction_stream
+    actual_unlink = Path.unlink
+    unrelated_source = paths.snapshot_manifest.with_name("unrelated-manifest.json")
+    archived_claim = paths.snapshot_manifest.with_name("claimed-manifest-archive.json")
+    unrelated_bytes = b'{"owner":"unrelated","must_survive":true}\n'
+    unrelated_source.write_bytes(unrelated_bytes)
+    validation_calls = 0
+
+    def drifting_validation(
+        actual_paths: V11ArtifactPaths,
+        handle: BinaryIO,
+        binding: capture_module._PredictionStreamBinding,
+        *,
+        expected_payload: bytes,
+        runtime_cases: tuple[capture_module.V11RuntimeCase, ...],
+        success_count: int,
+        failure_count: int,
+    ) -> str:
+        nonlocal validation_calls
+        validation_calls += 1
+        if validation_calls == 3:
+            with actual_paths.predictions.open("ab") as second_handle:
+                second_handle.write(b"\n")
+                second_handle.flush()
+                os.fsync(second_handle.fileno())
+        return actual_validation(
+            actual_paths,
+            handle,
+            binding,
+            expected_payload=expected_payload,
+            runtime_cases=runtime_cases,
+            success_count=success_count,
+            failure_count=failure_count,
+        )
+
+    def adversarial_unlink(path: Path, *, missing_ok: bool = False) -> None:
+        if path == paths.snapshot_manifest:
+            os.replace(path, archived_claim)
+            os.replace(unrelated_source, path)
+        actual_unlink(path, missing_ok=missing_ok)
+
+    class SuccessfulExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(
+        capture_module,
+        "_validate_final_prediction_stream",
+        drifting_validation,
+    )
+    monkeypatch.setattr(Path, "unlink", adversarial_unlink)
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        SuccessfulExtractor,
+    )
+
+    with pytest.raises(ValueError, match="prediction stream content changed"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert validation_calls == 3
+    assert unrelated_source.read_bytes() == unrelated_bytes
+    assert not archived_claim.exists()
+    persisted = capture_module.V11PredictionSnapshotManifest.model_validate_json(
+        paths.snapshot_manifest.read_bytes()
+    )
+    assert persisted.status == "COMPLETE"
+
+
 @pytest.mark.skipif(
     os.name != "posix",
     reason="POSIX-only: replacing an open prediction pathname is denied on Windows",
@@ -1399,7 +1562,14 @@ async def test_capture_rejects_real_posix_prediction_replacement_before_publicat
 
     assert replaced
     assert paths.predictions.exists()
-    assert not paths.snapshot_manifest.exists()
+    assert paths.snapshot_manifest.read_bytes() == b""
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
 
 
 @pytest.mark.skipif(
@@ -1463,7 +1633,14 @@ async def test_capture_rejects_real_posix_parent_substitution_before_publication
     assert substituted
     assert paths.predictions.exists()
     assert not paths.snapshot_manifest.exists()
-    assert not (moved_parent / paths.snapshot_manifest.name).exists()
+    assert (moved_parent / paths.snapshot_manifest.name).read_bytes() == b""
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
 
 
 @pytest.mark.parametrize(

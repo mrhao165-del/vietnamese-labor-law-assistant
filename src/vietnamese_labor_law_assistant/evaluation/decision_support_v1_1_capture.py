@@ -1203,35 +1203,30 @@ def _publish_prediction_manifest(
             raise ValueError("prediction snapshot manifest path identity changed")
     except Exception:
         os.close(descriptor)
-        _remove_created_manifest(paths, output_directory, created_identity)
         raise
 
-    try:
-        with os.fdopen(descriptor, "wb") as handle:
-            handle.write(manifest_payload)
-            handle.flush()
-            os.fsync(handle.fileno())
+    with os.fdopen(descriptor, "wb") as handle:
+        handle.write(manifest_payload)
+        handle.flush()
+        os.fsync(handle.fileno())
 
-        persisted_checksum = _validate_final_prediction_stream(
-            paths,
-            prediction_handle,
-            stream_binding,
-            expected_payload=expected_payload,
-            runtime_cases=runtime_cases,
-            success_count=success_count,
-            failure_count=failure_count,
-        )
-        if persisted_checksum != manifest.predictions_sha256:
-            raise ValueError("prediction stream checksum changed during manifest publication")
-        _require_capture_output_directory_binding(paths, output_directory)
-        persisted_manifest = _snapshot_file(paths.repo_root, paths.snapshot_manifest)
-        if not _same_filesystem_object(persisted_manifest.identity, created_identity):
-            raise ValueError("prediction snapshot manifest path identity changed")
-        if persisted_manifest.payload != manifest_payload:
-            raise ValueError("prediction snapshot manifest content changed during publication")
-    except Exception:
-        _remove_created_manifest(paths, output_directory, created_identity)
-        raise
+    persisted_checksum = _validate_final_prediction_stream(
+        paths,
+        prediction_handle,
+        stream_binding,
+        expected_payload=expected_payload,
+        runtime_cases=runtime_cases,
+        success_count=success_count,
+        failure_count=failure_count,
+    )
+    if persisted_checksum != manifest.predictions_sha256:
+        raise ValueError("prediction stream checksum changed during manifest publication")
+    _require_capture_output_directory_binding(paths, output_directory)
+    persisted_manifest = _snapshot_file(paths.repo_root, paths.snapshot_manifest)
+    if not _same_filesystem_object(persisted_manifest.identity, created_identity):
+        raise ValueError("prediction snapshot manifest path identity changed")
+    if persisted_manifest.payload != manifest_payload:
+        raise ValueError("prediction snapshot manifest content changed during publication")
 
 
 def _open_bound_manifest_descriptor(
@@ -1256,33 +1251,6 @@ def _open_bound_manifest_descriptor(
     if os.name != "nt":
         raise OSError("safe directory-relative manifest publication is unavailable")
     return os.open(paths.snapshot_manifest, flags, 0o600)
-
-
-def _remove_created_manifest(
-    paths: V11ArtifactPaths,
-    output_directory: _CaptureOutputDirectoryBinding,
-    created_identity: _FileIdentity,
-) -> None:
-    try:
-        if output_directory.descriptor is not None:
-            current_identity = _FileIdentity.from_stat(
-                os.stat(
-                    paths.snapshot_manifest.name,
-                    dir_fd=output_directory.descriptor,
-                    follow_symlinks=False,
-                )
-            )
-            if _same_filesystem_object(current_identity, created_identity):
-                os.unlink(
-                    paths.snapshot_manifest.name,
-                    dir_fd=output_directory.descriptor,
-                )
-            return
-        current_identity = _path_identity(paths.snapshot_manifest)
-        if _same_filesystem_object(current_identity, created_identity):
-            paths.snapshot_manifest.unlink()
-    except OSError:
-        return
 
 
 def _capture_start_timestamp(value: datetime | None) -> datetime:
