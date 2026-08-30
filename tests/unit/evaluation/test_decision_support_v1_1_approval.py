@@ -191,6 +191,8 @@ def test_canonical_cli_finalizes_and_validates_without_running_frozen_evaluation
             str(threshold_spec),
             "--approval",
             str(approval_path),
+            "--results-dir",
+            str(tmp_path / "results"),
             "--project-author-name",
             "mrhao165-del",
         ],
