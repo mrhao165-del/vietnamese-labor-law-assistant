@@ -5,7 +5,8 @@ import json
 import os
 import shutil
 import tempfile
-from datetime import datetime, timedelta, timezone
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -112,6 +113,20 @@ def capture_repository_state(paths: V11ArtifactPaths) -> RepositoryState:
     )
 
 
+def capture_execution_repository_state(paths: V11ArtifactPaths) -> RepositoryState:
+    return RepositoryState(
+        commit_sha="b" * 40,
+        tracked_dirty=False,
+        untracked_paths=(
+            paths.frozen_dataset.relative_to(paths.repo_root).as_posix(),
+            paths.freeze_manifest.relative_to(paths.repo_root).as_posix(),
+            paths.capture_intent.relative_to(paths.repo_root).as_posix(),
+            paths.predictions.relative_to(paths.repo_root).as_posix(),
+        ),
+        git_top_level=paths.repo_root,
+    )
+
+
 @pytest.fixture
 def captured_paths(tmp_path: Path) -> V11ArtifactPaths:
     return prepare_capture_paths(tmp_path)
@@ -125,6 +140,7 @@ def frozen_case(captured_paths: V11ArtifactPaths) -> V11FrozenEvaluationCase:
 @pytest.fixture
 def ready_capture(
     captured_paths: V11ArtifactPaths,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> tuple[V11ArtifactPaths, V11CapturePlan, Settings]:
     settings = configured_settings()
     plan = preflight_v1_1_capture(
@@ -132,6 +148,11 @@ def ready_capture(
         settings,
         project_author_name="mrhao165-del",
         repository_state=capture_repository_state(captured_paths),
+    )
+    monkeypatch.setattr(
+        capture_module,
+        "inspect_repository_state",
+        lambda root: capture_execution_repository_state(captured_paths),
     )
     return captured_paths, plan, settings
 
@@ -984,6 +1005,358 @@ async def test_capture_rejects_settings_drift_before_claiming_intent(
 
 
 @pytest.mark.parametrize(
+    ("drift_kind", "error"),
+    (
+        ("head", "Git source commit changed at capture execution boundary"),
+        ("tracked", "unexpected worktree delta at capture execution boundary"),
+        ("index", "unexpected worktree delta at capture execution boundary"),
+        ("untracked", "unexpected worktree delta at capture execution boundary"),
+    ),
+)
+@pytest.mark.asyncio
+async def test_capture_rejects_real_repository_drift_after_claims(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+    drift_kind: str,
+    error: str,
+) -> None:
+    paths, plan, settings = ready_capture
+    state = capture_execution_repository_state(paths)
+    if drift_kind == "head":
+        state = state.model_copy(update={"commit_sha": "c" * 40})
+    elif drift_kind in {"tracked", "index"}:
+        state = state.model_copy(update={"tracked_dirty": True})
+    else:
+        state = state.model_copy(update={"untracked_paths": (*state.untracked_paths, "late.txt")})
+    observed_roots: list[Path] = []
+    constructed = False
+
+    def observe_repository_state(root: Path) -> RepositoryState:
+        observed_roots.append(root)
+        return state
+
+    class ForbiddenExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            nonlocal constructed
+            constructed = True
+
+    monkeypatch.setattr(capture_module, "inspect_repository_state", observe_repository_state)
+    monkeypatch.setattr(capture_module, "OpenAIStructuredCaseIntakeExtractor", ForbiddenExtractor)
+
+    with pytest.raises(ValueError, match=error):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert observed_roots == [paths.repo_root]
+    assert not constructed
+    _assert_empty_claimed_failure(paths)
+
+
+@pytest.mark.asyncio
+async def test_capture_rejects_same_size_governed_drift_during_execution_revalidation(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    target = paths.frozen_dataset
+    original_bytes = target.read_bytes()
+    original_stat = target.stat()
+    original_loader = capture_module.load_v1_1_frozen_dataset_bytes
+    mutated = False
+
+    def mutate_after_execution_snapshot(payload: bytes) -> object:
+        nonlocal mutated
+        result = original_loader(payload)
+        if not mutated:
+            mutated = True
+            replacement = bytes((original_bytes[0] ^ 1,)) + original_bytes[1:]
+            target.write_bytes(replacement)
+            os.utime(target, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
+        return result
+
+    class ForbiddenExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            raise AssertionError("execution drift must fail before extractor construction")
+
+    monkeypatch.setattr(
+        capture_module,
+        "load_v1_1_frozen_dataset_bytes",
+        mutate_after_execution_snapshot,
+    )
+    monkeypatch.setattr(capture_module, "OpenAIStructuredCaseIntakeExtractor", ForbiddenExtractor)
+
+    with pytest.raises(ValueError, match="governed file bytes changed during capture execution"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    _assert_empty_claimed_failure(paths)
+
+
+@pytest.mark.parametrize("mutation", ("source_text_with_labels", "source_ref"))
+@pytest.mark.asyncio
+async def test_capture_rejects_runtime_inputs_not_derived_from_revalidated_frozen_bytes(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+    mutation: str,
+) -> None:
+    paths, plan, settings = ready_capture
+    original = plan.runtime_cases[0]
+    if mutation == "source_text_with_labels":
+        changed_input = CaseIntakeInput(
+            source_text=(
+                original.case_input.source_text
+                + '\n{"expected_case_facts":[{"fact_key":"LABEL_LEAK"}]}'
+            ),
+            source_ref=original.case_input.source_ref,
+        )
+    else:
+        changed_input = CaseIntakeInput(
+            source_text=original.case_input.source_text,
+            source_ref="user_message:substituted",
+        )
+    changed_runtime = original.model_copy(update={"case_input": changed_input})
+    changed_plan = plan.model_copy(
+        update={"runtime_cases": (changed_runtime, *plan.runtime_cases[1:])}
+    )
+
+    class ForbiddenExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            raise AssertionError("unbound runtime input must fail before extractor construction")
+
+    monkeypatch.setattr(capture_module, "OpenAIStructuredCaseIntakeExtractor", ForbiddenExtractor)
+
+    with pytest.raises(ValueError, match="runtime cases differ from the frozen dataset"):
+        await capture_v1_1_predictions(
+            paths,
+            changed_plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    _assert_empty_claimed_failure(paths)
+
+
+@pytest.mark.asyncio
+async def test_capture_binds_claimed_parent_before_extractor_construction(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    parent_observations = 0
+
+    def substituted_parent_identity(path: Path) -> object:
+        nonlocal parent_observations
+        identity = capture_module._FileIdentity.from_stat(os.lstat(path))
+        if path == paths.predictions.parent:
+            parent_observations += 1
+            if parent_observations > 1:
+                return replace(identity, inode=identity.inode + 1)
+        return identity
+
+    class ForbiddenExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            raise AssertionError("parent substitution must fail before extractor construction")
+
+    monkeypatch.setattr(
+        capture_module,
+        "_path_identity",
+        substituted_parent_identity,
+        raising=False,
+    )
+    monkeypatch.setattr(capture_module, "OpenAIStructuredCaseIntakeExtractor", ForbiddenExtractor)
+
+    with pytest.raises(ValueError, match="prediction output parent identity changed"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    _assert_empty_claimed_failure(paths)
+
+
+@pytest.mark.asyncio
+async def test_capture_rechecks_prediction_path_identity_after_final_fsync(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    replace_path = False
+    calls = 0
+
+    def substituted_prediction_identity(path: Path) -> object:
+        identity = capture_module._FileIdentity.from_stat(os.lstat(path))
+        if replace_path and path == paths.predictions:
+            return replace(identity, inode=identity.inode + 1)
+        return identity
+
+    class PathReplacingExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            nonlocal calls, replace_path
+            calls += 1
+            if calls == 26:
+                replace_path = True
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(
+        capture_module,
+        "_path_identity",
+        substituted_prediction_identity,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        PathReplacingExtractor,
+    )
+
+    with pytest.raises(ValueError, match="prediction stream path identity changed"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert paths.capture_intent.exists()
+    assert paths.predictions.exists()
+    assert not paths.snapshot_manifest.exists()
+
+
+@pytest.mark.asyncio
+async def test_capture_rejects_prediction_content_changed_outside_claimed_stream(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    calls = 0
+
+    class ContentTamperingExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            nonlocal calls
+            calls += 1
+            if calls == 26:
+                with paths.predictions.open("r+b") as second_handle:
+                    first_byte = second_handle.read(1)
+                    second_handle.seek(0)
+                    second_handle.write(bytes((first_byte[0] ^ 1,)))
+                    second_handle.flush()
+                    os.fsync(second_handle.fileno())
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        ContentTamperingExtractor,
+    )
+
+    with pytest.raises(ValueError, match="prediction stream content changed"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert paths.capture_intent.exists()
+    assert paths.predictions.exists()
+    assert not paths.snapshot_manifest.exists()
+
+
+@pytest.mark.parametrize(
+    ("captured_at", "error"),
+    (
+        (datetime(2026, 8, 30, 21, 5), "capture timestamp must be timezone-aware"),
+        (
+            datetime.now(UTC) + timedelta(days=1),
+            "capture start timestamp must not be in the future",
+        ),
+    ),
+)
+@pytest.mark.asyncio
+async def test_capture_rejects_invalid_or_future_start_before_claims(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+    captured_at: datetime,
+    error: str,
+) -> None:
+    paths, plan, settings = ready_capture
+
+    class ForbiddenExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            raise AssertionError("invalid start must fail before extractor construction")
+
+    monkeypatch.setattr(capture_module, "OpenAIStructuredCaseIntakeExtractor", ForbiddenExtractor)
+
+    with pytest.raises(ValueError, match=error):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=captured_at,
+        )
+
+    assert not paths.capture_intent.exists()
+    assert not paths.predictions.exists()
+    assert not paths.snapshot_manifest.exists()
+
+
+@pytest.mark.asyncio
+async def test_capture_fails_closed_when_observed_completion_precedes_start(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    actual_timestamp_value = capture_module._timestamp_value
+
+    def backwards_completion(value: datetime | None) -> datetime:
+        if value is None:
+            return CAPTURED_AT - timedelta(minutes=1)
+        return actual_timestamp_value(value)
+
+    class SuccessfulExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(capture_module, "_timestamp_value", backwards_completion)
+    monkeypatch.setattr(capture_module, "OpenAIStructuredCaseIntakeExtractor", SuccessfulExtractor)
+
+    with pytest.raises(
+        ValueError,
+        match="capture completion timestamp must not precede start",
+    ):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert paths.capture_intent.exists()
+    assert paths.predictions.exists()
+    assert len(load_v1_1_prediction_records(paths.predictions)) == 26
+    assert not paths.snapshot_manifest.exists()
+
+
+@pytest.mark.parametrize(
     ("payloads", "error"),
     (
         (
@@ -1077,6 +1450,13 @@ def _recursive_numbers(value: object) -> list[float]:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return []
     return [float(value)]
+
+
+def _assert_empty_claimed_failure(paths: V11ArtifactPaths) -> None:
+    assert paths.capture_intent.exists()
+    assert paths.predictions.exists()
+    assert paths.predictions.read_bytes() == b""
+    assert not paths.snapshot_manifest.exists()
 
 
 def _update_manifest_checksum(paths: V11ArtifactPaths, field: str, checksum: str) -> None:

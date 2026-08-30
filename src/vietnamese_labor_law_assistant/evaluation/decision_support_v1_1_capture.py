@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import os
+import stat
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Literal
+from typing import BinaryIO, Literal
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -39,7 +40,6 @@ from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_artifacts i
     inspect_repository_state,
     require_capture_repository_state,
     sha256_bytes,
-    sha256_file,
     write_exclusive,
 )
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_freeze import (
@@ -94,6 +94,12 @@ class _CaptureSnapshot:
     def captured(self, path: Path, repo_root: Path) -> _CapturedFile:
         relative = _relative_path(repo_root, path).as_posix()
         return self.files[relative]
+
+
+@dataclass(frozen=True)
+class _PredictionStreamBinding:
+    parent_identity: _FileIdentity
+    file_identity: _FileIdentity
 
 
 class V11RuntimeCase(BaseModel):
@@ -272,9 +278,15 @@ def project_runtime_case(case: V11FrozenEvaluationCase) -> V11RuntimeCase:
 def load_v1_1_prediction_records(path: Path) -> list[V11CaseIntakePredictionRecord]:
     """Load canonical prediction rows and verify frozen sequence/identity invariants."""
 
+    return _load_v1_1_prediction_records_bytes(path.read_bytes())
+
+
+def _load_v1_1_prediction_records_bytes(
+    payload: bytes,
+) -> list[V11CaseIntakePredictionRecord]:
     records = [
         V11CaseIntakePredictionRecord.model_validate_json(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
+        for line in payload.decode("utf-8").splitlines()
         if line.strip()
     ]
     if [record.sequence for record in records] != list(range(1, len(records) + 1)):
@@ -296,21 +308,30 @@ async def capture_v1_1_predictions(
 
     _require_canonical_paths(paths)
     _require_execution_plan(plan, settings)
-    started_at = _timestamp_value(captured_at)
+    started_at = _capture_start_timestamp(captured_at)
     _require_no_existing_capture_artifact(paths)
 
+    paths.capture_intent.parent.mkdir(parents=True, exist_ok=True)
+    parent_identity = _path_identity(paths.capture_intent.parent)
     intent = _capture_intent(plan, started_at)
     intent_bytes = canonical_json_bytes(intent.model_dump(mode="json"))
     write_exclusive(paths.capture_intent, intent_bytes)
 
     _require_safe_output_path(paths.repo_root, paths.predictions)
-    paths.predictions.parent.mkdir(parents=True, exist_ok=True)
-    with paths.predictions.open("xb") as handle:
-        _revalidate_execution_boundary(paths, plan, intent_bytes)
+    with paths.predictions.open("x+b") as handle:
+        stream_binding = _bind_prediction_stream(paths, handle, parent_identity)
+        runtime_cases = _revalidate_execution_boundary(
+            paths,
+            plan,
+            intent_bytes,
+            handle,
+            stream_binding,
+        )
         extractor = OpenAIStructuredCaseIntakeExtractor(settings)
         success_count = 0
         failure_count = 0
-        for sequence, runtime_case in enumerate(plan.runtime_cases, start=1):
+        row_payloads: list[bytes] = []
+        for sequence, runtime_case in enumerate(runtime_cases, start=1):
             try:
                 extracted = await extractor.extract(runtime_case.case_input)
                 result = validate_case_intake_result(runtime_case.case_input, extracted)
@@ -331,23 +352,35 @@ async def capture_v1_1_predictions(
                     V11PredictionFailureReason.UNEXPECTED_ERROR,
                 )
                 failure_count += 1
-            handle.write(canonical_json_bytes(record.model_dump(mode="json")))
+            row_payload = canonical_json_bytes(record.model_dump(mode="json"))
+            row_payloads.append(row_payload)
+            handle.write(row_payload)
             handle.flush()
             os.fsync(handle.fileno())
 
-    manifest = _prediction_snapshot_manifest(
-        plan,
-        started_at=started_at,
-        completed_at=_timestamp_value(None),
-        predictions_sha256=sha256_file(paths.predictions),
-        success_count=success_count,
-        failure_count=failure_count,
-    )
-    write_exclusive(
-        paths.snapshot_manifest,
-        canonical_json_bytes(manifest.model_dump(mode="json")),
-    )
-    return manifest
+        predictions_sha256 = _validate_final_prediction_stream(
+            paths,
+            handle,
+            stream_binding,
+            expected_payload=b"".join(row_payloads),
+            runtime_cases=runtime_cases,
+            success_count=success_count,
+            failure_count=failure_count,
+        )
+        manifest = _prediction_snapshot_manifest(
+            plan,
+            started_at=started_at,
+            completed_at=_timestamp_value(None),
+            predictions_sha256=predictions_sha256,
+            success_count=success_count,
+            failure_count=failure_count,
+        )
+        _require_prediction_stream_binding(paths, handle, stream_binding)
+        write_exclusive(
+            paths.snapshot_manifest,
+            canonical_json_bytes(manifest.model_dump(mode="json")),
+        )
+        return manifest
 
 
 def preflight_v1_1_capture(
@@ -798,7 +831,7 @@ def _prediction_snapshot_manifest(
         **_capture_identity(plan).model_dump(mode="python"),
         status=status,
         started_at=started_at,
-        completed_at=max(started_at, completed_at),
+        completed_at=completed_at,
         predictions_sha256=predictions_sha256,
         success_count=success_count,
         failure_count=failure_count,
@@ -826,15 +859,17 @@ def _revalidate_execution_boundary(
     paths: V11ArtifactPaths,
     plan: V11CapturePlan,
     expected_intent_bytes: bytes,
-) -> None:
+    handle: BinaryIO,
+    stream_binding: _PredictionStreamBinding,
+) -> tuple[V11RuntimeCase, ...]:
     """Recheck bound bytes after claiming outputs, without silently rerunning preflight."""
 
     _require_canonical_paths(paths)
     intent = _snapshot_file(paths.repo_root, paths.capture_intent)
-    predictions = _snapshot_file(paths.repo_root, paths.predictions)
     if intent.payload != expected_intent_bytes:
         raise ValueError("capture intent changed after exclusive claim")
-    if predictions.payload:
+    _require_prediction_stream_binding(paths, handle, stream_binding)
+    if os.fstat(handle.fileno()).st_size:
         raise ValueError("prediction stream was not empty after exclusive claim")
     if os.path.lexists(paths.snapshot_manifest):
         raise FileExistsError(f"capture artifact already exists: {paths.snapshot_manifest}")
@@ -904,6 +939,165 @@ def _revalidate_execution_boundary(
     if manifest_identity != plan_identity:
         raise ValueError("capture plan identity differs from the frozen manifest")
     _require_code_identity(snapshot, paths, manifest)
+
+    frozen_payload = snapshot.captured(paths.frozen_dataset, paths.repo_root).payload
+    canonical_runtime_cases = tuple(
+        project_runtime_case(case) for case in load_v1_1_frozen_dataset_bytes(frozen_payload)
+    )
+    if canonical_runtime_cases != plan.runtime_cases:
+        raise ValueError("capture plan runtime cases differ from the frozen dataset")
+
+    _require_execution_snapshot_stable(paths, snapshot)
+    state = inspect_repository_state(paths.repo_root)
+    _require_execution_repository_state(state, paths, manifest)
+
+    final_intent = _snapshot_file(paths.repo_root, paths.capture_intent)
+    if final_intent.payload != intent.payload:
+        raise ValueError("capture intent bytes changed during execution revalidation")
+    if final_intent.identity != intent.identity:
+        raise ValueError("capture intent identity changed during execution revalidation")
+    _require_prediction_stream_binding(paths, handle, stream_binding)
+    if os.path.lexists(paths.snapshot_manifest):
+        raise FileExistsError(f"capture artifact already exists: {paths.snapshot_manifest}")
+    return plan.runtime_cases
+
+
+def _require_execution_snapshot_stable(
+    paths: V11ArtifactPaths,
+    snapshot: _CaptureSnapshot,
+) -> None:
+    for captured in snapshot.files.values():
+        final = _snapshot_file(paths.repo_root, captured.path)
+        if final.payload != captured.payload:
+            raise ValueError(
+                f"governed file bytes changed during capture execution: {captured.path}"
+            )
+        if final.identity != captured.identity:
+            raise ValueError(
+                f"governed file identity changed during capture execution: {captured.path}"
+            )
+
+
+def _require_execution_repository_state(
+    state: RepositoryState,
+    paths: V11ArtifactPaths,
+    manifest: V11FrozenDatasetManifest,
+) -> None:
+    if state.git_top_level is None:
+        raise ValueError("Git top-level identity is required at capture execution boundary")
+    try:
+        top_level = state.git_top_level.resolve(strict=True)
+    except OSError as exc:
+        raise ValueError(
+            "Git top-level identity does not exist at capture execution boundary"
+        ) from exc
+    if top_level != paths.repo_root:
+        raise ValueError("repository root differs from Git top-level at capture execution boundary")
+    if state.commit_sha != manifest.git_commit_sha:
+        raise ValueError("Git source commit changed at capture execution boundary")
+    expected_untracked = tuple(
+        sorted(
+            path.relative_to(paths.repo_root).as_posix()
+            for path in (
+                paths.frozen_dataset,
+                paths.freeze_manifest,
+                paths.capture_intent,
+                paths.predictions,
+            )
+        )
+    )
+    if state.tracked_dirty or tuple(sorted(state.untracked_paths)) != expected_untracked:
+        raise ValueError("unexpected worktree delta at capture execution boundary")
+
+
+def _path_identity(path: Path) -> _FileIdentity:
+    return _FileIdentity.from_stat(os.lstat(path))
+
+
+def _same_filesystem_object(left: _FileIdentity, right: _FileIdentity) -> bool:
+    return (left.device, left.inode, left.mode) == (right.device, right.inode, right.mode)
+
+
+def _bind_prediction_stream(
+    paths: V11ArtifactPaths,
+    handle: BinaryIO,
+    expected_parent_identity: _FileIdentity,
+) -> _PredictionStreamBinding:
+    parent_identity = _path_identity(paths.predictions.parent)
+    if not _same_filesystem_object(parent_identity, expected_parent_identity):
+        raise ValueError("prediction output parent identity changed during exclusive claim")
+    file_identity = _FileIdentity.from_stat(os.fstat(handle.fileno()))
+    if not stat.S_ISREG(file_identity.mode):
+        raise ValueError("prediction stream is not a regular file")
+    binding = _PredictionStreamBinding(
+        parent_identity=parent_identity,
+        file_identity=file_identity,
+    )
+    _require_prediction_stream_binding(paths, handle, binding)
+    return binding
+
+
+def _require_prediction_stream_binding(
+    paths: V11ArtifactPaths,
+    handle: BinaryIO,
+    binding: _PredictionStreamBinding,
+) -> None:
+    _require_safe_existing_file(paths.repo_root, paths.predictions)
+    current_parent = _path_identity(paths.predictions.parent)
+    if not _same_filesystem_object(current_parent, binding.parent_identity):
+        raise ValueError("prediction output parent identity changed")
+    descriptor_identity = _FileIdentity.from_stat(os.fstat(handle.fileno()))
+    if not _same_filesystem_object(descriptor_identity, binding.file_identity):
+        raise ValueError("prediction stream descriptor identity changed")
+    path_identity = _path_identity(paths.predictions)
+    if not _same_filesystem_object(path_identity, binding.file_identity):
+        raise ValueError("prediction stream path identity changed")
+
+
+def _validate_final_prediction_stream(
+    paths: V11ArtifactPaths,
+    handle: BinaryIO,
+    binding: _PredictionStreamBinding,
+    *,
+    expected_payload: bytes,
+    runtime_cases: tuple[V11RuntimeCase, ...],
+    success_count: int,
+    failure_count: int,
+) -> str:
+    _require_prediction_stream_binding(paths, handle, binding)
+    handle.flush()
+    handle.seek(0)
+    durable_payload = handle.read()
+    if durable_payload != expected_payload:
+        raise ValueError("prediction stream content changed outside the claimed descriptor")
+
+    records = _load_v1_1_prediction_records_bytes(durable_payload)
+    if len(records) != 26:
+        raise ValueError("final prediction stream must contain exactly 26 records")
+    if [record.case_id for record in records] != [case.case_id for case in runtime_cases]:
+        raise ValueError("final prediction stream differs from frozen case order")
+    observed_successes = sum(record.status is V11PredictionStatus.SUCCESS for record in records)
+    observed_failures = sum(record.status is V11PredictionStatus.ERROR for record in records)
+    if (observed_successes, observed_failures) != (success_count, failure_count):
+        raise ValueError("final prediction stream counts differ from capture counts")
+
+    _require_prediction_stream_binding(paths, handle, binding)
+    canonical = _snapshot_file(paths.repo_root, paths.predictions)
+    if not _same_filesystem_object(canonical.identity, binding.file_identity):
+        raise ValueError("prediction stream canonical path identity changed")
+    if canonical.payload != durable_payload:
+        raise ValueError("prediction stream canonical path content changed")
+    return sha256_bytes(durable_payload)
+
+
+def _capture_start_timestamp(value: datetime | None) -> datetime:
+    if value is None:
+        return _timestamp_value(None)
+    timestamp = _timestamp_value(value)
+    observed_now = datetime.now().astimezone().replace(microsecond=0)
+    if timestamp > observed_now:
+        raise ValueError("capture start timestamp must not be in the future")
+    return timestamp
 
 
 def _timestamp_value(value: datetime | None) -> datetime:
