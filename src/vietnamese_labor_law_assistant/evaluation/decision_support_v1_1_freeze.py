@@ -15,6 +15,7 @@ from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1 import (
     candidate_quality_report,
     load_v1_1_candidate,
     load_v1_1_threshold_spec,
+    resolve_v1_1_week3_threshold_source,
     validate_v1_1_review_packet,
 )
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_approval import (
@@ -118,6 +119,7 @@ def prepare_v1_1_freeze(
         paths.threshold_approval,
         project_author_name=project_author_name,
         threshold_spec_identity=threshold_identity,
+        repo_root=paths.repo_root,
     )
     if not threshold_validation.policy_satisfied or not _is_canonical_approval_bytes(
         paths.threshold_approval
@@ -149,8 +151,11 @@ def prepare_v1_1_freeze(
     dataset_bytes = b"".join(
         canonical_json_bytes(case.model_dump(mode="json")) for case in frozen_cases
     )
-    threshold_spec = load_v1_1_threshold_spec(paths.threshold_spec)
-    evaluation_spec_path = _evaluation_spec_path(paths, threshold_spec.week3_threshold_source)
+    threshold_spec = load_v1_1_threshold_spec(paths.threshold_spec, repo_root=paths.repo_root)
+    evaluation_spec_path = resolve_v1_1_week3_threshold_source(
+        threshold_spec,
+        repo_root=paths.repo_root,
+    )
     manifest = V11FrozenDatasetManifest(
         ordered_case_ids_sha256=sha256_bytes(
             canonical_json_bytes([case.case_id for case in frozen_cases])
@@ -229,11 +234,6 @@ def _timezone_aware_timestamp(value: datetime | None, *, name: str) -> datetime:
     if timestamp.tzinfo is None or timestamp.utcoffset() is None:
         raise ValueError(f"{name} must include a timezone")
     return timestamp.replace(microsecond=0)
-
-
-def _evaluation_spec_path(paths: V11ArtifactPaths, registered_path: str) -> Path:
-    path = Path(registered_path)
-    return path if path.is_absolute() else paths.repo_root / path
 
 
 def _is_canonical_approval_bytes(path: Path) -> bool:

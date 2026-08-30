@@ -167,12 +167,13 @@ def validate_v1_1_threshold_approval(
     *,
     project_author_name: str,
     threshold_spec_identity: str | None = None,
+    repo_root: Path | None = None,
 ) -> V11ThresholdApprovalValidation:
     """Validate the approval identity, state, and unchanged threshold checksums."""
 
     errors: list[str] = []
     try:
-        spec = load_v1_1_threshold_spec(threshold_spec_path)
+        spec = load_v1_1_threshold_spec(threshold_spec_path, repo_root=repo_root)
     except (OSError, ValueError) as exc:
         return _failed_threshold_validation(f"invalid threshold specification: {exc}")
     try:

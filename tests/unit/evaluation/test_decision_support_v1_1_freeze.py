@@ -80,6 +80,29 @@ def test_freeze_rejects_approval_not_earlier_than_freeze(
         )
 
 
+def test_prepare_freeze_rejects_mutated_temp_root_inherited_threshold_source(
+    governed_paths: V11ArtifactPaths,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    week3_spec = governed_paths.repo_root / (
+        "data/evaluation/decision_support/v1_1/week3_evaluation_spec.json"
+    )
+    payload = json.loads(week3_spec.read_text(encoding="utf-8"))
+    payload["thresholds"]["missing_fact_precision_min"] = 0.5
+    week3_spec.write_text(json.dumps(payload), encoding="utf-8")
+    non_root_cwd = governed_paths.repo_root / "outside-repository"
+    non_root_cwd.mkdir()
+    monkeypatch.chdir(non_root_cwd)
+
+    with pytest.raises(ValueError, match="v1.1 proposal changed the Week-3 threshold"):
+        prepare_v1_1_freeze(
+            governed_paths,
+            project_author_name="mrhao165-del",
+            repository_state=CLEAN_STATE,
+            frozen_at=FROZEN_AT,
+        )
+
+
 def test_freeze_is_separate_write_once_and_preserves_inputs(
     governed_paths: V11ArtifactPaths,
     monkeypatch: pytest.MonkeyPatch,
