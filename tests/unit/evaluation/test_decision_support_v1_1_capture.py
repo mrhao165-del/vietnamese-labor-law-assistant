@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+import vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_capture as capture_module
 from vietnamese_labor_law_assistant.common.settings import Settings
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_artifacts import (
     V11_FREEZE_CODE_RELATIVE_PATHS,
@@ -94,6 +95,7 @@ def capture_repository_state(paths: V11ArtifactPaths) -> RepositoryState:
             paths.frozen_dataset.relative_to(paths.repo_root).as_posix(),
             paths.freeze_manifest.relative_to(paths.repo_root).as_posix(),
         ),
+        git_top_level=paths.repo_root,
     )
 
 
@@ -274,6 +276,34 @@ def test_preflight_rejects_gemini_without_required_base_url(
         )
 
 
+@pytest.mark.parametrize(
+    "base_url",
+    (
+        "https://user:secret-value@provider.test/v1",
+        "https://provider.test/v1?key=secret-value",
+        "https://provider.test/v1#token=secret-value",
+    ),
+)
+def test_preflight_rejects_secret_bearing_base_url_components(
+    captured_paths: V11ArtifactPaths,
+    base_url: str,
+) -> None:
+    settings = Settings(
+        openai_api_key=SecretStr("test-secret"),
+        llm_model="test-production-model",
+        llm_provider="openai",
+        openai_base_url=base_url,
+    )
+
+    with pytest.raises(ValueError, match="provider base URL contains non-persistable components"):
+        preflight_v1_1_capture(
+            captured_paths,
+            settings,
+            project_author_name="mrhao165-del",
+            repository_state=capture_repository_state(captured_paths),
+        )
+
+
 def test_preflight_rejects_changed_code_file_hash(captured_paths: V11ArtifactPaths) -> None:
     intake_path = captured_paths.repo_root / V11_FREEZE_CODE_RELATIVE_PATHS[0]
     with intake_path.open("ab") as handle:
@@ -357,6 +387,149 @@ def test_preflight_rejects_changed_ordered_case_identity(
             configured_settings(),
             project_author_name="mrhao165-del",
             repository_state=capture_repository_state(captured_paths),
+        )
+
+
+@pytest.mark.parametrize("artifact_name", ("capture_intent", "predictions", "snapshot_manifest"))
+def test_preflight_rechecks_capture_artifact_absence_before_return(
+    captured_paths: V11ArtifactPaths,
+    artifact_name: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original = capture_module.candidate_quality_report
+    created = False
+
+    def create_capture_artifact(cases: object) -> object:
+        nonlocal created
+        if not created:
+            created = True
+            write_exclusive(getattr(captured_paths, artifact_name), b"{}\n")
+        return original(cases)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(capture_module, "candidate_quality_report", create_capture_artifact)
+
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        preflight_v1_1_capture(
+            captured_paths,
+            configured_settings(),
+            project_author_name="mrhao165-del",
+            repository_state=capture_repository_state(captured_paths),
+        )
+
+
+@pytest.mark.parametrize("target_kind", ("frozen_dataset", "freeze_manifest", "code_file"))
+def test_preflight_rejects_file_mutated_and_restored_during_validation(
+    captured_paths: V11ArtifactPaths,
+    target_kind: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = (
+        captured_paths.repo_root / V11_FREEZE_CODE_RELATIVE_PATHS[0]
+        if target_kind == "code_file"
+        else getattr(captured_paths, target_kind)
+    )
+    original_bytes = target.read_bytes()
+    original = capture_module.candidate_quality_report
+    mutated = False
+
+    def mutate_and_restore(cases: object) -> object:
+        nonlocal mutated
+        if not mutated:
+            mutated = True
+            target.write_bytes(original_bytes + b"\n")
+            target.write_bytes(original_bytes)
+        return original(cases)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(capture_module, "candidate_quality_report", mutate_and_restore)
+
+    with pytest.raises(ValueError, match="governed file identity changed"):
+        preflight_v1_1_capture(
+            captured_paths,
+            configured_settings(),
+            project_author_name="mrhao165-del",
+            repository_state=capture_repository_state(captured_paths),
+        )
+
+
+def test_preflight_rechecks_repository_state_before_return(
+    captured_paths: V11ArtifactPaths,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clean = capture_repository_state(captured_paths)
+    dirty = clean.model_copy(update={"untracked_paths": (*clean.untracked_paths, "late.txt")})
+    states = iter((clean, dirty))
+    monkeypatch.setattr(capture_module, "inspect_repository_state", lambda root: next(states))
+
+    with pytest.raises(ValueError, match="unexpected worktree delta"):
+        preflight_v1_1_capture(
+            captured_paths,
+            configured_settings(),
+            project_author_name="mrhao165-del",
+        )
+
+
+def test_preflight_rejects_external_governed_input_symlink(
+    captured_paths: V11ArtifactPaths,
+    tmp_path: Path,
+) -> None:
+    external = tmp_path.parent / f"{tmp_path.name}-external-candidate.jsonl"
+    external.write_bytes(captured_paths.corrected_candidate.read_bytes())
+    captured_paths.corrected_candidate.unlink()
+    captured_paths.corrected_candidate.symlink_to(external)
+
+    with pytest.raises(ValueError, match="governed paths must not contain symlinks"):
+        preflight_v1_1_capture(
+            captured_paths,
+            configured_settings(),
+            project_author_name="mrhao165-del",
+            repository_state=capture_repository_state(captured_paths),
+        )
+
+
+def test_preflight_rejects_governed_code_symlink(
+    captured_paths: V11ArtifactPaths,
+    tmp_path: Path,
+) -> None:
+    code_path = captured_paths.repo_root / V11_FREEZE_CODE_RELATIVE_PATHS[0]
+    external = tmp_path.parent / f"{tmp_path.name}-external-intake.py"
+    external.write_bytes(code_path.read_bytes())
+    code_path.unlink()
+    code_path.symlink_to(external)
+
+    with pytest.raises(ValueError, match="governed paths must not contain symlinks"):
+        preflight_v1_1_capture(
+            captured_paths,
+            configured_settings(),
+            project_author_name="mrhao165-del",
+            repository_state=capture_repository_state(captured_paths),
+        )
+
+
+def test_preflight_rejects_dangling_capture_output_symlink(
+    captured_paths: V11ArtifactPaths,
+) -> None:
+    captured_paths.capture_intent.parent.mkdir(parents=True, exist_ok=True)
+    captured_paths.capture_intent.symlink_to(captured_paths.capture_intent.parent / "missing.json")
+
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        preflight_v1_1_capture(
+            captured_paths,
+            configured_settings(),
+            project_author_name="mrhao165-del",
+            repository_state=capture_repository_state(captured_paths),
+        )
+
+
+def test_preflight_rejects_repo_root_that_differs_from_git_top_level(tmp_path: Path) -> None:
+    paths = prepare_capture_paths(tmp_path / "nested")
+    state = capture_repository_state(paths).model_copy(update={"git_top_level": tmp_path})
+
+    with pytest.raises(ValueError, match="repository root differs from Git top-level"):
+        preflight_v1_1_capture(
+            paths,
+            configured_settings(),
+            project_author_name="mrhao165-del",
+            repository_state=state,
         )
 
 

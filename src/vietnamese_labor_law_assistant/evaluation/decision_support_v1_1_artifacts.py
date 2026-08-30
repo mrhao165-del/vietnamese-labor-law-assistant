@@ -57,6 +57,7 @@ class RepositoryState(BaseModel):
     commit_sha: str = Field(pattern=r"^[0-9a-f]{40}$")
     tracked_dirty: bool
     untracked_paths: tuple[str, ...]
+    git_top_level: Path | None = None
 
 
 V11_FREEZE_CODE_RELATIVE_PATHS = (
@@ -111,6 +112,14 @@ def inspect_repository_state(repo_root: Path) -> RepositoryState:
     """Inspect the current commit and worktree without changing repository state."""
 
     root = repo_root.resolve()
+    git_top_level = Path(
+        subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    ).resolve()
     commit = subprocess.run(
         ["git", "-C", str(root), "rev-parse", "HEAD"],
         check=True,
@@ -134,6 +143,7 @@ def inspect_repository_state(repo_root: Path) -> RepositoryState:
         commit_sha=commit,
         tracked_dirty=tracked_dirty,
         untracked_paths=tuple(sorted(Path(item).as_posix() for item in untracked)),
+        git_top_level=git_top_level,
     )
 
 
