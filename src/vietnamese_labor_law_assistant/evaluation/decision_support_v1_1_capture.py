@@ -1,17 +1,27 @@
-"""Label-isolated preflight contracts for the governed v1.1 prediction capture."""
+"""Label-isolated preflight and write-once governed v1.1 prediction capture."""
 
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from vietnamese_labor_law_assistant.common.settings import Settings
-from vietnamese_labor_law_assistant.decision_support.models import CaseIntakeInput
+from vietnamese_labor_law_assistant.decision_support.intake import (
+    CaseIntakeError,
+    OpenAIStructuredCaseIntakeExtractor,
+    validate_case_intake_result,
+)
+from vietnamese_labor_law_assistant.decision_support.models import (
+    CaseIntakeInput,
+    CaseIntakeResult,
+)
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1 import (
     V11ThresholdSpec,
     candidate_quality_report,
@@ -29,6 +39,8 @@ from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_artifacts i
     inspect_repository_state,
     require_capture_repository_state,
     sha256_bytes,
+    sha256_file,
+    write_exclusive,
 )
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_freeze import (
     V11FrozenDatasetManifest,
@@ -139,6 +151,112 @@ class V11CapturePlan(BaseModel):
     generation_settings: V11NonSecretGenerationSettings
 
 
+class V11PredictionStatus(StrEnum):
+    """Per-case result state persisted in the production prediction stream."""
+
+    SUCCESS = "SUCCESS"
+    ERROR = "ERROR"
+
+
+class V11PredictionFailureReason(StrEnum):
+    """The complete non-secret allowlist for persisted Case Intake failures."""
+
+    PROVIDER_UNAVAILABLE = "CASE_INTAKE_PROVIDER_UNAVAILABLE"
+    EMPTY_OUTPUT = "CASE_INTAKE_EMPTY_OUTPUT"
+    SOURCE_INVALID = "CASE_INTAKE_SOURCE_INVALID"
+    SCHEMA_INVALID = "CASE_INTAKE_SCHEMA_INVALID"
+    TIMEOUT = "CASE_INTAKE_TIMEOUT"
+    PROVIDER_ERROR = "CASE_INTAKE_PROVIDER_ERROR"
+    UNEXPECTED_ERROR = "CASE_INTAKE_UNEXPECTED_ERROR"
+
+
+class V11CaseIntakePredictionRecord(BaseModel):
+    """One canonical, label-free production prediction or sanitized failure."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    sequence: int = Field(ge=1, le=26)
+    case_id: str
+    status: V11PredictionStatus
+    result: CaseIntakeResult | None = None
+    failure_reason: V11PredictionFailureReason | None = None
+
+    @model_validator(mode="after")
+    def validate_payload(self) -> V11CaseIntakePredictionRecord:
+        if (self.status is V11PredictionStatus.SUCCESS) != (self.result is not None):
+            raise ValueError("SUCCESS requires one validated CaseIntakeResult")
+        if (self.status is V11PredictionStatus.ERROR) != (self.failure_reason is not None):
+            raise ValueError("ERROR requires one typed failure reason")
+        return self
+
+
+class _V11CaptureIdentity(BaseModel):
+    """Plan-bound identity fields safe to persist without runtime inputs or labels."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    dataset_id: Literal["decision_support_v1_1_final"]
+    dataset_version: Literal["v1_1_frozen"]
+    case_count: Literal[26]
+    frozen_dataset_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    freeze_manifest_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    corrected_candidate_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    review_packet_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    threshold_spec_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    threshold_approval_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    git_commit_sha: str = Field(pattern=r"^[0-9a-f]{40}$")
+    extractor_class: Literal[
+        "vietnamese_labor_law_assistant.decision_support.intake.OpenAIStructuredCaseIntakeExtractor"
+    ]
+    extractor_implementation_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    prompt_identity_method: Literal["BOUND_TO_FULL_INTAKE_MODULE_BYTES"]
+    response_schema_identity: Literal[
+        "vietnamese_labor_law_assistant.decision_support.models.CaseIntakeResult"
+    ]
+    generation_settings: V11NonSecretGenerationSettings
+
+
+class V11CaptureIntent(_V11CaptureIdentity):
+    """Exclusive audit claim created before extractor construction or provider use."""
+
+    schema_version: Literal["v1_1_capture_intent_v1"] = "v1_1_capture_intent_v1"
+    status: Literal["STARTED"] = "STARTED"
+    started_at: datetime
+
+    @model_validator(mode="after")
+    def validate_started_at(self) -> V11CaptureIntent:
+        _require_timezone_aware(self.started_at, "capture start timestamp")
+        return self
+
+
+class V11PredictionSnapshotManifest(_V11CaptureIdentity):
+    """Final checksum-bound status created only after all cases were attempted."""
+
+    schema_version: Literal["v1_1_prediction_snapshot_manifest_v1"] = (
+        "v1_1_prediction_snapshot_manifest_v1"
+    )
+    status: Literal["COMPLETE", "FAILED"]
+    started_at: datetime
+    completed_at: datetime
+    predictions_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    total_count: Literal[26] = 26
+    success_count: int = Field(ge=0, le=26)
+    failure_count: int = Field(ge=0, le=26)
+
+    @model_validator(mode="after")
+    def validate_final_status(self) -> V11PredictionSnapshotManifest:
+        _require_timezone_aware(self.started_at, "capture start timestamp")
+        _require_timezone_aware(self.completed_at, "capture completion timestamp")
+        if self.completed_at < self.started_at:
+            raise ValueError("capture completion timestamp must not precede start")
+        if self.success_count + self.failure_count != self.total_count:
+            raise ValueError("prediction counts must total 26")
+        complete = self.success_count == 26 and self.failure_count == 0
+        if (self.status == "COMPLETE") != complete:
+            raise ValueError("COMPLETE requires 26 successful prediction records")
+        return self
+
+
 def project_runtime_case(case: V11FrozenEvaluationCase) -> V11RuntimeCase:
     """Copy only legitimate production input fields out of one frozen labeled row."""
 
@@ -149,6 +267,87 @@ def project_runtime_case(case: V11FrozenEvaluationCase) -> V11RuntimeCase:
             source_ref=case.source_ref,
         ),
     )
+
+
+def load_v1_1_prediction_records(path: Path) -> list[V11CaseIntakePredictionRecord]:
+    """Load canonical prediction rows and verify frozen sequence/identity invariants."""
+
+    records = [
+        V11CaseIntakePredictionRecord.model_validate_json(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    if [record.sequence for record in records] != list(range(1, len(records) + 1)):
+        raise ValueError("prediction records must use contiguous frozen order")
+    case_ids = [record.case_id for record in records]
+    if len(case_ids) != len(set(case_ids)):
+        raise ValueError("prediction records contain duplicate case IDs")
+    return records
+
+
+async def capture_v1_1_predictions(
+    paths: V11ArtifactPaths,
+    plan: V11CapturePlan,
+    settings: Settings,
+    *,
+    captured_at: datetime | None = None,
+) -> V11PredictionSnapshotManifest:
+    """Claim and execute exactly one durable production Case Intake capture attempt."""
+
+    _require_canonical_paths(paths)
+    _require_execution_plan(plan, settings)
+    started_at = _timestamp_value(captured_at)
+    _require_no_existing_capture_artifact(paths)
+
+    intent = _capture_intent(plan, started_at)
+    intent_bytes = canonical_json_bytes(intent.model_dump(mode="json"))
+    write_exclusive(paths.capture_intent, intent_bytes)
+
+    _require_safe_output_path(paths.repo_root, paths.predictions)
+    paths.predictions.parent.mkdir(parents=True, exist_ok=True)
+    with paths.predictions.open("xb") as handle:
+        _revalidate_execution_boundary(paths, plan, intent_bytes)
+        extractor = OpenAIStructuredCaseIntakeExtractor(settings)
+        success_count = 0
+        failure_count = 0
+        for sequence, runtime_case in enumerate(plan.runtime_cases, start=1):
+            try:
+                extracted = await extractor.extract(runtime_case.case_input)
+                result = validate_case_intake_result(runtime_case.case_input, extracted)
+                record = V11CaseIntakePredictionRecord(
+                    sequence=sequence,
+                    case_id=runtime_case.case_id,
+                    status=V11PredictionStatus.SUCCESS,
+                    result=result,
+                )
+                success_count += 1
+            except CaseIntakeError as exc:
+                record = _failure_record(sequence, runtime_case.case_id, exc.reason)
+                failure_count += 1
+            except Exception:
+                record = _failure_record(
+                    sequence,
+                    runtime_case.case_id,
+                    V11PredictionFailureReason.UNEXPECTED_ERROR,
+                )
+                failure_count += 1
+            handle.write(canonical_json_bytes(record.model_dump(mode="json")))
+            handle.flush()
+            os.fsync(handle.fileno())
+
+    manifest = _prediction_snapshot_manifest(
+        plan,
+        started_at=started_at,
+        completed_at=_timestamp_value(None),
+        predictions_sha256=sha256_file(paths.predictions),
+        success_count=success_count,
+        failure_count=failure_count,
+    )
+    write_exclusive(
+        paths.snapshot_manifest,
+        canonical_json_bytes(manifest.model_dump(mode="json")),
+    )
+    return manifest
 
 
 def preflight_v1_1_capture(
@@ -534,3 +733,185 @@ def _require_code_identity(
         captured = snapshot.captured(code_path, paths.repo_root)
         if sha256_bytes(captured.payload) != manifest.code_file_sha256[relative_path]:
             raise ValueError(f"code file checksum changed: {relative_path}")
+
+
+def _require_execution_plan(plan: V11CapturePlan, settings: Settings) -> None:
+    runtime_case_ids = [runtime.case_id for runtime in plan.runtime_cases]
+    if len(plan.runtime_cases) != 26 or plan.case_count != len(plan.runtime_cases):
+        raise ValueError("capture plan must contain exactly 26 runtime cases")
+    if len(runtime_case_ids) != len(set(runtime_case_ids)):
+        raise ValueError("capture plan contains duplicate case IDs")
+    if runtime_case_ids != sorted(runtime_case_ids):
+        raise ValueError("capture plan case IDs differ from frozen order")
+    if any(type(runtime.case_input) is not CaseIntakeInput for runtime in plan.runtime_cases):
+        raise ValueError("capture plan must contain only exact CaseIntakeInput objects")
+    if (
+        plan.extractor_class != _EXTRACTOR_CLASS
+        or plan.prompt_identity_method != "BOUND_TO_FULL_INTAKE_MODULE_BYTES"
+        or plan.response_schema_identity != _RESPONSE_SCHEMA_IDENTITY
+    ):
+        raise ValueError("capture plan production identity changed after preflight")
+    if _non_secret_generation_settings(settings) != plan.generation_settings:
+        raise ValueError("generation settings changed after capture preflight")
+
+
+def _capture_identity(plan: V11CapturePlan) -> _V11CaptureIdentity:
+    return _V11CaptureIdentity(
+        dataset_id=plan.dataset_id,
+        dataset_version=plan.dataset_version,
+        case_count=plan.case_count,
+        frozen_dataset_sha256=plan.frozen_dataset_sha256,
+        freeze_manifest_sha256=plan.freeze_manifest_sha256,
+        corrected_candidate_sha256=plan.corrected_candidate_sha256,
+        review_packet_sha256=plan.review_packet_sha256,
+        threshold_spec_sha256=plan.threshold_spec_sha256,
+        threshold_approval_sha256=plan.threshold_approval_sha256,
+        git_commit_sha=plan.git_commit_sha,
+        extractor_class=plan.extractor_class,
+        extractor_implementation_sha256=plan.extractor_implementation_sha256,
+        prompt_identity_method=plan.prompt_identity_method,
+        response_schema_identity=plan.response_schema_identity,
+        generation_settings=plan.generation_settings,
+    )
+
+
+def _capture_intent(plan: V11CapturePlan, started_at: datetime) -> V11CaptureIntent:
+    return V11CaptureIntent(
+        **_capture_identity(plan).model_dump(mode="python"),
+        started_at=started_at,
+    )
+
+
+def _prediction_snapshot_manifest(
+    plan: V11CapturePlan,
+    *,
+    started_at: datetime,
+    completed_at: datetime,
+    predictions_sha256: str,
+    success_count: int,
+    failure_count: int,
+) -> V11PredictionSnapshotManifest:
+    status: Literal["COMPLETE", "FAILED"] = (
+        "COMPLETE" if success_count == 26 and failure_count == 0 else "FAILED"
+    )
+    return V11PredictionSnapshotManifest(
+        **_capture_identity(plan).model_dump(mode="python"),
+        status=status,
+        started_at=started_at,
+        completed_at=max(started_at, completed_at),
+        predictions_sha256=predictions_sha256,
+        success_count=success_count,
+        failure_count=failure_count,
+    )
+
+
+def _failure_record(
+    sequence: int,
+    case_id: str,
+    reason: str | V11PredictionFailureReason,
+) -> V11CaseIntakePredictionRecord:
+    try:
+        allowed_reason = V11PredictionFailureReason(reason)
+    except (TypeError, ValueError):
+        allowed_reason = V11PredictionFailureReason.UNEXPECTED_ERROR
+    return V11CaseIntakePredictionRecord(
+        sequence=sequence,
+        case_id=case_id,
+        status=V11PredictionStatus.ERROR,
+        failure_reason=allowed_reason,
+    )
+
+
+def _revalidate_execution_boundary(
+    paths: V11ArtifactPaths,
+    plan: V11CapturePlan,
+    expected_intent_bytes: bytes,
+) -> None:
+    """Recheck bound bytes after claiming outputs, without silently rerunning preflight."""
+
+    _require_canonical_paths(paths)
+    intent = _snapshot_file(paths.repo_root, paths.capture_intent)
+    predictions = _snapshot_file(paths.repo_root, paths.predictions)
+    if intent.payload != expected_intent_bytes:
+        raise ValueError("capture intent changed after exclusive claim")
+    if predictions.payload:
+        raise ValueError("prediction stream was not empty after exclusive claim")
+    if os.path.lexists(paths.snapshot_manifest):
+        raise FileExistsError(f"capture artifact already exists: {paths.snapshot_manifest}")
+    _require_safe_output_path(paths.repo_root, paths.snapshot_manifest)
+
+    snapshot = _snapshot_governed_files(paths)
+    manifest_file = snapshot.captured(paths.freeze_manifest, paths.repo_root)
+    manifest = V11FrozenDatasetManifest.model_validate_json(manifest_file.payload)
+    if manifest_file.payload != canonical_json_bytes(manifest.model_dump(mode="json")):
+        raise ValueError("freeze manifest bytes are not canonical")
+    if sha256_bytes(manifest_file.payload) != plan.freeze_manifest_sha256:
+        raise ValueError("freeze manifest checksum changed")
+
+    for path, expected, error in (
+        (
+            paths.corrected_candidate,
+            plan.corrected_candidate_sha256,
+            "corrected candidate checksum changed",
+        ),
+        (paths.review_packet, plan.review_packet_sha256, "human review checksum changed"),
+        (
+            paths.threshold_spec,
+            plan.threshold_spec_sha256,
+            "threshold specification checksum changed",
+        ),
+        (
+            paths.threshold_approval,
+            plan.threshold_approval_sha256,
+            "threshold approval checksum changed",
+        ),
+        (
+            paths.frozen_dataset,
+            plan.frozen_dataset_sha256,
+            "frozen dataset checksum changed",
+        ),
+    ):
+        _require_snapshot_checksum(snapshot, path, paths, expected, error)
+
+    manifest_identity = (
+        manifest.dataset_id,
+        manifest.dataset_version,
+        manifest.case_count,
+        manifest.review_status,
+        manifest.threshold_approval_decision,
+        manifest.frozen_dataset_sha256,
+        manifest.corrected_candidate_sha256,
+        manifest.review_packet_sha256,
+        manifest.threshold_spec_sha256,
+        manifest.threshold_approval_sha256,
+        manifest.git_commit_sha,
+        manifest.code_file_sha256.get(_INTAKE_IMPLEMENTATION_PATH),
+    )
+    plan_identity = (
+        plan.dataset_id,
+        plan.dataset_version,
+        plan.case_count,
+        plan.review_status,
+        plan.threshold_approval_decision,
+        plan.frozen_dataset_sha256,
+        plan.corrected_candidate_sha256,
+        plan.review_packet_sha256,
+        plan.threshold_spec_sha256,
+        plan.threshold_approval_sha256,
+        plan.git_commit_sha,
+        plan.extractor_implementation_sha256,
+    )
+    if manifest_identity != plan_identity:
+        raise ValueError("capture plan identity differs from the frozen manifest")
+    _require_code_identity(snapshot, paths, manifest)
+
+
+def _timestamp_value(value: datetime | None) -> datetime:
+    timestamp = value or datetime.now().astimezone()
+    _require_timezone_aware(timestamp, "capture timestamp")
+    return timestamp.replace(microsecond=0)
+
+
+def _require_timezone_aware(value: datetime, name: str) -> None:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{name} must be timezone-aware")

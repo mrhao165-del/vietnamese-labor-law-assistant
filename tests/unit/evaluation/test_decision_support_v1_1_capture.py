@@ -13,6 +13,11 @@ from pydantic import SecretStr
 
 import vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_capture as capture_module
 from vietnamese_labor_law_assistant.common.settings import Settings
+from vietnamese_labor_law_assistant.decision_support.intake import CaseIntakeError
+from vietnamese_labor_law_assistant.decision_support.models import (
+    CaseIntakeInput,
+    CaseIntakeResult,
+)
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_artifacts import (
     V11_FREEZE_CODE_RELATIVE_PATHS,
     RepositoryState,
@@ -23,6 +28,11 @@ from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_artifacts i
 )
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_capture import (
     V11CapturePlan,
+    V11CaseIntakePredictionRecord,
+    V11PredictionFailureReason,
+    V11PredictionStatus,
+    capture_v1_1_predictions,
+    load_v1_1_prediction_records,
     preflight_v1_1_capture,
     project_runtime_case,
 )
@@ -34,6 +44,7 @@ from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_freeze impo
 
 PROJECT_ROOT = Path(__file__).parents[3]
 FROZEN_AT = datetime(2026, 8, 30, 21, 0, tzinfo=timezone(timedelta(hours=7)))
+CAPTURED_AT = datetime(2026, 8, 30, 21, 5, tzinfo=timezone(timedelta(hours=7)))
 CLEAN_STATE = RepositoryState(commit_sha="b" * 40, tracked_dirty=False, untracked_paths=())
 WEEK3_SPEC_RELATIVE_PATH = Path("data/evaluation/decision_support/v1_1/week3_evaluation_spec.json")
 
@@ -667,6 +678,405 @@ def test_preflight_rejects_every_existing_capture_artifact(
             project_author_name="mrhao165-del",
             repository_state=capture_repository_state(captured_paths),
         )
+
+
+@pytest.mark.asyncio
+async def test_capture_constructs_production_extractor_and_fsyncs_each_canonical_row(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    received: list[CaseIntakeInput] = []
+    fsync_calls: list[int] = []
+    actual_fsync = os.fsync
+
+    def recording_fsync(descriptor: int) -> None:
+        fsync_calls.append(descriptor)
+        actual_fsync(descriptor)
+
+    class SpyProductionExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+            assert paths.capture_intent.exists()
+            assert paths.predictions.exists()
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            assert not paths.snapshot_manifest.exists()
+            received.append(case_input)
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(capture_module.os, "fsync", recording_fsync)
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        SpyProductionExtractor,
+    )
+
+    manifest = await capture_v1_1_predictions(
+        paths,
+        plan,
+        settings,
+        captured_at=CAPTURED_AT,
+    )
+    records = load_v1_1_prediction_records(paths.predictions)
+
+    assert received == [runtime.case_input for runtime in plan.runtime_cases]
+    assert all(type(item) is CaseIntakeInput for item in received)
+    assert manifest.status == "COMPLETE"
+    assert manifest.total_count == 26
+    assert manifest.success_count == 26
+    assert manifest.failure_count == 0
+    assert [record.sequence for record in records] == list(range(1, 27))
+    assert [record.case_id for record in records] == [case.case_id for case in plan.runtime_cases]
+    assert all(record.status == "SUCCESS" for record in records)
+    assert len(fsync_calls) == 28  # intent + 26 prediction rows + final manifest
+    assert paths.predictions.read_bytes() == b"".join(
+        canonical_json_bytes(record.model_dump(mode="json")) for record in records
+    )
+
+
+@pytest.mark.asyncio
+async def test_typed_failure_is_recorded_and_final_status_fails(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+
+    class FailingExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            if case_input is plan.runtime_cases[0].case_input:
+                raise CaseIntakeError("CASE_INTAKE_TIMEOUT")
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(capture_module, "OpenAIStructuredCaseIntakeExtractor", FailingExtractor)
+
+    manifest = await capture_v1_1_predictions(
+        paths,
+        plan,
+        settings,
+        captured_at=CAPTURED_AT,
+    )
+    records = load_v1_1_prediction_records(paths.predictions)
+
+    assert manifest.status == "FAILED"
+    assert manifest.total_count == 26
+    assert manifest.success_count == 25
+    assert manifest.failure_count == 1
+    assert records[0].status == "ERROR"
+    assert records[0].failure_reason == "CASE_INTAKE_TIMEOUT"
+    assert records[0].result is None
+
+
+@pytest.mark.asyncio
+async def test_unknown_failures_are_sanitized_and_artifacts_exclude_governed_values(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    secret_exception = "test-secret Authorization reviewer_notes_reasoning expected_case_facts 0.95"
+    attempts = 0
+
+    class UnexpectedFailureExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise CaseIntakeError("CASE_INTAKE_NOT_ALLOWLISTED: " + secret_exception)
+            if attempts == 2:
+                raise RuntimeError(secret_exception)
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        UnexpectedFailureExtractor,
+    )
+
+    manifest = await capture_v1_1_predictions(
+        paths,
+        plan,
+        settings,
+        captured_at=CAPTURED_AT,
+    )
+    records = load_v1_1_prediction_records(paths.predictions)
+
+    assert manifest.status == "FAILED"
+    assert manifest.failure_count == 2
+    assert records[0].failure_reason == V11PredictionFailureReason.UNEXPECTED_ERROR
+    assert records[1].failure_reason == V11PredictionFailureReason.UNEXPECTED_ERROR
+    artifacts = [
+        json.loads(paths.capture_intent.read_text(encoding="utf-8")),
+        [json.loads(line) for line in paths.predictions.read_text(encoding="utf-8").splitlines()],
+        json.loads(paths.snapshot_manifest.read_text(encoding="utf-8")),
+    ]
+    artifact_strings = tuple(_recursive_strings(artifacts))
+    artifact_keys = set(_recursive_keys(artifacts))
+    artifact_numbers = set(_recursive_numbers(artifacts))
+    serialized = json.dumps(artifacts, ensure_ascii=False)
+    assert "test-secret" not in serialized
+    assert all("authorization" not in value.casefold() for value in artifact_strings)
+    for prohibited in (
+        "expected_case_facts",
+        "critical_fact_ids",
+        "date_fact_ids",
+        "money_fact_ids",
+        "source_spans",
+        "assertion_verification_labels",
+        "expected_candidate_issues",
+        "critical_issue_codes",
+        "expected_missing_fields",
+        "expected_refined_issues",
+        "expected_refined_issue_status",
+        "expected_clarification_behavior",
+        "expected_graph_status",
+        "reviewer_notes_reasoning",
+        "review_decision",
+        "thresholds",
+        "threshold_entries",
+    ):
+        assert prohibited not in artifact_keys
+
+    with paths.review_packet.open(encoding="utf-8", newline="") as handle:
+        reviewer_notes = {
+            row["reviewer_notes_reasoning"]
+            for row in csv.DictReader(handle)
+            if row["reviewer_notes_reasoning"]
+        }
+    assert reviewer_notes.isdisjoint(artifact_strings)
+    threshold_values = json.loads(paths.threshold_spec.read_text(encoding="utf-8"))["thresholds"]
+    unique_threshold_values = {float(value) for value in threshold_values.values()} - {0.0, 1.0}
+    assert unique_threshold_values.isdisjoint(artifact_numbers)
+
+
+@pytest.mark.asyncio
+async def test_keyboard_interrupt_leaves_durable_audit_evidence_and_blocks_retry(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    fsync_calls: list[int] = []
+    actual_fsync = os.fsync
+    calls = 0
+
+    def recording_fsync(descriptor: int) -> None:
+        fsync_calls.append(descriptor)
+        actual_fsync(descriptor)
+
+    class InterruptingExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            assert actual_settings is settings
+            assert paths.capture_intent.exists()
+            assert paths.predictions.exists()
+
+        async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                raise KeyboardInterrupt("operator interrupted capture")
+            return CaseIntakeResult()
+
+    monkeypatch.setattr(capture_module.os, "fsync", recording_fsync)
+    monkeypatch.setattr(
+        capture_module, "OpenAIStructuredCaseIntakeExtractor", InterruptingExtractor
+    )
+
+    with pytest.raises(KeyboardInterrupt, match="operator interrupted capture"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert paths.capture_intent.exists()
+    assert paths.predictions.exists()
+    assert not paths.snapshot_manifest.exists()
+    partial_records = load_v1_1_prediction_records(paths.predictions)
+    assert len(partial_records) == 1
+    assert partial_records[0].sequence == 1
+    assert len(fsync_calls) == 2  # intent and the completed first row
+
+    class ForbiddenRetryExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            raise AssertionError("retry must be refused before extractor construction")
+
+    monkeypatch.setattr(
+        capture_module,
+        "OpenAIStructuredCaseIntakeExtractor",
+        ForbiddenRetryExtractor,
+    )
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+
+@pytest.mark.asyncio
+async def test_capture_claims_outputs_then_revalidates_bound_files_before_extractor_use(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    with paths.frozen_dataset.open("ab") as handle:
+        handle.write(b"\n")
+
+    class ForbiddenExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            raise AssertionError("drift must fail before extractor construction")
+
+    monkeypatch.setattr(capture_module, "OpenAIStructuredCaseIntakeExtractor", ForbiddenExtractor)
+
+    with pytest.raises(ValueError, match="frozen dataset checksum changed"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert paths.capture_intent.exists()
+    assert paths.predictions.exists()
+    assert paths.predictions.read_bytes() == b""
+    assert not paths.snapshot_manifest.exists()
+    with pytest.raises(FileExistsError, match="capture artifact already exists"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            settings,
+            captured_at=CAPTURED_AT,
+        )
+
+
+@pytest.mark.asyncio
+async def test_capture_rejects_settings_drift_before_claiming_intent(
+    ready_capture: tuple[V11ArtifactPaths, V11CapturePlan, Settings],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, plan, settings = ready_capture
+    changed_settings = settings.model_copy(update={"llm_model": "different-production-model"})
+
+    class ForbiddenExtractor:
+        def __init__(self, actual_settings: Settings) -> None:
+            raise AssertionError("settings drift must fail before extractor construction")
+
+    monkeypatch.setattr(capture_module, "OpenAIStructuredCaseIntakeExtractor", ForbiddenExtractor)
+
+    with pytest.raises(ValueError, match="generation settings changed after capture preflight"):
+        await capture_v1_1_predictions(
+            paths,
+            plan,
+            changed_settings,
+            captured_at=CAPTURED_AT,
+        )
+
+    assert not paths.capture_intent.exists()
+    assert not paths.predictions.exists()
+    assert not paths.snapshot_manifest.exists()
+
+
+@pytest.mark.parametrize(
+    ("payloads", "error"),
+    (
+        (
+            (
+                {"sequence": 1, "case_id": "case-a", "status": "SUCCESS", "result": {}},
+                {"sequence": 3, "case_id": "case-b", "status": "SUCCESS", "result": {}},
+            ),
+            "contiguous frozen order",
+        ),
+        (
+            (
+                {"sequence": 1, "case_id": "case-a", "status": "SUCCESS", "result": {}},
+                {"sequence": 2, "case_id": "case-a", "status": "SUCCESS", "result": {}},
+            ),
+            "duplicate case IDs",
+        ),
+        (
+            (
+                {
+                    "sequence": 1,
+                    "case_id": "case-a",
+                    "status": "SUCCESS",
+                    "result": {},
+                    "expected_case_facts": [],
+                },
+            ),
+            "Extra inputs are not permitted",
+        ),
+    ),
+)
+def test_prediction_loader_validates_schema_order_and_unique_case_ids(
+    tmp_path: Path,
+    payloads: tuple[dict[str, object], ...],
+    error: str,
+) -> None:
+    path = tmp_path / "predictions.jsonl"
+    path.write_bytes(b"".join(canonical_json_bytes(payload) for payload in payloads))
+
+    with pytest.raises(ValueError, match=error):
+        load_v1_1_prediction_records(path)
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    (
+        {"status": V11PredictionStatus.SUCCESS, "result": None},
+        {
+            "status": V11PredictionStatus.SUCCESS,
+            "result": CaseIntakeResult(),
+            "failure_reason": V11PredictionFailureReason.TIMEOUT,
+        },
+        {"status": V11PredictionStatus.ERROR, "failure_reason": None},
+        {
+            "status": V11PredictionStatus.ERROR,
+            "result": CaseIntakeResult(),
+            "failure_reason": V11PredictionFailureReason.TIMEOUT,
+        },
+    ),
+)
+def test_prediction_record_rejects_inconsistent_success_and_failure_payloads(
+    kwargs: dict[str, object],
+) -> None:
+    with pytest.raises(ValueError):
+        V11CaseIntakePredictionRecord(sequence=1, case_id="case-a", **kwargs)  # type: ignore[arg-type]
+
+
+def _recursive_strings(value: object) -> list[str]:
+    if isinstance(value, dict):
+        return [item for child in value.values() for item in _recursive_strings(child)]
+    if isinstance(value, list):
+        return [item for child in value for item in _recursive_strings(child)]
+    return [value] if isinstance(value, str) else []
+
+
+def _recursive_keys(value: object) -> list[str]:
+    if isinstance(value, dict):
+        return [
+            *(str(key) for key in value),
+            *(item for child in value.values() for item in _recursive_keys(child)),
+        ]
+    if isinstance(value, list):
+        return [item for child in value for item in _recursive_keys(child)]
+    return []
+
+
+def _recursive_numbers(value: object) -> list[float]:
+    if isinstance(value, dict):
+        return [item for child in value.values() for item in _recursive_numbers(child)]
+    if isinstance(value, list):
+        return [item for child in value for item in _recursive_numbers(child)]
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return []
+    return [float(value)]
 
 
 def _update_manifest_checksum(paths: V11ArtifactPaths, field: str, checksum: str) -> None:
