@@ -79,7 +79,7 @@ def case_input(source_text: str | None = None) -> CaseIntakeInput:
 
 
 def fact_payload(
-    source_text: str,
+    _source_text: str,
     *,
     raw_value: str = "2 thang",
     fact_id: str = "CF-unpaid-wages-1",
@@ -87,7 +87,6 @@ def fact_payload(
     fact_type: str = "DURATION",
     normalized_value: object | None = None,
 ) -> dict[str, object]:
-    start = source_text.index(raw_value)
     return {
         "fact_id": fact_id,
         "fact_key": fact_key,
@@ -98,12 +97,21 @@ def fact_payload(
         "verification_status": "UNVERIFIED",
         "source_type": "USER_MESSAGE",
         "source_ref": "user_message:case-1",
-        "source_span": {
-            "start_offset": start,
-            "end_offset": start + len(raw_value),
-            "text": raw_value,
-        },
+        "source_span": {"text": raw_value},
     }
+
+
+def canonical_fact_payload(source_text: str) -> dict[str, object]:
+    payload = fact_payload(source_text)
+    raw_value = payload["raw_value"]
+    assert isinstance(raw_value, str)
+    start = source_text.index(raw_value)
+    payload["source_span"] = {
+        "start_offset": start,
+        "end_offset": start + len(raw_value),
+        "text": raw_value,
+    }
+    return payload
 
 
 def successful_payload(source_text: str) -> dict[str, object]:
@@ -116,6 +124,176 @@ def successful_payload(source_text: str) -> dict[str, object]:
     }
 
 
+def provider_fact_payload(
+    *,
+    raw_value: str,
+    fact_id: str,
+    fact_key: str,
+    fact_type: str,
+    normalized_value: object,
+    literal_span_text: str | None = None,
+) -> dict[str, object]:
+    return {
+        "fact_id": fact_id,
+        "fact_key": fact_key,
+        "fact_type": fact_type,
+        "raw_value": raw_value,
+        "normalized_value": normalized_value,
+        "assertion_mode": "EXPLICIT",
+        "verification_status": "UNVERIFIED",
+        "source_type": "USER_MESSAGE",
+        "source_ref": "user_message:case-1",
+        "source_span": {"text": literal_span_text or raw_value},
+    }
+
+
+def provider_payload(*facts: dict[str, object]) -> dict[str, object]:
+    return {"facts": list(facts), "candidate_issues": []}
+
+
+@pytest.mark.asyncio
+async def test_provider_schema_requests_literal_span_text_without_offsets() -> None:
+    source = case_input("Tôi làm việc theo hợp đồng 18 tháng.")
+    client = ParseClient([{"facts": [], "candidate_issues": []}])
+
+    await OpenAIStructuredCaseIntakeExtractor(settings(), client).extract(source)
+
+    response_format = client.requests[0]["response_format"]
+    assert isinstance(response_format, type)
+    schema = response_format.model_json_schema()
+    source_span_schema = schema["$defs"]["_ProviderSourceSpan"]
+    assert set(source_span_schema["properties"]) == {"text"}
+
+
+@pytest.mark.asyncio
+async def test_unique_vietnamese_literal_derives_canonical_codepoint_offsets() -> None:
+    source = case_input("Tôi đang làm việc theo hợp đồng lao động 18 tháng.")
+    payload = provider_payload(
+        provider_fact_payload(
+            raw_value="18 tháng",
+            fact_id="CF-contract-duration-1",
+            fact_key="CONTRACT_DURATION",
+            fact_type="DURATION",
+            normalized_value=18,
+        )
+    )
+
+    result = await OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload])).extract(
+        source
+    )
+
+    assert result.facts[0].source_span.start_offset == 41
+    assert result.facts[0].source_span.end_offset == 49
+    assert result.facts[0].source_span.text == "18 tháng"
+
+
+@pytest.mark.asyncio
+async def test_literal_absent_from_source_fails_closed_as_source_grounding() -> None:
+    source = case_input("Tôi làm việc theo hợp đồng 18 tháng.")
+    payload = provider_payload(
+        provider_fact_payload(
+            raw_value="24 tháng",
+            fact_id="CF-contract-duration-1",
+            fact_key="CONTRACT_DURATION",
+            fact_type="DURATION",
+            normalized_value=24,
+        )
+    )
+
+    with pytest.raises(CaseIntakeError, match="CASE_INTAKE_SOURCE_INVALID"):
+        await OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload])).extract(
+            source
+        )
+
+
+@pytest.mark.asyncio
+async def test_repeated_literal_fails_closed_instead_of_choosing_first_occurrence() -> None:
+    source = case_input("Tôi ký hợp đồng 12 tháng rồi gia hạn thêm 12 tháng.")
+    payload = provider_payload(
+        provider_fact_payload(
+            raw_value="12 tháng",
+            fact_id="CF-contract-duration-1",
+            fact_key="CONTRACT_DURATION",
+            fact_type="DURATION",
+            normalized_value=12,
+        )
+    )
+
+    with pytest.raises(CaseIntakeError, match="CASE_INTAKE_SOURCE_INVALID"):
+        await OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload])).extract(
+            source
+        )
+
+
+@pytest.mark.asyncio
+async def test_punctuation_adjacent_money_literal_keeps_exact_bounds() -> None:
+    source = case_input("Mức lương là 5.000.000 đồng/tháng.")
+    literal = "5.000.000 đồng/tháng"
+    payload = provider_payload(
+        provider_fact_payload(
+            raw_value=literal,
+            fact_id="CF-monthly-wage-1",
+            fact_key="MONTHLY_WAGE",
+            fact_type="MONEY",
+            normalized_value=5_000_000,
+        )
+    )
+
+    result = await OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload])).extract(
+        source
+    )
+
+    assert result.facts[0].source_span.start_offset == 13
+    assert result.facts[0].source_span.end_offset == 33
+    assert source.source_text[13:33] == literal
+
+
+@pytest.mark.asyncio
+async def test_relative_date_literal_is_preserved_while_offsets_are_derived() -> None:
+    source = case_input("Tôi dự định nghỉ việc vào cuối tháng sau.")
+    literal = "cuối tháng sau"
+    payload = provider_payload(
+        provider_fact_payload(
+            raw_value=literal,
+            fact_id="CF-intended-termination-1",
+            fact_key="INTENDED_TERMINATION_DATE",
+            fact_type="TEMPORAL_EXPRESSION",
+            normalized_value=literal,
+        )
+    )
+
+    result = await OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload])).extract(
+        source
+    )
+
+    assert result.facts[0].normalized_value == literal
+    assert result.facts[0].source_span.text == literal
+    assert (
+        source.source_text[
+            result.facts[0].source_span.start_offset : result.facts[0].source_span.end_offset
+        ]
+        == literal
+    )
+
+
+@pytest.mark.asyncio
+async def test_duplicate_semantic_facts_remain_a_source_grounding_failure() -> None:
+    source = case_input("Hợp đồng của tôi có thời hạn 18 tháng.")
+    first = provider_fact_payload(
+        raw_value="18 tháng",
+        fact_id="CF-contract-duration-1",
+        fact_key="CONTRACT_DURATION",
+        fact_type="DURATION",
+        normalized_value=18,
+    )
+    second = {**first, "fact_id": "CF-contract-duration-2"}
+
+    with pytest.raises(CaseIntakeError, match="CASE_INTAKE_SOURCE_INVALID"):
+        await OpenAIStructuredCaseIntakeExtractor(
+            settings(), ParseClient([provider_payload(first, second)])
+        ).extract(source)
+
+
 @pytest.mark.asyncio
 async def test_one_structured_call_returns_facts_and_multiple_candidate_issues() -> None:
     source = case_input()
@@ -124,7 +302,7 @@ async def test_one_structured_call_returns_facts_and_multiple_candidate_issues()
     result = await OpenAIStructuredCaseIntakeExtractor(settings(), client).extract(source)
 
     assert len(client.requests) == 1
-    assert client.requests[0]["response_format"] is CaseIntakeResult
+    assert client.requests[0]["response_format"] is not CaseIntakeResult
     assert len(result.facts) == 1
     assert [issue.issue_code for issue in result.candidate_issues] == [
         IssueCode.CONTRACT_TERM,
@@ -161,16 +339,11 @@ async def test_fabricated_source_span_fails_application_validation() -> None:
     source = case_input()
     payload = successful_payload(source.source_text)
     fact = fact_payload(source.source_text)
-    start = source.source_text.index("2 thang")
     fact.update(
         {
             "raw_value": "9 thang",
             "normalized_value": "9 thang",
-            "source_span": {
-                "start_offset": start,
-                "end_offset": start + len("9 thang"),
-                "text": "9 thang",
-            },
+            "source_span": {"text": "9 thang"},
         }
     )
     payload["facts"] = [fact]
@@ -253,7 +426,7 @@ async def test_prompt_injection_remains_untrusted_data_and_cannot_change_contrac
     assert messages[0]["content"] == CASE_INTAKE_SYSTEM_PROMPT
     assert "untrusted data" in CASE_INTAKE_SYSTEM_PROMPT
     assert injected in messages[1]["content"]
-    assert client.requests[0]["response_format"] is CaseIntakeResult
+    assert client.requests[0]["response_format"] is not CaseIntakeResult
 
 
 @pytest.mark.asyncio
@@ -265,7 +438,9 @@ async def test_invalid_output_retries_only_the_same_structured_intake_stage() ->
 
     assert result.facts
     assert len(client.requests) == 2
-    assert all(request["response_format"] is CaseIntakeResult for request in client.requests)
+    response_format = client.requests[0]["response_format"]
+    assert response_format is not CaseIntakeResult
+    assert all(request["response_format"] is response_format for request in client.requests)
     first_messages = client.requests[0]["messages"]
     retry_messages = client.requests[1]["messages"]
     assert isinstance(first_messages, list) and len(first_messages) == 2
@@ -345,50 +520,50 @@ async def test_wrong_source_ref_and_duplicate_fact_representation_fail_closed() 
         )
 
 
-@pytest.mark.asyncio
-async def test_source_span_that_exceeds_the_input_fails_closed() -> None:
+def test_canonical_source_span_that_exceeds_the_input_fails_closed() -> None:
     source = case_input("2 thang")
-    fact = fact_payload(source.source_text)
+    fact = canonical_fact_payload(source.source_text)
     fact["source_span"] = {
-        "start_offset": len(source.source_text) + 1,
-        "end_offset": len(source.source_text) + 1 + len("2 thang"),
+        "start_offset": 1,
+        "end_offset": 1 + len("2 thang"),
         "text": "2 thang",
     }
-    payload = {"facts": [fact], "candidate_issues": []}
+    result = CaseIntakeResult.model_validate({"facts": [fact], "candidate_issues": []})
 
-    with pytest.raises(CaseIntakeError, match="CASE_INTAKE_SOURCE_INVALID"):
-        await OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload])).extract(
-            source
-        )
+    with pytest.raises(ValueError, match="exceeds"):
+        validate_case_intake_result(source, result)
 
 
 @pytest.mark.asyncio
-async def test_repeated_vietnamese_text_is_disambiguated_by_exact_offsets() -> None:
+async def test_repeated_raw_value_can_use_a_unique_longer_literal_span() -> None:
     source = case_input("Công ty nợ lương 2 tháng. Nhắc lại: 2 tháng.")
     repeated_value = "2 tháng"
-    second_start = source.source_text.rindex(repeated_value)
+    unique_literal = "Nhắc lại: 2 tháng"
+    second_start = source.source_text.index(unique_literal)
     repeated_fact = fact_payload(
         source.source_text,
         raw_value=repeated_value,
         normalized_value=2,
     )
-    repeated_fact["source_span"] = {
-        "start_offset": second_start,
-        "end_offset": second_start + len(repeated_value),
-        "text": repeated_value,
-    }
+    repeated_fact["source_span"] = {"text": unique_literal}
 
     result = await OpenAIStructuredCaseIntakeExtractor(
         settings(), ParseClient([{"facts": [repeated_fact], "candidate_issues": []}])
     ).extract(source)
 
     assert result.facts[0].source_span.start_offset == second_start
-    assert source.source_text[second_start : second_start + len(repeated_value)] == repeated_value
+    assert result.facts[0].source_span.text == unique_literal
+    assert source.source_text[second_start : second_start + len(unique_literal)] == unique_literal
 
 
 def test_corrupted_internal_source_type_is_rejected_by_application_validation() -> None:
     source = case_input()
-    fact = CaseIntakeResult.model_validate(successful_payload(source.source_text)).facts[0]
+    fact = CaseIntakeResult.model_validate(
+        {
+            "facts": [canonical_fact_payload(source.source_text)],
+            "candidate_issues": [],
+        }
+    ).facts[0]
     corrupted_payload = fact.model_dump()
     corrupted_payload["source_type"] = "DOCUMENT"
     corrupted_fact = fact.model_construct(**corrupted_payload)
