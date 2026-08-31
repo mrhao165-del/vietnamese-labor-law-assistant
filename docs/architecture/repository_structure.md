@@ -107,6 +107,9 @@ are thin file/CLI adapters. `evaluation/decision_support_v1_1_artifacts.py`,
 `decision_support_v1_1_freeze.py`, and `decision_support_v1_1_capture.py` own the canonical
 write-once release-evaluation boundary. Freeze validates and binds the reviewed labels and unchanged
 threshold approval offline; capture projects only `CaseIntakeInput` into the production extractor.
+The additive `evaluation/decision_support_v1_1_rc2.py` module owns the distinct RC2 pre-capture
+registration, exact Mistral configuration identity, label-isolated runtime projection, sequential
+pacing, and RC2-only write-once paths. It does not alter or overwrite the historical RC1 evidence.
 No downstream evaluation stage may make another provider call. The frontend now
 renders only the sanitized backend-selected Direct QA/Case Analysis
 mode and public known/missing/clarification/refined/error projection; it does not select the mode or
