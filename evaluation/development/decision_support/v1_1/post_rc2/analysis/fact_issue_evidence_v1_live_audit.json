@@ -1,0 +1,127 @@
+{
+  "schema_version": "fact_issue_evidence_live_audit_v1",
+  "mode": "SYNTHETIC_DEVELOPMENT_NOT_RELEASE",
+  "run_id": "fact-issue-evidence-v1-mistral-small-2603-20260902",
+  "matrix_sha256": "4316b99b2e944dbac19eb0b0f1a36eba1db2dac26add6dc05e5d44ccba9cd5ce",
+  "restored_prompt_sha256": "249fc81530c2401899488348bb6de61820c4ff06f29ecbb7e783eb97d7e9a393",
+  "prompt_sha256": "47a07e19c081151470d4dc8ac10ba6d764e4ec90e864ae131a54760579562788",
+  "cycle_claim_sha256": "5e7d06bb685da8ba7064ca7d6c6af5489f34364444fd07504a2dca320495b76f",
+  "predictions_sha256": "d1bcaafbba3be3d5b492afaaae37fce4db7400d80424e152bf88cce050ca2b42",
+  "report_sha256": "32c2b4bf0bb245d62c4d1f39e3a793a5368c51f1cda0b0136a94294141ed0af8",
+  "provider": "openai",
+  "model": "mistral-small-2603",
+  "synthetic_gate": "FAIL",
+  "reported_internal_gate_count": 13,
+  "reported_internal_passed_gate_count": 4,
+  "reported_internal_failed_gate_count": 9,
+  "declared_authorization_gate_count": 12,
+  "post_run_audited_passed_gate_count": 3,
+  "post_run_audited_failed_gate_count": 9,
+  "terminal_case_count": 16,
+  "structured_success_count": 15,
+  "typed_failure_count": 1,
+  "fact_layer": {
+    "true_positive": 11,
+    "false_positive": 9,
+    "false_negative": 1,
+    "precision": 0.55,
+    "recall": 0.9166666666666666,
+    "f1": 0.6874999999999999,
+    "atomic_case_accuracy": 0.75,
+    "canonical_fact_key_compliance": 1.0,
+    "canonical_fact_type_compliance": 1.0,
+    "normalization_accuracy": 1.0,
+    "source_grounding_accuracy": 1.0,
+    "reported_missingness_false_positive_count": 0,
+    "post_run_reconstructed_missingness_false_positive_count": 3,
+    "unsupported_negation_false_positive_count": 1,
+    "forbidden_fact_violation_count": 7
+  },
+  "issue_layer": {
+    "contract_term_precision": 1.0,
+    "contract_term_recall": 0.75,
+    "contract_term_f1": 0.8571428571428571,
+    "employee_unilateral_termination_precision": 1.0,
+    "employee_unilateral_termination_recall": 0.8333333333333334,
+    "employee_unilateral_termination_f1": 0.9090909090909091,
+    "macro_f1": 0.8831168831168831,
+    "critical_recall": 0.8,
+    "false_positive_count": 0
+  },
+  "cross_layer": {
+    "issue_present_zero_fact_correct": 0,
+    "issue_present_zero_fact_total": 4,
+    "fact_present_no_issue_correct": 3,
+    "fact_present_no_issue_total": 4,
+    "fabricated_fact_to_justify_issue_count": 4,
+    "unrelated_fact_issue_contamination_count": 0
+  },
+  "evaluator_audit": {
+    "discrepancy_found": true,
+    "missingness_scope_defect": "The write-once report counted only fixtures tagged missingness_only. Cases 010 and 011 were tagged missingness and produced three missing-derived positive facts, so the declared missingness gate is FAIL with a reconstructed count of 3.",
+    "gate_count_defect": "The write-once report included structured_success as a thirteenth internal decision. The preregistered authorization contract declares twelve metric gates; structured success remains a separate blocking precondition.",
+    "write_once_report_modified": false,
+    "committed_evaluator_corrected_after_audit": true,
+    "provider_rerun_after_correction": false,
+    "overall_decision_changed": false
+  },
+  "case_findings": [
+    {
+      "case_id": "fact-issue-dev-003",
+      "categories": [
+        "RAW_LITERAL_TOO_BROAD",
+        "PRONOUN_AS_EMPLOYEE_ROLE",
+        "TERMINATION_INTENT_AS_DATE"
+      ]
+    },
+    {
+      "case_id": "fact-issue-dev-005",
+      "categories": [
+        "EXTRA_WAGE_PAYMENT_PROBLEM"
+      ],
+      "note": "The extra problem fact is semantically plausible from the phrase stating unpaid wages; the preregistered amount-only expectation remains unchanged. Other mandatory gates fail independently."
+    },
+    {
+      "case_id": "fact-issue-dev-009",
+      "categories": [
+        "TERMINATION_INTENT_AS_EMPLOYEE_ROLE"
+      ]
+    },
+    {
+      "case_id": "fact-issue-dev-010",
+      "categories": [
+        "MISSING_ROLE_TOPIC_AS_EMPLOYEE_ROLE"
+      ]
+    },
+    {
+      "case_id": "fact-issue-dev-011",
+      "categories": [
+        "MISSING_CONTRACT_TOPIC_AS_TYPE",
+        "MISSING_DURATION_TOPIC_AS_ZERO_DURATION"
+      ]
+    },
+    {
+      "case_id": "fact-issue-dev-012",
+      "categories": [
+        "CASE_INTAKE_SCHEMA_INVALID"
+      ]
+    },
+    {
+      "case_id": "fact-issue-dev-015",
+      "categories": [
+        "UNSUPPORTED_NEGATION_AS_NOTICE_SPECIAL_CASE"
+      ]
+    }
+  ],
+  "remaining_general_failure_family": "FACT_VALUE_ELIGIBILITY_EXCLUSION_ENFORCEMENT",
+  "remaining_general_pattern": "The model still promotes issue intent, topic labels, missing values, and unsupported negation into affirmative canonical property values even though candidate issues can be emitted independently.",
+  "prompt_contract_ambiguity": "The restored baseline still describes employee-termination issue evidence as including messages about employee role, while the orthogonal matrix expects an employee-role-only message not to select that issue. The live model matched the fixture, but the wording remains ambiguous and is not remediated in this single cycle.",
+  "stop_rule_enforced": true,
+  "second_prompt_change": false,
+  "second_synthetic_provider_run": false,
+  "old26_regression_authorized": false,
+  "old26_executed": false,
+  "fresh_holdout_created": false,
+  "rc3_created": false,
+  "release_evaluation_performed": false
+}

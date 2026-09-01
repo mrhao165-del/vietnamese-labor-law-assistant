@@ -13,8 +13,8 @@ from vietnamese_labor_law_assistant.common.settings import get_settings
 from vietnamese_labor_law_assistant.decision_support.intake import (
     OpenAIStructuredCaseIntakeExtractor,
 )
-from vietnamese_labor_law_assistant.evaluation.decision_support_atomic_development import (
-    validate_property_eligibility_authorization,
+from vietnamese_labor_law_assistant.evaluation.decision_support_fact_issue_development import (
+    validate_fact_issue_authorization,
 )
 from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1 import (
     load_v1_1_threshold_spec,
@@ -39,7 +39,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--repo-root", type=Path, default=Path("."))
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--output-dir", type=Path)
-    parser.add_argument("--property-authorization-report", type=Path, required=True)
+    parser.add_argument("--fact-issue-authorization-report", type=Path, required=True)
     parser.add_argument("--live-development", action="store_true")
     parser.add_argument("--acknowledge-not-release")
     args = parser.parse_args(argv)
@@ -53,30 +53,31 @@ def main(argv: Sequence[str] | None = None) -> int:
     threshold_path = (
         repo_root / "data/evaluation/decision_support/v1_1/v1_1_proposed_thresholds.json"
     )
-    property_matrix_path = (
-        repo_root / "evaluation/development/decision_support/v1_1/post_rc2/"
-        "property_eligibility_synthetic_v1.jsonl"
+    fact_issue_matrix_path = (
+        repo_root / "evaluation/development/decision_support/v1_1/post_rc2/fact_issue_2x2_v1.jsonl"
     )
-    property_runs_root = (
+    fact_issue_runs_root = (
         repo_root / "evaluation/development/decision_support/v1_1/post_rc2/runs"
     ).resolve()
-    property_report_path = args.property_authorization_report
-    if not property_report_path.is_absolute():
-        property_report_path = repo_root / property_report_path
-    property_report_path = property_report_path.resolve()
+    fact_issue_report_path = args.fact_issue_authorization_report
+    if not fact_issue_report_path.is_absolute():
+        fact_issue_report_path = repo_root / fact_issue_report_path
+    fact_issue_report_path = fact_issue_report_path.resolve()
     try:
-        report_relative = property_report_path.relative_to(property_runs_root)
+        report_relative = fact_issue_report_path.relative_to(fact_issue_runs_root)
     except ValueError:
-        parser.error("property authorization report must remain under the development runs root")
-    if len(report_relative.parts) != 2 or report_relative.name != "property_report.json":
-        parser.error("property authorization report must be one run's property_report.json")
+        parser.error(
+            "fact-vs-issue authorization report must remain under the development runs root"
+        )
+    if len(report_relative.parts) != 2 or report_relative.name != "fact_issue_report.json":
+        parser.error("fact-vs-issue authorization report must be one run's fact_issue_report.json")
     try:
-        validate_property_eligibility_authorization(
-            report_path=property_report_path,
-            matrix_path=property_matrix_path,
+        validate_fact_issue_authorization(
+            report_path=fact_issue_report_path,
+            matrix_path=fact_issue_matrix_path,
         )
     except (OSError, ValueError) as exc:
-        parser.error(f"property authorization is invalid: {exc}")
+        parser.error(f"fact-vs-issue authorization is invalid: {exc}")
     output_dir = args.output_dir or (
         repo_root / "evaluation/development/decision_support/v1_1/post_rc2/runs" / args.run_id
     )

@@ -33,7 +33,7 @@ def test_cli_requires_explicit_non_release_acknowledgement_before_settings(
     assert calls == []
 
 
-def test_cli_requires_passing_property_report_before_settings(
+def test_cli_requires_passing_fact_issue_report_before_settings(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -57,7 +57,7 @@ def test_cli_requires_passing_property_report_before_settings(
     assert calls == []
 
 
-def test_cli_rejects_failed_property_authorization_before_settings(
+def test_cli_rejects_failed_fact_issue_authorization_before_settings(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -66,12 +66,12 @@ def test_cli_rejects_failed_property_authorization_before_settings(
     monkeypatch.setattr(script, "get_settings", lambda: calls.append("settings"))
     monkeypatch.setattr(
         script,
-        "validate_property_eligibility_authorization",
+        "validate_fact_issue_authorization",
         lambda **kwargs: (_ for _ in ()).throw(ValueError("synthetic gate failed")),
     )
     report = (
         tmp_path / "evaluation/development/decision_support/v1_1/post_rc2/runs/failed/"
-        "property_report.json"
+        "fact_issue_report.json"
     )
 
     with pytest.raises(SystemExit):
@@ -81,7 +81,7 @@ def test_cli_rejects_failed_property_authorization_before_settings(
                 str(tmp_path),
                 "--run-id",
                 "old26-failed-auth",
-                "--property-authorization-report",
+                "--fact-issue-authorization-report",
                 str(report),
                 "--live-development",
                 "--acknowledge-not-release",
@@ -109,7 +109,7 @@ def test_cli_runs_development_service_and_prints_no_secret(
     monkeypatch.setattr(script, "get_settings", lambda: SimpleNamespace())
     monkeypatch.setattr(
         script,
-        "validate_property_eligibility_authorization",
+        "validate_fact_issue_authorization",
         lambda **kwargs: SimpleNamespace(),
     )
     monkeypatch.setattr(script, "validate_development_provider_settings", lambda settings: None)
@@ -134,10 +134,10 @@ def test_cli_runs_development_service_and_prints_no_secret(
             str(tmp_path),
             "--run-id",
             "dev-run-1",
-            "--property-authorization-report",
+            "--fact-issue-authorization-report",
             str(
                 tmp_path / "evaluation/development/decision_support/v1_1/post_rc2/runs/pass/"
-                "property_report.json"
+                "fact_issue_report.json"
             ),
             "--live-development",
             "--acknowledge-not-release",

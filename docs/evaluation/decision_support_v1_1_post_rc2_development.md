@@ -203,3 +203,63 @@ architecture review, and both production MCP demos passed. Frontend typecheck, l
 component tests, the three-case Playwright suite, and three repeated Playwright lifecycles (9/9)
 all terminated without a hang or leaked Vite listener. These results clear the secondary blockers
 but do not override the failed synthetic extraction gate.
+
+## Fact-versus-issue evidence separation cycle
+
+The failed property-eligibility prompt and its evidence remain immutable at commit `9c649da`. A new
+normal change first restored the rendered prompt byte-for-byte to the better development baseline
+`249fc81530c2401899488348bb6de61820c4ff06f29ecbb7e783eb97d7e9a393`, then made one bounded
+addition separating Level-F fact evidence from Level-I preliminary issue evidence. The resulting
+prompt SHA-256 is `47a07e19c081151470d4dc8ac10ba6d764e4ec90e864ae131a54760579562788`.
+It explicitly permits a supported candidate issue with zero or incomplete facts, delegates absent
+requirements to `MissingFactDetector`, forbids creating facts to justify an issue, and prevents wage
+facts alone from selecting `CONTRACT_TERM`. The public intake model, fact vocabulary, transport
+enums, normalization validator, source-span resolver, and legal semantics did not change.
+
+The new matrix has 16 fresh synthetic cases, four in each fact/issue 2x2 cell. Matrix SHA-256 is
+`4316b99b2e944dbac19eb0b0f1a36eba1db2dac26add6dc05e5d44ccba9cd5ce`. Before the first
+provider request, the runner exclusively recorded a claim binding that matrix, the prompt, the
+pinned generation configuration, and the fixed development thresholds. The one permitted run,
+`fact-issue-evidence-v1-mistral-small-2603-20260902`, produced 16 terminal records: 15 structured
+successes and one `CASE_INTAKE_SCHEMA_INVALID` failure. Prediction SHA-256 is
+`d1bcaafbba3be3d5b492afaaae37fce4db7400d80424e152bf88cce050ca2b42`; report SHA-256 is
+`32c2b4bf0bb245d62c4d1f39e3a793a5368c51f1cda0b0136a94294141ed0af8`.
+
+The write-once report's internal accounting failed 4/13 pass, 9/13 fail. Fact TP/FP/FN was `11/9/1`, yielding
+precision `0.55`, recall `0.9166666666666666`, and F1 `0.6874999999999999`; atomic exactness was
+`6/8` (`0.75`). Canonical keys, canonical types, normalization, and source grounding remained 100%.
+Candidate issue precision was 100% for both codes, but the one structured failure reduced
+`CONTRACT_TERM` recall to `0.75`, employee-termination recall to `0.8333333333333334`, macro-F1 to
+`0.8831168831168831`, and critical recall to `0.8`.
+
+A post-run read-only audit found two evaluator-accounting defects without modifying the write-once
+predictions or report. First, the report counted missingness false positives only for fixtures tagged
+`missingness_only`; cases 010 and 011 were tagged `missingness` and produced three missing-derived
+positive facts. The declared missingness gate is therefore FAIL with a reconstructed count of three,
+not the report's zero. Second, the report treated structured success as a thirteenth internal gate;
+the authorization contract declares twelve metric gates and keeps structured success as a separate
+blocking precondition. The audited twelve-gate result is 3 PASS and 9 FAIL. Neither discrepancy
+changes the synthetic FAIL decision. The committed evaluator corrects both accounting rules for
+future development cycles; the existing write-once report was not regenerated and no provider call
+was made after the correction.
+
+The dominant remaining general family is `FACT_VALUE_ELIGIBILITY_EXCLUSION_ENFORCEMENT`. Seven
+forbidden facts show intent used as a role/date, missing field labels used as positive values, a
+missing duration normalized to zero, and unsupported negation used as a notice-special-case value.
+Consequently, only 0/4 issue-present/zero-fact rows satisfied the complete cross-layer contract even
+though three of those four rows selected the right issue codes. The amount-only wage row also drew
+an additional, semantically plausible wage-problem fact; its preregistered expectation is preserved
+and the other mandatory failures remain independent of that diagnostic limitation.
+
+The restored baseline prompt also retains an ambiguity: it describes employee-termination issue
+evidence as including messages about employee role, while the orthogonal matrix expects a role-only
+message not to select that issue. The live model matched the fixture, but this wording ambiguity was
+not changed after the run and remains diagnostic evidence for a future bounded cycle.
+
+The single-cycle stop was enforced: no second prompt change, second synthetic provider round, or
+old-26 provider regression occurred. `OLD26_REGRESSION_AUTHORIZED` remains `NO`; no holdout, review
+packet, freeze, RC3 identity, release evaluation, or Week-5 capability was created. The canonical
+offline quality gate passed 892 tests with two accepted platform skips and 87.17%
+coverage; Ruff, formatting, Pyright, architecture, protected-evidence review, both MCP demos,
+frontend typecheck/lint/build, 16 component tests, the 3-case Playwright suite, and 9/9 repeated
+Playwright lifecycle checks were green. These results do not override the failed synthetic gate.

@@ -14,6 +14,7 @@ development adapter writes outside release paths:
 ```powershell
 uv run python scripts/run_decision_support_v1_1_development.py `
   --run-id <unique-development-run-id> `
+  --fact-issue-authorization-report <passing-fact-issue-report> `
   --live-development `
   --acknowledge-not-release RC2_REGRESSION_DIAGNOSTIC_SET
 ```

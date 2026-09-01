@@ -158,6 +158,13 @@ safe path segment, and cannot write outside `evaluation/development/decision_sup
 construction unless a passing property report, its pre-call claim, the matrix, prompt, and
 predictions all validate by checksum and the metrics recompute exactly from those inputs.
 
+`evaluation/decision_support_fact_issue_development.py` owns the subsequent one-shot 16-row
+fact-versus-issue evidence-separation experiment. It keeps fact, issue, and cross-layer metrics
+separate; preregisters fixed authorization thresholds in a cycle-wide pre-call claim; persists only
+label-free predictions under `evaluation/development/`; and recomputes every metric before a later
+old-26 task can be authorized. Its script is a thin acknowledged adapter. It cannot emit release
+state, run the old-26 diagnostic set, create a holdout, or create an RC identity.
+
 `AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
 status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned
 in this scope. See [the boundary ADR](adr_decision_support_boundary.md) for the complete dependency

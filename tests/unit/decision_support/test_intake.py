@@ -377,24 +377,23 @@ def test_prompt_operationalizes_minimality_negation_and_issue_independence() -> 
     assert missing == []
 
 
-def test_prompt_defines_property_eligibility_and_wage_issue_exclusions() -> None:
+def test_prompt_separates_fact_and_candidate_issue_evidence_thresholds() -> None:
     required_rules = (
-        "PROPERTY ELIGIBILITY",
-        "EMPLOYEE_ROLE requires a directly stated job, position, or worker category",
-        "resignation intent does not state EMPLOYEE_ROLE",
-        "INTENDED_TERMINATION_DATE requires an actual temporal expression",
-        "intent to resign by itself is not a date",
-        "NOTICE_SPECIAL_CASE requires a directly stated supported exception circumstance",
-        "ordinary notice duration is not NOTICE_SPECIAL_CASE",
-        "WAGE FACTS AND ISSUES",
-        "A wage fact by itself selects neither candidate issue",
-        "Never select CONTRACT_TERM from wages or generic employment context",
-        "WAGE_DELAY_FORCE_MAJEURE is the only target property here that accepts",
+        "FACT AND ISSUE EVIDENCE ARE SIBLING TASKS",
+        "LEVEL F",
+        "LEVEL I",
+        "zero or incomplete Level-F facts",
+        "Never fabricate or complete facts to justify a candidate issue",
+        "MissingFactDetector handles absent required facts downstream",
+        "Wage facts alone select neither supported issue and never CONTRACT_TERM",
+        "does not require EMPLOYEE_ROLE, INTENDED_TERMINATION_DATE, or NOTICE_SPECIAL_CASE",
     )
 
     compact_prompt = " ".join(CASE_INTAKE_SYSTEM_PROMPT.split())
     missing = [rule for rule in required_rules if rule not in compact_prompt]
     assert missing == []
+    assert "PROPERTY ELIGIBILITY" not in compact_prompt
+    assert "WAGE FACTS AND ISSUES" not in compact_prompt
 
 
 @pytest.mark.asyncio
