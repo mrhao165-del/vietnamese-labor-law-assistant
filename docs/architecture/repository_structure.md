@@ -137,6 +137,13 @@ only `CaseIntakeInput` into the extractor, finalizes development predictions bef
 metrics, and cannot emit a release terminal. Its CLI is a thin acknowledged adapter. Development
 evidence lives under `evaluation/development/`; it is not benchmark release evidence.
 
+`evaluation/decision_support_atomic_development.py` adds a smaller synthetic-first gate for atomic
+boundaries, missingness, negation, and candidate-issue behavior. It consumes a separately versioned
+20-row development matrix, sends only `CaseIntakeInput` to the extractor, persists predictions
+before scoring, accepts one expected repeated-literal fail-closed result, and cannot express a
+release decision. Its script is an acknowledged adapter and all outputs remain under the
+development namespace.
+
 `AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
 status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned
 in this scope. See [the boundary ADR](adr_decision_support_boundary.md) for the complete dependency

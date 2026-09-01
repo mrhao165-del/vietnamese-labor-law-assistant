@@ -359,6 +359,23 @@ def test_prompt_carries_the_closed_atomic_absence_and_issue_contract() -> None:
     assert "both candidate issues" in CASE_INTAKE_SYSTEM_PROMPT
 
 
+def test_prompt_operationalizes_minimality_negation_and_issue_independence() -> None:
+    required_rules = (
+        "shortest literal source segment",
+        "raw_value and source_span.text must be exactly the same minimal literal",
+        "UNKNOWN, MISSING, or NOT PROVIDED",
+        "unsupported negation",
+        "Do not turn the subject of missing or negated information into an affirmative fact",
+        "Candidate-issue classification is independent from fact emission",
+        "Do not use a pronoun or a termination-intent phrase as EMPLOYEE_ROLE",
+        "Assign a date key only when the text explicitly identifies the date's role",
+        "WAGE_PAYMENT_PROBLEM_REPORTED",
+    )
+
+    missing = [rule for rule in required_rules if rule not in CASE_INTAKE_SYSTEM_PROMPT]
+    assert missing == []
+
+
 @pytest.mark.asyncio
 async def test_unique_vietnamese_literal_derives_canonical_codepoint_offsets() -> None:
     source = case_input("Tôi đang làm việc theo hợp đồng lao động 18 tháng.")

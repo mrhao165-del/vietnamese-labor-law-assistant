@@ -1,0 +1,79 @@
+{
+  "analysis_scope": "post-rc2-contract-v1-mistral-small-2603-20260901",
+  "classification_unit": "overlapping fact or issue occurrence unless case_count is stated",
+  "historical_inputs_mutated": false,
+  "clusters": {
+    "MISSING_ATOMIC_FACT": {
+      "count": 5,
+      "case_count": 4,
+      "case_ids": ["dsw3-dev-002", "dsw3-dev-004", "dsw3-dev-010", "dsw3-dev-011"],
+      "pattern": "An independently represented property was omitted, including one deliberate duplicate-label diagnostic occurrence."
+    },
+    "OVER_BROAD_FACT": {
+      "count": 9,
+      "case_count": 9,
+      "case_ids": ["dsi-dev-002", "dsi-dev-003", "dsi-dev-009", "dsi-dev-006", "dsw3-dev-003", "dsw3-dev-005", "dsw3-dev-012", "dsw3-dev-015", "dsw3-dev-017"],
+      "pattern": "A clause-sized topical phrase or whole missing/negative statement was treated as one fact."
+    },
+    "MULTIPLE_FACTS_MERGED": {
+      "count": 0,
+      "case_count": 0,
+      "case_ids": [],
+      "pattern": "No unambiguous multi-property merge remained; current decomposition defects were omissions or property misassignment."
+    },
+    "NEGATIVE_INFORMATION_EMITTED_AS_POSITIVE_FACT": {
+      "count": 1,
+      "case_count": 1,
+      "case_ids": ["dsw3-dev-012"],
+      "pattern": "A statement denying the existence of an issue was emitted as affirmative notice metadata."
+    },
+    "MISSING_INFORMATION_EMITTED_AS_POSITIVE_FACT": {
+      "count": 3,
+      "case_count": 3,
+      "case_ids": ["dsw3-dev-003", "dsw3-dev-005", "dsw3-dev-017"],
+      "pattern": "The topic named by a missing-data statement was treated as evidence that the corresponding fact exists."
+    },
+    "RAW_VALUE_TOO_BROAD": {
+      "count": 3,
+      "case_count": 3,
+      "case_ids": ["dsi-dev-002", "dsi-dev-003", "dsi-dev-006"],
+      "pattern": "Semantically related facts retained subject, object, or sentence context beyond the minimal fact expression."
+    },
+    "SOURCE_SPAN_TOO_BROAD": {
+      "count": 4,
+      "case_count": 4,
+      "case_ids": ["dsi-dev-002", "dsi-dev-003", "dsi-dev-004", "dsi-dev-006"],
+      "pattern": "The span was internally grounded but included event or sentence context beyond the expected literal fact."
+    },
+    "WRONG_NORMALIZED_VALUE": {
+      "count": 8,
+      "case_count": 6,
+      "case_ids": ["dsi-dev-002", "dsi-dev-003", "dsi-dev-006", "dsw3-dev-002", "dsw3-dev-010", "dsw3-dev-016"],
+      "pattern": "Text was echoed instead of the canonical representation, a property was assigned the wrong value, or an unsupported numeric value was invented."
+    },
+    "WRONG_ASSERTION_MODE": {
+      "count": 2,
+      "case_count": 2,
+      "case_ids": ["dsi-dev-010", "dsw3-dev-008"],
+      "pattern": "One ordinary explicit value was marked inferred; one deliberate profile-specific diagnostic expected inferred from identical literal text."
+    },
+    "CANDIDATE_ISSUE_FALSE_NEGATIVE": {
+      "count": 9,
+      "case_count": 8,
+      "case_ids": ["dsw3-dev-003", "dsw3-dev-005", "dsw3-dev-006", "dsw3-dev-009", "dsw3-dev-010", "dsw3-dev-014", "dsw3-dev-015", "dsw3-dev-017"],
+      "pattern": "Misses concentrated in missing-information language, bare canonical token bundles, and preliminary issue-only diagnostics."
+    },
+    "CANDIDATE_ISSUE_FALSE_POSITIVE": {
+      "count": 3,
+      "case_count": 3,
+      "case_ids": ["dsi-dev-010", "dsw3-dev-010", "dsw3-dev-016"],
+      "pattern": "Wage-topic or token-position cues caused an issue to be emitted without the expected supported intent."
+    }
+  },
+  "zero_expected_fact_cases": {
+    "count": 8,
+    "cases_with_positive_predictions": 6,
+    "positive_prediction_count": 6,
+    "positive_case_ids": ["dsi-dev-009", "dsw3-dev-003", "dsw3-dev-005", "dsw3-dev-012", "dsw3-dev-015", "dsw3-dev-017"]
+  }
+}

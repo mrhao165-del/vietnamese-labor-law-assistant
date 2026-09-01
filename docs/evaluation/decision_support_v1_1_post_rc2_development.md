@@ -92,3 +92,36 @@ repository `npm run test:e2e` command terminated 3/3, and no Vite process remain
 network mock returned the bounded 503 envelope and the UI reached its alert assertion. This makes
 the observed boundary a transient prior runner/server-lifecycle condition; no product or browser
 test code was changed speculatively.
+
+## Atomic/missingness development cycle
+
+The next bounded cycle made one prompt-only revision. Prompt SHA-256 changed from
+`ffc99b92620f8abebcac9d76705d7dd1f7b6823c70b57e5e1bb6056b9aaa4a11` to
+`249fc81530c2401899488348bb6de61820c4ff06f29ecbb7e783eb97d7e9a393`. The revision operationalizes
+minimum literal boundaries, one-property decomposition, missingness, negation, normalization, and
+issue/fact independence. The transport schema, canonical vocabulary, public model, source-span
+resolver, and legal semantics did not change.
+
+A new 20-row synthetic matrix was authored before the prompt change and contains no old RC2 input.
+The one live synthetic run produced 20/20 terminal records: 19 successful results and the expected
+typed repeated-literal ambiguity failure. Keys, types, and internal source grounding were each
+100%, and all three missingness-only rows emitted zero facts. The gate nevertheless failed: exact
+fact F1 was `0.7659574468085106`, atomic-case accuracy was `0.5`, candidate issue macro-F1 was
+`0.8`, and the unsupported-negation row emitted one positive fact.
+
+The remaining general error is canonical property eligibility. Termination intent was still used as
+an intended date or employee role, ordinary notice duration was used as `NOTICE_SPECIAL_CASE`, and
+wage-topic language over-triggered candidate issues. Two matrix rows also expose a pre-run fixture
+scope limitation: their amount/duration-only expectations omitted a separately supported wage
+problem. Those expectations were not changed after observing provider output.
+
+The synthetic gate therefore stopped provider work. No second prompt change and no new old-26
+regression were run. No holdout, review packet, freeze, RC3 identity, capture, or release evaluation
+was created.
+
+All non-provider repository checks remained green after the stop. The canonical Python gate passed
+853 tests with two accepted Windows/POSIX skips and 86.90% coverage; Ruff, formatting, Pyright,
+the protected-artifact guard, the architecture test, and both production MCP demos passed. Frontend
+typecheck, lint, production build, 16 component tests, the three-scenario Playwright suite, and three
+repeated Playwright lifecycles (9/9) terminated successfully with no hang. These regression results
+do not override the failed extraction-development gate.

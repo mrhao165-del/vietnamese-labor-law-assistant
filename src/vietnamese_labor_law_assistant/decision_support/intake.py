@@ -43,25 +43,53 @@ grounded in the supplied source_text. Do not invent missing facts or create fact
 Use only the exact canonical fact keys, fact types, and normalized primitive types in this table:
 {_render_fact_contract_prompt()}
 
-Emit one distinct canonical fact for each atomic value. Contract type, duration, signing date,
-start date, and end date are separate facts. A wage-payment problem, its money amount, and its
-duration are separate facts. Never add a broad summary fact such as USER_MESSAGE_CONTENT, and never
-rename a key to a plausible synonym. A statement about the absence of information, such as facts
-being missing or not provided, is not a positive fact and must not create one. It may still identify
-a preliminary candidate issue when the user explicitly asks about that supported issue.
+Apply these extraction rules in order:
+
+MINIMAL FACT: emit the shortest literal source segment that independently proves one canonical
+property. raw_value and source_span.text must be exactly the same minimal literal. Do not include a
+subject, object, label word, neighboring action, punctuation, or sentence context when a shorter
+literal still proves the property.
+
+ONE PROPERTY PER FACT: emit one distinct canonical fact for every independently stated property.
+Contract type, duration, signing date, start date, and end date are separate facts. A wage-payment
+problem, its money amount, and its duration are separate facts. Every literal alternative explicitly
+written by the user is EXPLICIT even when the alternatives conflict or express uncertainty.
+
+NO SUMMARY FACTS: never turn a clause or whole message into a topical summary fact. Never add a
+broad key such as USER_MESSAGE_CONTENT or rename a key to a plausible synonym. If no canonical key
+precisely represents a source literal, emit no fact for that content.
+
+MISSING INFORMATION: words saying that a value is UNKNOWN, MISSING, or NOT PROVIDED describe the
+absence of information and evidence; they are not evidence for the underlying property.
+Do not turn the subject of missing or negated information into an affirmative fact. An input
+containing only missing-data statements may correctly produce zero facts.
+
+NEGATION: an unsupported negation does not create the corresponding affirmative fact or an invented
+positive normalized value. Emit a negated condition only when a canonical key explicitly represents
+that negative condition and the literal states it; otherwise fail closed by omitting the fact.
 
 Every fact must copy the required source_ref, use source_type=USER_MESSAGE, preserve a literal
 raw_value, and cite a source_span.text copied literally from source_text. Do not calculate or return
 source-span offsets; the application derives them deterministically. source_span.text must occur
 exactly once in source_text so the application can derive an unambiguous canonical span.
 EXPLICIT means the user directly stated the atomic fact. INFERRED is only for a direct non-legal
-linguistic implication of stated text; never infer a positive fact from missing information.
+linguistic implication of stated text; never infer a positive fact from missingness or negation.
 Assertion mode never means verified. Always set verification_status to UNVERIFIED.
 DATE is an exact YYYY-MM-DD literal already present in raw_value. DURATION and MONEY use an integer
-only when the literal can be normalized safely. TEMPORAL_EXPRESSION preserves the exact raw string.
-Never convert a relative, incomplete, or ambiguous time expression into an exact DATE.
+only when the literal can be normalized safely; remove duration units and money punctuation from
+the integer normalized_value. TEMPORAL_EXPRESSION preserves the exact raw string. Ordinary TEXT
+uses its minimal literal as normalized_value, except an explicit wage-payment problem uses the
+canonical marker WAGE_PAYMENT_PROBLEM_REPORTED and explicit uppercase contract tokens remain
+unchanged. Never convert a relative, incomplete, or ambiguous time expression into an exact DATE.
+Assign a date key only when the text explicitly identifies the date's role as signing, start, end,
+wage due, intended termination, or reference date; never guess a date role from position.
 
 Candidate issues are preliminary multi-label possibilities, not ACTIVE findings or legal outcomes.
+Candidate-issue classification is independent from fact emission: a genuine issue intent can support
+an issue even when no positive fact key represents that intent, while a topical word alone does not
+justify a fact. Do not use a pronoun or a termination-intent phrase as EMPLOYEE_ROLE. Use
+NOTICE_SPECIAL_CASE only for an explicit supported circumstance or the literal NONE, never for
+missing notice information or an ordinary notice duration.
 Use only CONTRACT_TERM for a message about contract type, duration, signing, start/end, expiry, or
 missing contract-term information. Use only EMPLOYEE_UNILATERAL_TERMINATION for a message about the
 employee's intent to resign or end employment, notice/no-notice circumstances, role, or a wage

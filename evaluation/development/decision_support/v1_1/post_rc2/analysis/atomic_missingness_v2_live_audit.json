@@ -1,0 +1,59 @@
+{
+  "run_id": "atomic-missingness-v2-mistral-small-2603-20260901",
+  "mode": "SYNTHETIC_DEVELOPMENT_NOT_RELEASE",
+  "live_development_passed": false,
+  "matrix_sha256": "2c5f4140dd881b7dd6dc372938fc2e2f814c7ec29bf71e5e626af8118afc02c9",
+  "prompt_sha256": "249fc81530c2401899488348bb6de61820c4ff06f29ecbb7e783eb97d7e9a393",
+  "predictions_sha256": "dcef3ac23eb00cd31e06dadbc1470405fdb381a48be7f3fdbe6f517c8a03f682",
+  "provider_work_stopped_after_run": true,
+  "old_26_regression_run": false,
+  "summary": {
+    "terminal_cases": 20,
+    "successful_results": 19,
+    "expected_typed_failures": 1,
+    "unexpected_failures": 0,
+    "expected_facts": 19,
+    "predicted_facts": 28,
+    "fact_exact_tp": 18,
+    "fact_exact_fp": 10,
+    "fact_exact_fn": 1,
+    "fact_exact_f1": 0.7659574468085106,
+    "canonical_key_compliance": 1.0,
+    "canonical_type_compliance": 1.0,
+    "source_grounding_accuracy": 1.0,
+    "missingness_false_positive_count": 0,
+    "negation_false_positive_count": 1,
+    "atomic_case_accuracy": 0.5,
+    "candidate_issue_macro_f1": 0.8
+  },
+  "fact_difference_audit": {
+    "too_broad": {
+      "count": 1,
+      "case_ids": ["atomic-dev-004"],
+      "note": "The raw date was minimal but source_span.text retained the complete signing clause."
+    },
+    "too_narrow": {"count": 0, "case_ids": []},
+    "wrong_atomic_decomposition_or_property_eligibility": {
+      "count": 7,
+      "case_ids": ["atomic-dev-006", "atomic-dev-009", "atomic-dev-010", "atomic-dev-011", "atomic-dev-015", "atomic-dev-019"],
+      "note": "Intent became a date or role, an ordinary notice duration became a special case, and unsupported negation became affirmative notice metadata."
+    },
+    "normalization_only": {"count": 0, "case_ids": []},
+    "assertion_only": {"count": 0, "case_ids": []},
+    "fixture_scope_caveat": {
+      "count": 2,
+      "case_ids": ["atomic-dev-005", "atomic-dev-007"],
+      "note": "The source independently supports WAGE_PAYMENT_PROBLEM although the pre-run matrix isolated amount/duration expectations. The matrix was not relabeled after observing output; these rows remain disclosed limitations."
+    },
+    "other": {"count": 0, "case_ids": []}
+  },
+  "candidate_issue_audit": {
+    "true_positive_count": 14,
+    "false_positive_count": 5,
+    "false_negative_count": 2,
+    "false_positive_case_ids": ["atomic-dev-005", "atomic-dev-006", "atomic-dev-007", "atomic-dev-019"],
+    "false_negative_case_ids": ["atomic-dev-012", "atomic-dev-013"],
+    "pattern": "Wage-only language over-triggered issues while missing-information issue context was under-recalled."
+  },
+  "next_hypothesis": "Define canonical fact-key eligibility and explicit exclusion rules for role, intended date, notice special case, and wage-triggered issue classification on synthetic development fixtures before another live run."
+}
