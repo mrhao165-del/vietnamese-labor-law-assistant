@@ -165,6 +165,23 @@ label-free predictions under `evaluation/development/`; and recomputes every met
 old-26 task can be authorized. Its script is a thin acknowledged adapter. It cannot emit release
 state, run the old-26 diagnostic set, create a holdout, or create an RC identity.
 
+The production-development `OpenAIStructuredCaseIntakeExtractor` now executes two private,
+sequential inference boundaries over the same original `CaseIntakeInput`. The fact boundary returns
+only evidence-status observations; the issue boundary returns only the existing two-code candidate
+allowlist. Neither result is supplied to the other call. After both boundaries succeed, application
+code filters and canonically validates facts, validates the issue list, and deterministically merges
+the two private results into the unchanged public `CaseIntakeResult`. A failure at either boundary
+fails the intake without exposing a partial result. Normal execution therefore uses two structured
+provider calls; with three structured attempts and the OpenAI SDK's two transport retries per
+attempt, the theoretical maximum is 18 HTTP transmissions per intake. This is Case Intake
+infrastructure, not MCP/tool-efficiency work.
+
+`evaluation/decision_support_split_inference_development.py` owns the corresponding one-shot 28-row
+synthetic split-boundary experiment. It records boundary-specific success, retry and latency data;
+fact, issue, and cross-layer metrics; and the unchanged authorization gates in a write-once
+development claim/report. Its thin script cannot run the old-26 set, write release evidence, create
+a holdout, or create an RC identity.
+
 `AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
 status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned
 in this scope. See [the boundary ADR](adr_decision_support_boundary.md) for the complete dependency

@@ -319,3 +319,52 @@ skips, but three real-stdio retrieval integration tests failed because the retri
 not initialize within their 30-second timeout on this machine. The standalone retrieval demo
 completed successfully after its heavier model initialization, so this remains a visible secondary
 quality blocker rather than an extraction-contract remediation in this bounded cycle.
+
+## Split fact/issue inference-boundary cycle
+
+The next bounded cycle retained the private evidence-status admission contract and replaced the
+single combined provider response with two narrow private responses. The fact call sees only the
+original intake and requests fact observations; the issue call independently sees the same original
+intake and requests only preliminary candidate issues. Neither call receives the other's output.
+The application merges both only after successful completion, and the public `CaseIntakeResult`, 17
+FactKeys, five FactTypes, source-span resolver, and legal semantics remain unchanged. The historical
+combined prompt remains available only for evidence compatibility at SHA-256
+`723138a67943fc4660028502d358d6316b5b70ddcf8b2e282dfe63d00869432f`; the fact prompt SHA-256 is
+`d81441d9027f69a835ef2d803e62e637c73d91059aa6115324d4ba651a316998`, and the issue prompt SHA-256
+is `c7a62996ea6fdb513b0beb2e57e6f0312c3ffdd071079993819b2eccb13ddedf`.
+
+The fresh matrix contains 28 synthetic cases and has SHA-256
+`61da4f246bb995672b1645442ef64f517597a0862ecd951a98a43e7fb35ce18a`. Its single claimed run,
+`split-inference-v1-mistral-small-2603-20260902`, produced 28 terminal rows: 27 complete structured
+results and one typed fact-boundary provider failure. The label-free predictions SHA-256 is
+`cfd0792df2396213e025d2f6b4f9a3d876c94ed08c2c73be1d3df8bff07db903`; the report SHA-256 is
+`f92a5caad9fe8fe7367c73cecb52a69e450bd9628bc0fc6719b4b4cacf422add`.
+
+The split and merge invariants held, but the fixed authorization gate failed. Fact TP/FP/FN was
+`19/11/6`, for precision `0.6333333333333333`, recall `0.76`, and F1
+`0.6909090909090909`; atomic exactness was `10/18` (`0.5555555555555556`). Canonical key/type and
+source-grounding accuracy remained 100%, while normalization accuracy was
+`0.6060606060606061`. Two missingness-derived and two unsupported-negation false-positive facts
+remained, and 11 positive facts were fabricated against the independent fixture contract.
+Candidate issue macro-F1 was `0.8819444444444445` and critical recall was
+`0.8823529411764706`. Only 2/6 issue-present/zero-fact rows and 1/7 fact-present/no-issue rows were
+exact. The remaining bounded class is therefore `FACT_AND_ISSUE_MODEL_QUALITY`, not a transport or
+merge defect.
+
+Normal intake uses one fact call and one issue call. The run made 30 fact-boundary and 27
+issue-boundary structured parse invocations, with mean fact/issue/total latencies of
+2537.36/1006.75/3544.96 milliseconds. Three failed fact attempts each exhausted the SDK's two
+transport retries, so the 57 logical parse invocations corresponded to 63 HTTP transmissions under
+the configured retry contract. The split architecture can theoretically issue at most 18 HTTP
+transmissions per intake (three structured attempts per boundary, three transport transmissions per
+attempt).
+
+The single-cycle stop was enforced: no prompt adjustment or second synthetic run occurred after the
+result, and old-26 authorization remains `NO`. No old-26 provider regression, fresh holdout, review
+packet, freeze, RC3, release evaluation, or Week-5 work occurred. The canonical offline quality gate
+then passed 953 tests with two accepted platform skips and 87.13% coverage; Ruff, formatting,
+Pyright, architecture checks, both production MCP demos, frontend typecheck/lint/build, 16 component
+tests, the 3-case Playwright suite, and 9/9 repeated Playwright lifecycles were green. A cold bounded
+MCP diagnostic reproduced one 30-second retrieval initialization timeout; an unchanged immediate
+rerun passed, as did retrieval-only, calculator-only, combined, and the production demos. The
+evidence supports transient process startup, not a demonstrated product defect.

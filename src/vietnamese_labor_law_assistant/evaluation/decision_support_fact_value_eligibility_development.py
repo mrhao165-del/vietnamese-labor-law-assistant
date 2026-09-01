@@ -286,11 +286,11 @@ class FactValueEligibilityDevelopmentMetrics(BaseModel):
     employee_unilateral_termination: IssuePrecisionRecall
     candidate_issue_macro_f1: float = Field(ge=0, le=1)
     critical_issue_recall: float = Field(ge=0, le=1)
-    issue_zero_fact_case_count: Literal[8] = 8
-    issue_zero_fact_correct_count: int = Field(ge=0, le=8)
+    issue_zero_fact_case_count: int = Field(ge=1, le=28)
+    issue_zero_fact_correct_count: int = Field(ge=0, le=28)
     issue_zero_fact_contract_accuracy: float = Field(ge=0, le=1)
-    fact_no_issue_case_count: Literal[7] = 7
-    fact_no_issue_correct_count: int = Field(ge=0, le=7)
+    fact_no_issue_case_count: int = Field(ge=1, le=28)
+    fact_no_issue_correct_count: int = Field(ge=0, le=28)
     fact_no_issue_contract_accuracy: float = Field(ge=0, le=1)
     fabricated_fact_to_justify_issue_count: int = Field(ge=0)
     unrelated_fact_issue_contamination_count: int = Field(ge=0)
@@ -624,8 +624,6 @@ def evaluate_fact_value_eligibility_predictions(
         issue: _issue_precision_recall(*counts) for issue, counts in issue_counts.items()
     }
     candidate_macro_f1 = sum(item.f1 for item in issue_metrics.values()) / len(issue_metrics)
-    if issue_zero_total != 8 or fact_no_issue_total != 7:
-        raise ValueError("fact-value eligibility cross-layer denominators changed")
     provisional = FactValueEligibilityDevelopmentMetrics(
         terminal_case_count=len(records),
         successful_result_count=successful,
@@ -673,8 +671,10 @@ def evaluate_fact_value_eligibility_predictions(
         employee_unilateral_termination=issue_metrics[IssueCode.EMPLOYEE_UNILATERAL_TERMINATION],
         candidate_issue_macro_f1=candidate_macro_f1,
         critical_issue_recall=_ratio(critical_matched, critical_expected),
+        issue_zero_fact_case_count=issue_zero_total,
         issue_zero_fact_correct_count=issue_zero_correct,
         issue_zero_fact_contract_accuracy=_ratio(issue_zero_correct, issue_zero_total),
+        fact_no_issue_case_count=fact_no_issue_total,
         fact_no_issue_correct_count=fact_no_issue_correct,
         fact_no_issue_contract_accuracy=_ratio(fact_no_issue_correct, fact_no_issue_total),
         fabricated_fact_to_justify_issue_count=fabricated_for_issue,

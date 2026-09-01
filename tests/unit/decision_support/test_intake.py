@@ -17,7 +17,6 @@ from vietnamese_labor_law_assistant.decision_support.enums import (
     VerificationStatus,
 )
 from vietnamese_labor_law_assistant.decision_support.intake import (
-    CASE_INTAKE_SYSTEM_PROMPT,
     CaseIntakeError,
     OpenAIStructuredCaseIntakeExtractor,
     validate_case_intake_result,
@@ -33,11 +32,30 @@ class ParseClient:
     def __init__(self, outcomes: list[object]) -> None:
         self.outcomes = outcomes
         self.requests: list[dict[str, object]] = []
+        self._outcome_index = 0
+        self._pending_issue_payload: dict[str, object] | None = None
         self.beta = SimpleNamespace(chat=SimpleNamespace(completions=self))
 
     def parse(self, **kwargs: object) -> object:
         self.requests.append(kwargs)
-        outcome = self.outcomes[len(self.requests) - 1]
+        response_format = kwargs.get("response_format")
+        is_issue_boundary = getattr(response_format, "__name__", "") == (
+            "_ProviderCandidateIssueResult"
+        )
+        if is_issue_boundary and self._pending_issue_payload is not None:
+            outcome: object = self._pending_issue_payload
+            self._pending_issue_payload = None
+        else:
+            if not is_issue_boundary:
+                self._pending_issue_payload = None
+            outcome = self.outcomes[self._outcome_index]
+            self._outcome_index += 1
+        if isinstance(outcome, dict) and "facts" in outcome and "candidate_issues" in outcome:
+            if is_issue_boundary:
+                outcome = {"candidate_issues": outcome["candidate_issues"]}
+            else:
+                self._pending_issue_payload = {"candidate_issues": outcome["candidate_issues"]}
+                outcome = {"facts": outcome["facts"]}
         if isinstance(outcome, Exception):
             raise outcome
         if outcome is NO_CHOICES:
@@ -584,47 +602,42 @@ def test_prompt_carries_the_closed_atomic_absence_and_issue_contract() -> None:
         "MONEY",
         "TEMPORAL_EXPRESSION",
     ):
-        assert value in CASE_INTAKE_SYSTEM_PROMPT
-    assert "one distinct canonical fact" in CASE_INTAKE_SYSTEM_PROMPT
-    assert "absence of information" in CASE_INTAKE_SYSTEM_PROMPT
-    assert "both candidate issues" in CASE_INTAKE_SYSTEM_PROMPT
+        assert value in intake.FACT_EXTRACTION_SYSTEM_PROMPT
+    assert "one observation" in intake.FACT_EXTRACTION_SYSTEM_PROMPT
+    assert "Missing, unknown" in intake.FACT_EXTRACTION_SYSTEM_PROMPT
+    assert "CONTRACT_TERM" in intake.CANDIDATE_ISSUE_SYSTEM_PROMPT
+    assert "EMPLOYEE_UNILATERAL_TERMINATION" in intake.CANDIDATE_ISSUE_SYSTEM_PROMPT
 
 
 def test_prompt_operationalizes_minimality_negation_and_issue_independence() -> None:
     required_rules = (
         "shortest literal source segment",
-        "raw_value and source_span.text must be exactly the same minimal literal",
-        "UNKNOWN, MISSING, or NOT PROVIDED",
-        "unsupported negation",
-        "Do not turn the subject of missing or negated information into an affirmative fact",
-        "Candidate-issue classification is independent from fact emission",
-        "Do not use a pronoun or a termination-intent phrase as EMPLOYEE_ROLE",
-        "Assign a date key only when the text explicitly identifies the date's role",
+        "raw_value must be that minimal literal",
+        "MISSING",
+        "UNKNOWN",
+        "NEGATED",
+        "emit a fact because a legal issue seems possible",
+        "Never infer an exact date from a relative expression",
         "WAGE_PAYMENT_PROBLEM_REPORTED",
     )
 
-    compact_prompt = " ".join(CASE_INTAKE_SYSTEM_PROMPT.split())
+    compact_prompt = " ".join(intake.FACT_EXTRACTION_SYSTEM_PROMPT.split())
     missing = [rule for rule in required_rules if rule not in compact_prompt]
     assert missing == []
 
 
 def test_prompt_separates_fact_and_candidate_issue_evidence_thresholds() -> None:
-    required_rules = (
-        "FACT AND ISSUE EVIDENCE ARE SIBLING TASKS",
-        "LEVEL F",
-        "LEVEL I",
-        "zero or incomplete Level-F facts",
-        "Never fabricate or complete facts to justify a candidate issue",
-        "MissingFactDetector handles absent required facts downstream",
-        "Wage facts alone select neither supported issue and never CONTRACT_TERM",
-        "does not require EMPLOYEE_ROLE, INTENDED_TERMINATION_DATE, or NOTICE_SPECIAL_CASE",
-    )
+    fact_prompt = " ".join(intake.FACT_EXTRACTION_SYSTEM_PROMPT.split())
+    issue_prompt = " ".join(intake.CANDIDATE_ISSUE_SYSTEM_PROMPT.split())
 
-    compact_prompt = " ".join(CASE_INTAKE_SYSTEM_PROMPT.split())
-    missing = [rule for rule in required_rules if rule not in compact_prompt]
-    assert missing == []
-    assert "PROPERTY ELIGIBILITY" not in compact_prompt
-    assert "WAGE FACTS AND ISSUES" not in compact_prompt
+    assert "FACT EXTRACTION ONLY" in fact_prompt
+    assert "Do not classify candidate issues" in fact_prompt
+    assert "CANDIDATE ISSUE DETECTION ONLY" in issue_prompt
+    assert "Work directly from the original raw message" in issue_prompt
+    assert "MissingFactDetector handles absent requirements downstream" in issue_prompt
+    assert "Wage information alone selects neither supported issue" in issue_prompt
+    assert "CaseFacts" not in fact_prompt
+    assert "source spans" in issue_prompt
 
 
 def test_prompt_defines_transport_evidence_status_and_canonical_admission() -> None:
@@ -633,14 +646,12 @@ def test_prompt_defines_transport_evidence_status_and_canonical_admission() -> N
         "MISSING",
         "UNKNOWN",
         "NEGATED",
-        "Only PRESENT_ASSERTED observations may become canonical facts",
-        "non-PRESENT observations are transport diagnostics",
-        "explicit canonical value NONE",
-        "unknown or missing NONE",
-        "directly asserted absence of WAGE_DELAY_FORCE_MAJEURE is also PRESENT_ASSERTED",
+        "Only PRESENT_ASSERTED can become a canonical CaseFact",
+        "directly asserted canonical NONE value",
+        "WAGE_DELAY_FORCE_MAJEURE may represent a directly asserted presence or absence",
     )
 
-    compact_prompt = " ".join(CASE_INTAKE_SYSTEM_PROMPT.split())
+    compact_prompt = " ".join(intake.FACT_EXTRACTION_SYSTEM_PROMPT.split())
     missing = [rule for rule in required_rules if rule not in compact_prompt]
     assert missing == []
 
@@ -775,14 +786,16 @@ async def test_duplicate_semantic_facts_remain_a_source_grounding_failure() -> N
 
 
 @pytest.mark.asyncio
-async def test_one_structured_call_returns_facts_and_multiple_candidate_issues() -> None:
+async def test_two_structured_boundaries_merge_facts_and_multiple_candidate_issues() -> None:
     source = case_input()
     client = ParseClient([successful_payload(source.source_text)])
 
     result = await OpenAIStructuredCaseIntakeExtractor(settings(), client).extract(source)
 
-    assert len(client.requests) == 1
+    assert len(client.requests) == 2
     assert client.requests[0]["response_format"] is not CaseIntakeResult
+    assert client.requests[1]["response_format"] is not CaseIntakeResult
+    assert client.requests[0]["response_format"] is not client.requests[1]["response_format"]
     assert len(result.facts) == 1
     assert [issue.issue_code for issue in result.candidate_issues] == [
         IssueCode.CONTRACT_TERM,
@@ -835,7 +848,7 @@ async def test_fabricated_source_span_fails_application_validation() -> None:
 
 @pytest.mark.asyncio
 async def test_extra_field_and_malformed_parsed_output_fail_closed() -> None:
-    extra_client = ParseClient([{"facts": [], "candidate_issues": [], "answer": "invented"}])
+    extra_client = ParseClient([{"facts": [], "answer": "invented"}])
     with pytest.raises(CaseIntakeError, match="CASE_INTAKE_SCHEMA_INVALID"):
         await OpenAIStructuredCaseIntakeExtractor(settings(), extra_client).extract(case_input())
 
@@ -872,7 +885,7 @@ async def test_empty_facts_and_issues_is_a_valid_no_extraction_result() -> None:
     )
 
     assert result == CaseIntakeResult(facts=[], candidate_issues=[])
-    assert len(client.requests) == 1
+    assert len(client.requests) == 2
 
 
 @pytest.mark.asyncio
@@ -900,27 +913,32 @@ async def test_prompt_injection_remains_untrusted_data_and_cannot_change_contrac
     )
 
     assert result == CaseIntakeResult()
-    assert len(client.requests) == 1
+    assert len(client.requests) == 2
     messages = client.requests[0]["messages"]
     assert isinstance(messages, list)
-    assert messages[0]["content"] == CASE_INTAKE_SYSTEM_PROMPT
-    assert "untrusted data" in CASE_INTAKE_SYSTEM_PROMPT
+    assert messages[0]["content"] == intake.FACT_EXTRACTION_SYSTEM_PROMPT
+    assert "untrusted data" in intake.FACT_EXTRACTION_SYSTEM_PROMPT
     assert injected in messages[1]["content"]
     assert client.requests[0]["response_format"] is not CaseIntakeResult
+    issue_messages = client.requests[1]["messages"]
+    assert isinstance(issue_messages, list)
+    assert issue_messages[0]["content"] == intake.CANDIDATE_ISSUE_SYSTEM_PROMPT
+    assert issue_messages[1] == messages[1]
 
 
 @pytest.mark.asyncio
-async def test_invalid_output_retries_only_the_same_structured_intake_stage() -> None:
+async def test_invalid_fact_output_retries_only_fact_then_runs_issue_once() -> None:
     source = case_input()
     client = ParseClient([RuntimeError("invalid"), successful_payload(source.source_text)])
 
     result = await OpenAIStructuredCaseIntakeExtractor(settings(retries=1), client).extract(source)
 
     assert result.facts
-    assert len(client.requests) == 2
+    assert len(client.requests) == 3
     response_format = client.requests[0]["response_format"]
     assert response_format is not CaseIntakeResult
-    assert all(request["response_format"] is response_format for request in client.requests)
+    assert all(request["response_format"] is response_format for request in client.requests[:2])
+    assert client.requests[2]["response_format"] is not response_format
     first_messages = client.requests[0]["messages"]
     retry_messages = client.requests[1]["messages"]
     assert isinstance(first_messages, list) and len(first_messages) == 2
