@@ -112,8 +112,11 @@ backend-selected Direct QA or Case Analysis mode without a manual selector and r
 known-fact, missing-field, clarification, refined-issue, and fixed error states inline. Existing
 direct-QA answers, citations, verification, and public error sanitization remain intact. Case
 Analysis still executes no retrieval, calculator, MCP tool, legal rule/application, or legal
-recommendation. A Week-5 `EvidencePlan` and frozen, human-reviewed v1.1 evaluation/release evidence
-remain future scope.
+recommendation. The frozen, human-reviewed v1.1 set is now governed separately from production
+predictions. RC2 release infrastructure uses an immutable revision-2 registration, fsynced per-case
+journal, same-run crash recovery, atomic write-once snapshot finalization, and a provider-free
+18-gate evaluator. The frozen capture and real RC2 evaluation remain unexecuted until the separately
+authorized one-time operation. A Week-5 `EvidencePlan` remains future scope.
 
 ## RAG pipeline
 

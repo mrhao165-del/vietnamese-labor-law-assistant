@@ -1,10 +1,69 @@
 # V1.1 production Case Intake prediction capture
 
+## RC2 revision-2 closeout protocol
+
+RC1 and the original RC2 registration are immutable historical evidence. RC1 ended as
+`FAILED_PROVIDER_CAPTURE` with zero successful predictions. RC2 registration revision 1 made zero
+frozen calls and is superseded before capture because it lacked a complete closeout lifecycle. The
+same release candidate, `v1_1_rc2`, is prepared under registration revision 2; there is no RC3.
+
+Revision 2 fixes the production identity to:
+
+- provider `openai` with base URL `https://api.mistral.ai/v1`;
+- exact model `mistral-small-2603` (no alias);
+- temperature `0`, timeout `60`, SDK retries `2`, structured retries `2`;
+- concurrency `1` and inter-case pacing `1.0` second.
+
+The revision-2 operational sequence is deliberately split by commit and authorization. Registration
+is offline and happens only after the implementation commit:
+
+```powershell
+$implementationCommit = git rev-parse HEAD
+uv run python scripts/capture_decision_support_v1_1_rc2.py `
+  --project-author-name mrhao165-del `
+  --register `
+  --implementation-commit-sha $implementationCommit `
+  --confirm-write-once V1_1_RC2_PRECAPTURE_REGISTRATION
+```
+
+After the registration artifact is committed as its own direct child commit, the one-time capture
+command is:
+
+```powershell
+uv run python scripts/capture_decision_support_v1_1_rc2.py `
+  --project-author-name mrhao165-del `
+  --live `
+  --confirm-write-once V1_1_RC2_FROZEN_CAPTURE
+```
+
+Do not run that command during pre-capture remediation. It validates every checksum and exact
+generation setting, constructs the production extractor, and only then creates
+`rc2_capture_started.json`. Each terminal case attempt is appended and fsynced to the journal.
+Restarting the same command retains the run ID, validates the same identity, skips every terminal
+case, and attempts only unseen cases. A changed dataset, provider/model/config, prompt, schema, code,
+or output namespace fails closed.
+
+Only a complete 26-entry journal can atomically publish the final snapshot. After capture completion,
+the offline write-once evaluator is run separately:
+
+```powershell
+uv run python scripts/run_decision_support_v1_1_rc2_evaluation.py `
+  --confirm-write-once V1_1_RC2_OFFLINE_EVALUATION
+```
+
+This evaluator has no settings, credential, extractor, or provider argument. It reads expected labels
+only after verifying the finalized snapshot and runs Candidate Issues, Missing Facts, Clarification,
+Refined Issues, and finite CaseGraph deterministically. N/A values retain the registered blocking
+semantics, and any failed mandatory gate prevents `RELEASE_PASS`. An immutable evaluation-start
+identity fixes the offline timestamp. If materialization is interrupted, the next invocation verifies
+every existing partial output byte-for-byte, creates only absent successors, and never overwrites an
+artifact; an already terminal invocation is refused.
+
 This workflow has exactly one live-provider stage: production Case Intake prediction capture.
 Freeze and preflight are offline. Missing Facts, Clarification, Refined Issues, CaseGraph evaluation,
 metrics, and release gates must run offline from the immutable snapshot.
 
-## Production configuration
+## Historical generic production configuration
 
 Use placeholders only in documentation and keep `.env` uncommitted.
 
@@ -31,7 +90,7 @@ $env:LLM_MAX_RETRIES="2"
 $env:AGENT_STRUCTURED_OUTPUT_MAX_RETRIES="2"
 ```
 
-## Controlled sequence
+## Historical RC1 controlled sequence
 
 Run from a clean repository at the exact commit that will be recorded in release evidence:
 
@@ -59,7 +118,7 @@ allow at most 78 parse invocations. The OpenAI client transport policy permits t
 invocation, so the theoretical maximum is 234 HTTP attempts. These are retry ceilings, not expected
 request counts. There are zero downstream evaluation LLM calls.
 
-## Canonical artifacts
+## Historical RC1 canonical artifacts
 
 - `data/evaluation/decision_support/v1_1/v1_1_evaluation_frozen.jsonl`
 - `evaluation/results/decision_support/v1_1/v1_1_frozen_dataset_manifest.json`
@@ -74,6 +133,27 @@ request counts. There are zero downstream evaluation LLM calls.
 
 Never edit, overwrite, delete, or manually reconstruct these files. A failed or interrupted attempt
 is release evidence and requires an explicit new version rather than a silent retry.
+
+## RC2 revision-2 artifacts
+
+- `evaluation/results/decision_support/v1_1/rc2/rc2_capture_manifest.json` — preserved revision 1
+- `evaluation/results/decision_support/v1_1/rc2/rc2_registration_v2.json`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_capture_started.json`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_capture_journal.jsonl`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_production_predictions.jsonl`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_prediction_metadata.json`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_capture_completed.json`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_metrics.json`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_failed_samples.jsonl`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_release_evaluation.md`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_evaluation_started.json`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_evaluation_completed.json`
+- `evaluation/results/decision_support/v1_1/rc2/rc2_release_terminal.json`
+
+Final names are write-once. Every immutable transition is published through a durable temporary file
+and atomic no-replace operation; the snapshot is materialized only from the complete journal.
+Evaluation products are generated offline with byte-verifying partial-run recovery, while a second
+invocation after the terminal result refuses to replace the first result.
 
 ## Offline-only boundary after capture
 

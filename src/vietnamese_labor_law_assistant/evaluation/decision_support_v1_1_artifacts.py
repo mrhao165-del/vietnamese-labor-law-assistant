@@ -102,13 +102,46 @@ def canonical_json_bytes(payload: object) -> bytes:
 
 
 def write_exclusive(path: Path, payload: bytes) -> None:
-    """Create an artifact once, refusing to overwrite existing evidence."""
+    """Atomically publish complete bytes once under an absent final name."""
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("xb") as handle:
-        handle.write(payload)
-        handle.flush()
-        os.fsync(handle.fileno())
+    if os.path.lexists(path):
+        raise FileExistsError(f"final artifact already exists: {path}")
+    temporary = atomic_temporary_path(path)
+    if os.path.lexists(temporary):
+        temporary.unlink()
+    try:
+        with temporary.open("xb") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        if temporary.read_bytes() != payload:
+            raise OSError("temporary artifact changed before atomic publication")
+        try:
+            os.link(temporary, path)
+        except FileExistsError as exc:
+            raise FileExistsError(f"final artifact already exists: {path}") from exc
+        fsync_directory(path.parent)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def atomic_temporary_path(path: Path) -> Path:
+    """Return the fixed recoverable temporary name for a write-once artifact."""
+
+    return path.with_name(f".{path.name}.atomic-write.tmp")
+
+
+def fsync_directory(path: Path) -> None:
+    """Durably persist a directory entry on platforms that expose directory fsync."""
+
+    if os.name == "nt":
+        return
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
 
 
 def inspect_repository_state(repo_root: Path) -> RepositoryState:

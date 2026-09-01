@@ -6,7 +6,7 @@ import json
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from types import ModuleType, SimpleNamespace
+from types import ModuleType
 
 import pytest
 from pydantic import SecretStr, ValidationError
@@ -391,24 +391,11 @@ def test_prediction_metadata_rejects_inconsistent_status_and_counts() -> None:
         )
 
 
-def test_prepare_rc2_capture_binds_exact_governance_and_remediation_identity() -> None:
+def test_revision_1_registration_remains_readable_historical_evidence() -> None:
     module = rc2_module()
     paths = module.RC2ArtifactPaths.from_root(PROJECT_ROOT)
-
-    if paths.capture_manifest.exists():
-        plan = module.load_rc2_capture_plan(
-            paths,
-            configured_settings(),
-            project_author_name="mrhao165-del",
-        )
-    else:
-        plan = module.prepare_rc2_capture(
-            paths,
-            configured_settings(),
-            project_author_name="mrhao165-del",
-        )
-
-    manifest = plan.manifest
+    payload = paths.registration_revision_1.read_bytes()
+    manifest = module.RC2CaptureManifest.model_validate_json(payload)
     assert manifest.release_candidate == "v1_1_rc2"
     assert manifest.parent == "v1_1_rc1"
     assert manifest.parent_result == "FAILED_PROVIDER_CAPTURE"
@@ -434,12 +421,10 @@ def test_prepare_rc2_capture_binds_exact_governance_and_remediation_identity() -
     assert len(manifest.extractor_implementation_sha256) == 64
     assert len(manifest.transport_schema_sha256) == 64
     assert len(manifest.canonical_schema_sha256) == 64
-    assert len(plan.runtime_cases) == 26
-    assert all(type(runtime) is V11RuntimeCase for runtime in plan.runtime_cases)
-    assert all(
-        set(runtime.model_dump(mode="json")) == {"case_id", "case_input"}
-        for runtime in plan.runtime_cases
-    )
+    assert manifest.status == "PREPARED_NOT_CAPTURED"
+    assert manifest.capture_started_at is None
+    assert manifest.capture_completed_at is None
+    assert manifest.prediction_checksum is None
 
 
 def load_capture_script() -> ModuleType:
@@ -452,31 +437,14 @@ def load_capture_script() -> ModuleType:
     return module
 
 
-def test_rc2_capture_adapter_defaults_to_offline_preparation(
+def test_rc2_capture_adapter_defaults_to_offline_status(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
     tmp_path: Path,
 ) -> None:
     script = load_capture_script()
     calls: list[str] = []
-    manifest = rc2_module().RC2CaptureManifest.model_validate(manifest_payload(PROJECT_ROOT))
-    plan = SimpleNamespace(manifest=manifest, runtime_cases=tuple())
-    monkeypatch.setattr(script, "get_settings", lambda: configured_settings())
-    monkeypatch.setattr(
-        script,
-        "prepare_rc2_capture",
-        lambda *args, **kwargs: calls.append("prepare") or plan,
-    )
-    monkeypatch.setattr(
-        script,
-        "write_rc2_manifest",
-        lambda *args, **kwargs: calls.append("write"),
-    )
-    monkeypatch.setattr(
-        script,
-        "capture_rc2_predictions",
-        lambda *args, **kwargs: calls.append("live"),
-    )
+    monkeypatch.setattr(script, "get_settings", lambda: calls.append("settings"))
 
     assert (
         script.main(
@@ -491,8 +459,8 @@ def test_rc2_capture_adapter_defaults_to_offline_preparation(
     )
 
     report = json.loads(capsys.readouterr().out)
-    assert calls == ["prepare"]
-    assert report["status"] == "PREPARED_NOT_WRITTEN"
+    assert calls == []
+    assert report["status"] == "REGISTRATION_REVISION_2_ABSENT"
     assert report["provider_calls_performed"] == 0
 
 
@@ -504,6 +472,16 @@ def test_rc2_capture_adapter_requires_confirmation_before_settings(
     script = load_capture_script()
     calls: list[str] = []
     monkeypatch.setattr(script, "get_settings", lambda: calls.append("settings"))
+    monkeypatch.setattr(
+        script,
+        "prepare_rc2_registration_v2",
+        lambda *args, **kwargs: calls.append("prepare"),
+    )
+    monkeypatch.setattr(
+        script,
+        "capture_registered_rc2",
+        lambda *args, **kwargs: calls.append("live"),
+    )
 
     with pytest.raises(SystemExit):
         script.main(["--project-author-name", "mrhao165-del", mode])

@@ -107,10 +107,17 @@ are thin file/CLI adapters. `evaluation/decision_support_v1_1_artifacts.py`,
 `decision_support_v1_1_freeze.py`, and `decision_support_v1_1_capture.py` own the canonical
 write-once release-evaluation boundary. Freeze validates and binds the reviewed labels and unchanged
 threshold approval offline; capture projects only `CaseIntakeInput` into the production extractor.
-The additive `evaluation/decision_support_v1_1_rc2.py` module owns the distinct RC2 pre-capture
-registration, exact Mistral configuration identity, label-isolated runtime projection, sequential
-pacing, and RC2-only write-once paths. It does not alter or overwrite the historical RC1 evidence.
-No downstream evaluation stage may make another provider call. The frontend now
+The additive `evaluation/decision_support_v1_1_rc2.py` module owns the distinct RC2 revision-2
+pre-capture registration, exact Mistral configuration identity, governed checksum validation, and
+RC1/revision-1 preservation. `evaluation/decision_support_v1_1_rc2_capture.py` owns the immutable
+capture-start transition, per-case append-only durable journal, same-run recovery, deterministic
+journal-to-snapshot projection, atomic no-replace finalization, and capture-completion identity.
+`evaluation/decision_support_v1_1_rc2_release.py` owns the provider-free RC2 snapshot evaluator,
+unchanged 18-gate application, failed-sample classification, release report, immutable
+evaluation-start identity, byte-verifying interrupted-materialization recovery, and offline/terminal
+state transitions. The two scripts only adapt those evaluation services. No downstream evaluation
+stage can accept settings, an extractor, or a provider client. None of these modules alters or
+overwrites historical RC1 or revision-1 RC2 evidence. The frontend now
 renders only the sanitized backend-selected Direct QA/Case Analysis
 mode and public known/missing/clarification/refined/error projection; it does not select the mode or
 perform decision-support work. `frontend/tests/e2e/` supplies three deterministic Playwright

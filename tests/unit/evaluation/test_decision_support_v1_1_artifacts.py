@@ -32,6 +32,26 @@ def test_paths_and_write_once_policy(tmp_path: Path) -> None:
     assert output.read_bytes() == b"first\n"
 
 
+def test_write_once_publication_never_leaves_a_partial_final_artifact(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from vietnamese_labor_law_assistant.evaluation import (
+        decision_support_v1_1_artifacts as artifacts_module,
+    )
+
+    output = tmp_path / "evidence.json"
+
+    def fail_publication(_: Path, __: Path) -> None:
+        raise OSError("synthetic publication interruption")
+
+    monkeypatch.setattr(artifacts_module.os, "link", fail_publication)
+    with pytest.raises(OSError, match="publication interruption"):
+        write_exclusive(output, b"complete\n")
+
+    assert not output.exists()
+
+
 def test_repository_policy_is_clean_then_allows_only_bound_freeze_outputs(
     tmp_path: Path,
 ) -> None:
