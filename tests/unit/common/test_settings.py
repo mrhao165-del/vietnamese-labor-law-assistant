@@ -1,3 +1,6 @@
+from pathlib import Path
+
+import pytest
 from pydantic import SecretStr
 
 from vietnamese_labor_law_assistant.common.settings import Settings
@@ -11,7 +14,12 @@ def test_settings_defaults_and_secret_redaction() -> None:
     assert "secret" not in repr(settings)
 
 
-def test_settings_infers_gemini_provider_from_compatible_base_url() -> None:
+def test_settings_infers_gemini_provider_from_compatible_base_url(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("LLM_PROVIDER", raising=False)
     settings = Settings(
         openai_base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
     )

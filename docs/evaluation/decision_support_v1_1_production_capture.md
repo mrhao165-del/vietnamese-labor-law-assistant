@@ -1,5 +1,27 @@
 # V1.1 production Case Intake prediction capture
 
+## Current post-RC2 status
+
+RC2 completed its one immutable capture and remains `RELEASE_FAIL`; none of the RC2 commands below
+may be rerun. Its production snapshot checksum is
+`6f2c113afc7270135c519ebebf265f866e2e38518d26a8cacb281a6570ce1d76`.
+
+The post-RC2 Week-4 development cycle adds a closed provider transport vocabulary and general
+atomic extraction instructions while leaving the public `CaseIntakeResult` and historical evidence
+unchanged. The old 26 cases are now development/regression evidence only. The acknowledged
+development adapter writes outside release paths:
+
+```powershell
+uv run python scripts/run_decision_support_v1_1_development.py `
+  --run-id <unique-development-run-id> `
+  --live-development `
+  --acknowledge-not-release RC2_REGRESSION_DIAGNOSTIC_SET
+```
+
+The first recorded strict-contract development run did not meet its exit criteria, so no new
+holdout or RC3 was prepared. Do not iterate the old run as if it were a release capture, and do not
+describe its cases as an unseen holdout.
+
 ## RC2 revision-2 closeout protocol
 
 RC1 and the original RC2 registration are immutable historical evidence. RC1 ended as

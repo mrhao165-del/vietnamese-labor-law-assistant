@@ -87,12 +87,17 @@ def fact_payload(
     fact_type: str = "DURATION",
     normalized_value: object | None = None,
 ) -> dict[str, object]:
+    if normalized_value is None:
+        if fact_type in {"DURATION", "MONEY"} and raw_value.split()[0].isdigit():
+            normalized_value = int(raw_value.split()[0])
+        else:
+            normalized_value = raw_value
     return {
         "fact_id": fact_id,
         "fact_key": fact_key,
         "fact_type": fact_type,
         "raw_value": raw_value,
-        "normalized_value": raw_value if normalized_value is None else normalized_value,
+        "normalized_value": normalized_value,
         "assertion_mode": "EXPLICIT",
         "verification_status": "UNVERIFIED",
         "source_type": "USER_MESSAGE",
@@ -166,6 +171,195 @@ async def test_provider_schema_requests_literal_span_text_without_offsets() -> N
 
 
 @pytest.mark.asyncio
+async def test_provider_schema_exposes_closed_fact_key_and_fact_type_enums() -> None:
+    source = case_input("Hop dong 18 thang.")
+    client = ParseClient([{"facts": [], "candidate_issues": []}])
+
+    await OpenAIStructuredCaseIntakeExtractor(settings(), client).extract(source)
+
+    response_format = client.requests[0]["response_format"]
+    assert isinstance(response_format, type)
+    schema = response_format.model_json_schema()
+    provider_fact = schema["$defs"]["_ProviderCaseFact"]
+    assert provider_fact["properties"]["fact_key"]["$ref"].endswith("/$defs/FactKey")
+    assert provider_fact["properties"]["fact_type"]["$ref"].endswith("/$defs/FactType")
+    assert set(schema["$defs"]["FactKey"]["enum"]) == {
+        "CONTRACT_DURATION",
+        "CONTRACT_EXPIRY_STATEMENT",
+        "CONTRACT_SIGNED_DATE",
+        "CONTRACT_TYPE",
+        "EVENT_TIME",
+        "UNPAID_WAGES_AMOUNT",
+        "UNPAID_WAGES_DURATION",
+        "CONTRACT_START_DATE",
+        "CONTRACT_END_DATE",
+        "NOTICE_SPECIAL_CASE",
+        "EMPLOYEE_ROLE",
+        "INTENDED_TERMINATION_DATE",
+        "INTENDED_TERMINATION_REFERENCE_DATE",
+        "WAGE_PAYMENT_PROBLEM",
+        "WAGE_PAYMENT_DUE_DATE",
+        "WAGE_PAYMENT_STATUS",
+        "WAGE_DELAY_FORCE_MAJEURE",
+    }
+    assert set(schema["$defs"]["FactType"]["enum"]) == {
+        "TEXT",
+        "DATE",
+        "DURATION",
+        "MONEY",
+        "TEMPORAL_EXPRESSION",
+    }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("fact_key", "fact_type", "normalized_value"),
+    [
+        ("USER_MESSAGE_CONTENT", "TEXT", "24 thang"),
+        ("CONTRACT_TERM", "TEXT", "24 thang"),
+        ("CONTRACT_DURATION", "CONTRACT_TERM", 24),
+        ("CONTRACT_DURATION", "DURATION", "24"),
+        ("UNPAID_WAGES_AMOUNT", "MONEY", 5_000_000.0),
+    ],
+)
+async def test_provider_fact_vocabulary_and_normalization_drift_fail_closed(
+    fact_key: str,
+    fact_type: str,
+    normalized_value: object,
+) -> None:
+    source = case_input("24 thang")
+    payload = provider_payload(
+        provider_fact_payload(
+            raw_value="24 thang",
+            fact_id="CF-contract-value-1",
+            fact_key=fact_key,
+            fact_type=fact_type,
+            normalized_value=normalized_value,
+        )
+    )
+
+    with pytest.raises(CaseIntakeError, match="CASE_INTAKE_SCHEMA_INVALID"):
+        await OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload])).extract(
+            source
+        )
+
+
+@pytest.mark.asyncio
+async def test_provider_can_return_three_atomic_contract_facts() -> None:
+    source = case_input("FIXED_TERM 2026-02-01 2027-01-31")
+    payload = {
+        "facts": [
+            provider_fact_payload(
+                raw_value="FIXED_TERM",
+                fact_id="CF-contract-type-1",
+                fact_key="CONTRACT_TYPE",
+                fact_type="TEXT",
+                normalized_value="FIXED_TERM",
+            ),
+            provider_fact_payload(
+                raw_value="2026-02-01",
+                fact_id="CF-contract-start-1",
+                fact_key="CONTRACT_START_DATE",
+                fact_type="DATE",
+                normalized_value="2026-02-01",
+            ),
+            provider_fact_payload(
+                raw_value="2027-01-31",
+                fact_id="CF-contract-end-1",
+                fact_key="CONTRACT_END_DATE",
+                fact_type="DATE",
+                normalized_value="2027-01-31",
+            ),
+        ],
+        "candidate_issues": [{"issue_code": "CONTRACT_TERM"}],
+    }
+
+    result = await OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload])).extract(
+        source
+    )
+
+    assert [fact.fact_key for fact in result.facts] == [
+        "CONTRACT_TYPE",
+        "CONTRACT_START_DATE",
+        "CONTRACT_END_DATE",
+    ]
+    assert [fact.source_span.text for fact in result.facts] == [
+        "FIXED_TERM",
+        "2026-02-01",
+        "2027-01-31",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_wage_problem_and_amount_remain_distinct_atomic_facts() -> None:
+    source = case_input("Cong ty no luong 5000000 dong, toi muon nghi viec.")
+    payload = {
+        "facts": [
+            provider_fact_payload(
+                raw_value="no luong",
+                fact_id="CF-wage-problem-1",
+                fact_key="WAGE_PAYMENT_PROBLEM",
+                fact_type="TEXT",
+                normalized_value="WAGE_PAYMENT_PROBLEM_REPORTED",
+            ),
+            provider_fact_payload(
+                raw_value="5000000 dong",
+                fact_id="CF-unpaid-amount-1",
+                fact_key="UNPAID_WAGES_AMOUNT",
+                fact_type="MONEY",
+                normalized_value=5_000_000,
+            ),
+        ],
+        "candidate_issues": [{"issue_code": "EMPLOYEE_UNILATERAL_TERMINATION"}],
+    }
+
+    result = await OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload])).extract(
+        source
+    )
+
+    assert [(fact.fact_key, fact.normalized_value) for fact in result.facts] == [
+        ("WAGE_PAYMENT_PROBLEM", "WAGE_PAYMENT_PROBLEM_REPORTED"),
+        ("UNPAID_WAGES_AMOUNT", 5_000_000),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_missing_information_statement_does_not_require_an_invented_positive_fact() -> None:
+    source = case_input("Thieu toan bo du kien nghi viec.")
+    payload = {
+        "facts": [],
+        "candidate_issues": [{"issue_code": "EMPLOYEE_UNILATERAL_TERMINATION"}],
+    }
+
+    result = await OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload])).extract(
+        source
+    )
+
+    assert result.facts == []
+    assert [item.issue_code for item in result.candidate_issues] == [
+        IssueCode.EMPLOYEE_UNILATERAL_TERMINATION
+    ]
+
+
+def test_prompt_carries_the_closed_atomic_absence_and_issue_contract() -> None:
+    for value in (
+        "CONTRACT_DURATION",
+        "CONTRACT_TYPE",
+        "INTENDED_TERMINATION_DATE",
+        "WAGE_PAYMENT_PROBLEM",
+        "TEXT",
+        "DATE",
+        "DURATION",
+        "MONEY",
+        "TEMPORAL_EXPRESSION",
+    ):
+        assert value in CASE_INTAKE_SYSTEM_PROMPT
+    assert "one distinct canonical fact" in CASE_INTAKE_SYSTEM_PROMPT
+    assert "absence of information" in CASE_INTAKE_SYSTEM_PROMPT
+    assert "both candidate issues" in CASE_INTAKE_SYSTEM_PROMPT
+
+
+@pytest.mark.asyncio
 async def test_unique_vietnamese_literal_derives_canonical_codepoint_offsets() -> None:
     source = case_input("Tôi đang làm việc theo hợp đồng lao động 18 tháng.")
     payload = provider_payload(
@@ -227,13 +421,13 @@ async def test_repeated_literal_fails_closed_instead_of_choosing_first_occurrenc
 
 @pytest.mark.asyncio
 async def test_punctuation_adjacent_money_literal_keeps_exact_bounds() -> None:
-    source = case_input("Mức lương là 5.000.000 đồng/tháng.")
+    source = case_input("Công ty nợ tôi 5.000.000 đồng/tháng.")
     literal = "5.000.000 đồng/tháng"
     payload = provider_payload(
         provider_fact_payload(
             raw_value=literal,
-            fact_id="CF-monthly-wage-1",
-            fact_key="MONTHLY_WAGE",
+            fact_id="CF-unpaid-wage-1",
+            fact_key="UNPAID_WAGES_AMOUNT",
             fact_type="MONEY",
             normalized_value=5_000_000,
         )
@@ -243,9 +437,9 @@ async def test_punctuation_adjacent_money_literal_keeps_exact_bounds() -> None:
         source
     )
 
-    assert result.facts[0].source_span.start_offset == 13
-    assert result.facts[0].source_span.end_offset == 33
-    assert source.source_text[13:33] == literal
+    assert result.facts[0].source_span.start_offset == 15
+    assert result.facts[0].source_span.end_offset == 35
+    assert source.source_text[15:35] == literal
 
 
 @pytest.mark.asyncio
@@ -342,7 +536,7 @@ async def test_fabricated_source_span_fails_application_validation() -> None:
     fact.update(
         {
             "raw_value": "9 thang",
-            "normalized_value": "9 thang",
+            "normalized_value": 9,
             "source_span": {"text": "9 thang"},
         }
     )

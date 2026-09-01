@@ -91,7 +91,7 @@ def _complete_case(sequence: int) -> V11EvaluationCandidateCase:
     source_ref = f"user_message:synthetic_{sequence:03d}"
     text = "Loai INDEFINITE; ngay 2026-10-01; tien 1000000."
     facts = (
-        _fact("TYPE", FactKey.CONTRACT_TYPE, "CONTRACT_TYPE", "INDEFINITE", text, source_ref),
+        _fact("TYPE", FactKey.CONTRACT_TYPE, "TEXT", "INDEFINITE", text, source_ref),
         _fact(
             "DATE",
             FactKey.INTENDED_TERMINATION_DATE,

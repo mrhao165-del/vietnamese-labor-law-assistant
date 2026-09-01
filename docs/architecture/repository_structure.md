@@ -86,6 +86,12 @@ registry-owned legal-source and calculator-capability metadata, deduplicates sha
 and preserves per-issue traceability. It is not an `EvidencePlan` and contains no query, ranking,
 source resolution, execution, or tool budget.
 
+`decision_support/fact_contract.py` is the single provider-facing vocabulary table. It reuses the
+17-value `FactKey` enum from the immutable issue registry, adds the five-value closed `FactType`
+transport vocabulary, and binds exact normalized primitive/decomposition rules. The internal
+provider model consumes that table; the public `CaseIntakeResult` remains unchanged. Unknown keys,
+issue codes used as types, invalid key/type pairs, and wrong normalized primitives fail closed.
+
 `agent/case_graph.py` now owns only the five-node acyclic orchestration. It makes one call through
 the existing `CaseIntakeExtractor`, then calls the deterministic capabilities in dependency order.
 Any missing required field terminates the request with bounded clarification; complete facts reach
@@ -124,6 +130,12 @@ perform decision-support work. `frontend/tests/e2e/` supplies three deterministi
 `page.route` flows against the real Vite UI and API client. A Week-5 `EvidencePlan`,
 retrieval/calculator execution, legal application/recommendations, and frozen human-reviewed v1.1
 release evidence remain absent.
+
+After the immutable RC2 failure, `evaluation/decision_support_v1_1_development.py` owns only the
+non-release diagnostic runner and compliance report. It refuses RC1/RC2 output namespaces, projects
+only `CaseIntakeInput` into the extractor, finalizes development predictions before label-based
+metrics, and cannot emit a release terminal. Its CLI is a thin acknowledged adapter. Development
+evidence lives under `evaluation/development/`; it is not benchmark release evidence.
 
 `AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
 status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned

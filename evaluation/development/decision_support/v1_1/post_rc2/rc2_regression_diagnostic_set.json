@@ -1,0 +1,22 @@
+{
+  "authorized_uses": [
+    "DEVELOPMENT_DIAGNOSTICS",
+    "REGRESSION_TESTS",
+    "PROMPT_SCHEMA_VALIDATION",
+    "DEVELOPMENT_MODEL_COMPARISON"
+  ],
+  "blind_holdout": false,
+  "case_count": 26,
+  "governance_classification": "RC2_REGRESSION_DIAGNOSTIC_SET",
+  "historical_dataset_sha256": "5f726893300176d1c3b4e915253682b70ef343376903e3e7e243d838e245c29e",
+  "historical_prediction_sha256": "6f2c113afc7270135c519ebebf265f866e2e38518d26a8cacb281a6570ce1d76",
+  "historical_rc2_artifacts_mutable": false,
+  "historical_release_status": "RELEASE_FAIL",
+  "identity": "decision_support_v1_1_post_rc2_regression_v1",
+  "prohibited_claims": [
+    "UNSEEN_BLIND_HOLDOUT",
+    "FRESH_FINAL_EVALUATION",
+    "INDEPENDENT_RC3_HOLDOUT"
+  ],
+  "regression_use_allowed": true
+}

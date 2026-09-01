@@ -1,0 +1,10 @@
+{
+  "approved": false,
+  "assessment": "The extraction remediation closes only the internal provider transport vocabulary and prompt contract. Public CaseIntakeResult, evaluator signatures, N/A semantics, deterministic downstream contracts, and metric definitions remain unchanged.",
+  "assessed_before_new_holdout_predictions": true,
+  "existing_gates_still_applicable": true,
+  "metric_count": 18,
+  "recommendation": "REUSE_UNCHANGED",
+  "schema_version": "post_rc2_threshold_reuse_assessment_v1",
+  "threshold_spec_sha256": "373aa3d4512e6d5cb75e7bcba3dbcc6ef2541ced8603b67b18e6bcd80b31ad5c"
+}

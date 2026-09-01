@@ -137,10 +137,12 @@ async def test_complete_synthetic_release_dry_run_is_offline_and_temporary(
     assert paths.release_report.is_file()
     assert paths.evaluation_completed.is_file()
     assert paths.release_terminal.is_file()
-    assert not (
+    assert paths.predictions.is_file()
+    assert paths.predictions.is_relative_to(tmp_path)
+    assert paths.predictions != (
         PROJECT_ROOT
         / "evaluation/results/decision_support/v1_1/rc2/rc2_production_predictions.jsonl"
-    ).exists()
+    )
 
 
 @pytest.mark.asyncio

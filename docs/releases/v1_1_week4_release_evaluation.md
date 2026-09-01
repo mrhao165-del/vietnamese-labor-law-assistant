@@ -1,4 +1,28 @@
-# V1.1 Week-4 frozen release evaluation
+# V1.1 Week-4 current release status
+
+Week 4 is **not complete**.
+
+- RC1 is immutable `FAILED_PROVIDER_CAPTURE` with zero successful predictions.
+- RC2 is immutable `RELEASE_FAIL`, run ID `0b3f1cd6-e299-48e9-b3cc-a9b711704a4d`, prediction
+  SHA-256 `6f2c113afc7270135c519ebebf265f866e2e38518d26a8cacb281a6570ce1d76`, and 3/18 gates
+  passing. Its root cause remains `TRUE_MODEL_PROMPT_QUALITY_FAILURE`; historical evidence was not
+  rewritten.
+- The former 26-case frozen set is now `RC2_REGRESSION_DIAGNOSTIC_SET` and
+  `NOT_BLIND_HOLDOUT` for prospective development use.
+- The post-RC2 strict transport run achieved 39/39 canonical keys, 39/39 canonical key/type/value
+  combinations, and 39/39 internally grounded spans. It did not satisfy development exit: the
+  valid intake subset had fact F1 `0.56`, source-span exact accuracy `0.60`, hallucinated-signature
+  rate `0.5333333333333333`, and one of the 26 cases ended in a typed source-grounding failure.
+  Six rows with no expected positive facts still received positive facts. Candidate issue macro-F1
+  on the intake subset improved to `0.9444444444444444` with critical issue recall `1.0`.
+- No new holdout, human-review packet, freeze, RC3 registration, or RC3 capture was created.
+
+The existing 18 definitions and thresholds remain semantically applicable because the public
+CaseIntakeResult, evaluator, deterministic registry, labels, and threshold semantics did not change.
+The proposal for any future independent holdout is `REUSE_UNCHANGED`, subject to pre-release human
+governance before predictions. No approval is recorded here.
+
+## Historical RC1 frozen release evaluation
 
 Release gates: **FAIL**
 
