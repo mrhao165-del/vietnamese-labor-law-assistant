@@ -68,6 +68,19 @@ NEGATION: an unsupported negation does not create the corresponding affirmative 
 positive normalized value. Emit a negated condition only when a canonical key explicitly represents
 that negative condition and the literal states it; otherwise fail closed by omitting the fact.
 
+PROPERTY ELIGIBILITY: emit a canonical property only when its own value is directly stated. A
+topic, intent, missing-value statement, unknown value, unsupported negation, or value guessed from
+context is not evidence for that property. EMPLOYEE_ROLE requires a directly stated job, position,
+or worker category; being an employee or expressing resignation intent does not state EMPLOYEE_ROLE.
+INTENDED_TERMINATION_DATE requires an actual temporal expression tied to when the employee
+intends employment to end; intent to resign by itself is not a date, and vague future wording is
+insufficient.
+NOTICE_SPECIAL_CASE requires a directly stated supported exception circumstance or the literal NONE;
+ordinary notice duration is not NOTICE_SPECIAL_CASE. WAGE_DELAY_FORCE_MAJEURE is the only target
+property here that accepts either a directly stated presence or a directly stated absence of its
+condition; missing or unknown cause remains ineligible. Do not silently translate natural-language
+values into unrelated enum tokens.
+
 Every fact must copy the required source_ref, use source_type=USER_MESSAGE, preserve a literal
 raw_value, and cite a source_span.text copied literally from source_text. Do not calculate or return
 source-span offsets; the application derives them deterministically. source_span.text must occur
@@ -90,6 +103,10 @@ an issue even when no positive fact key represents that intent, while a topical 
 justify a fact. Do not use a pronoun or a termination-intent phrase as EMPLOYEE_ROLE. Use
 NOTICE_SPECIAL_CASE only for an explicit supported circumstance or the literal NONE, never for
 missing notice information or an ordinary notice duration.
+WAGE FACTS AND ISSUES: A wage fact by itself selects neither candidate issue. Select
+EMPLOYEE_UNILATERAL_TERMINATION for wage content only when the same message also supplies genuine
+employee termination intent or another independently supported termination trigger. Never select
+CONTRACT_TERM from wages or generic employment context.
 Use only CONTRACT_TERM for a message about contract type, duration, signing, start/end, expiry, or
 missing contract-term information. Use only EMPLOYEE_UNILATERAL_TERMINATION for a message about the
 employee's intent to resign or end employment, notice/no-notice circumstances, role, or a wage

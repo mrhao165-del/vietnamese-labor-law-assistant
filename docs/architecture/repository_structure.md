@@ -144,6 +144,20 @@ before scoring, accepts one expected repeated-literal fail-closed result, and ca
 release decision. Its script is an acknowledged adapter and all outputs remain under the
 development namespace.
 
+The same evaluation-owned module also contains the additive 30-row property-eligibility development
+contract. Its distinct record schema, evaluator, and write-once runner measure direct-evidence
+eligibility, exclusions, normalization, atomic exactness, and fact/issue separation without changing
+the historical 20-row runner or 26-row release record contract. Before its first extractor call, the
+runner exclusively claims the cycle-wide namespace and binds the exact matrix bytes, prompt,
+provider configuration, and canonical per-run paths. The evaluation-owned core resolves each run
+as one direct child of the fixed development root and iterates the parsed matrix snapshot. The
+dedicated script fixes the matrix and
+output root, requires an explicit non-release acknowledgement, constrains the run identity to one
+safe path segment, and cannot write outside `evaluation/development/decision_support/v1_1/`
+`post_rc2/runs/` or emit release state. The old-26 development adapter fails before provider
+construction unless a passing property report, its pre-call claim, the matrix, prompt, and
+predictions all validate by checksum and the metrics recompute exactly from those inputs.
+
 `AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
 status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned
 in this scope. See [the boundary ADR](adr_decision_support_boundary.md) for the complete dependency

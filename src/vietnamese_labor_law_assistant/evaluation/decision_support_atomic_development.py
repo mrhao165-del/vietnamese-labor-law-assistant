@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -57,6 +57,10 @@ from vietnamese_labor_law_assistant.evaluation.decision_support_v1_1_development
 
 AtomicExpectedStatus = Literal["SUCCESS", "CASE_INTAKE_SOURCE_INVALID"]
 _FactSignature = tuple[object, ...]
+_PROPERTY_ELIGIBILITY_RUNS_ROOT = (
+    Path(__file__).resolve().parents[3]
+    / "evaluation/development/decision_support/v1_1/post_rc2/runs"
+)
 
 
 def _utc_now() -> datetime:
@@ -185,6 +189,196 @@ class AtomicDevelopmentReport(BaseModel):
     metrics: AtomicDevelopmentMetrics
 
 
+class PropertyEligibilitySyntheticCase(BaseModel):
+    """One synthetic eligibility decision with explicit positive and negative bounds."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    case_id: str = Field(pattern=r"^property-dev-[0-9]{3}$")
+    source_text: str = Field(min_length=1, max_length=16000)
+    expected_facts: tuple[AtomicExpectedFact, ...]
+    expected_candidate_issues: tuple[IssueCode, ...]
+    forbidden_fact_keys: tuple[FactKey, ...] = Field(min_length=1)
+    forbidden_candidate_issues: tuple[IssueCode, ...]
+    tags: tuple[str, ...] = Field(min_length=1)
+
+    @property
+    def source_ref(self) -> str:
+        return f"user_message:{self.case_id}"
+
+    @property
+    def expected_fact_count(self) -> int:
+        return len(self.expected_facts)
+
+    @model_validator(mode="after")
+    def validate_explicit_bounds(self) -> PropertyEligibilitySyntheticCase:
+        expected_keys = {fact.fact_key for fact in self.expected_facts}
+        if expected_keys.intersection(self.forbidden_fact_keys):
+            raise ValueError("expected and forbidden fact keys must be disjoint")
+        if set(self.expected_candidate_issues).intersection(self.forbidden_candidate_issues):
+            raise ValueError("expected and forbidden candidate issues must be disjoint")
+        for values, label in (
+            (self.expected_candidate_issues, "expected candidate issues"),
+            (self.forbidden_fact_keys, "forbidden fact keys"),
+            (self.forbidden_candidate_issues, "forbidden candidate issues"),
+            (self.tags, "tags"),
+        ):
+            if len(values) != len(set(values)):
+                raise ValueError(f"property fixture {label} must be unique")
+        for fact in self.expected_facts:
+            if self.source_text.count(fact.source_span_text) != 1:
+                raise ValueError("expected fact literal must occur exactly once")
+        return self
+
+
+class PropertyEligibilityPredictionRecord(BaseModel):
+    """One label-free synthetic prediction without altering the 26-row release schema."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    sequence: int = Field(ge=1, le=30)
+    case_id: str = Field(pattern=r"^property-dev-[0-9]{3}$")
+    status: V11PredictionStatus
+    result: CaseIntakeResult | None = None
+    failure_reason: V11PredictionFailureReason | None = None
+
+    @model_validator(mode="after")
+    def validate_payload(self) -> PropertyEligibilityPredictionRecord:
+        if (self.status is V11PredictionStatus.SUCCESS) != (self.result is not None):
+            raise ValueError("SUCCESS requires one validated CaseIntakeResult")
+        if (self.status is V11PredictionStatus.ERROR) != (self.failure_reason is not None):
+            raise ValueError("ERROR requires one typed failure reason")
+        return self
+
+
+class PropertyPrecisionRecall(BaseModel):
+    """Exact-signature precision and recall for one canonical property family."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    true_positive: int = Field(ge=0)
+    false_positive: int = Field(ge=0)
+    false_negative: int = Field(ge=0)
+    precision: float = Field(ge=0, le=1)
+    recall: float = Field(ge=0, le=1)
+
+
+class PropertyEligibilityMetrics(BaseModel):
+    """Predeclared structural and quality gates for the 30-row synthetic cycle."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    case_count: Literal[30] = 30
+    terminal_case_count: int = Field(ge=0, le=30)
+    successful_result_count: int = Field(ge=0, le=30)
+    typed_failure_count: int = Field(ge=0, le=30)
+    expected_fact_count: int = Field(ge=0)
+    predicted_fact_count: int = Field(ge=0)
+    fact_exact_tp: int = Field(ge=0)
+    fact_exact_fp: int = Field(ge=0)
+    fact_exact_fn: int = Field(ge=0)
+    fact_exact_precision: float = Field(ge=0, le=1)
+    fact_exact_recall: float = Field(ge=0, le=1)
+    fact_exact_f1: float = Field(ge=0, le=1)
+    atomic_case_count: int = Field(ge=0)
+    atomic_exact_case_count: int = Field(ge=0)
+    atomic_case_accuracy: float = Field(ge=0, le=1)
+    canonical_fact_key_compliance: float = Field(ge=0, le=1)
+    canonical_fact_type_compliance: float = Field(ge=0, le=1)
+    invalid_unregistered_key_count: int = Field(ge=0)
+    source_grounding_accuracy: float = Field(ge=0, le=1)
+    minimal_span_accuracy: float = Field(ge=0, le=1)
+    missingness_false_positive_count: int = Field(ge=0)
+    negation_false_positive_count: int = Field(ge=0)
+    forbidden_fact_violation_count: int = Field(ge=0)
+    forbidden_issue_violation_count: int = Field(ge=0)
+    normalization_mismatch_count: int = Field(ge=0)
+    property_eligibility_contract_passed: bool
+    issue_fact_separation_passed: bool
+    normalization_contract_passed: bool
+    candidate_issue_tp: int = Field(ge=0)
+    candidate_issue_fp: int = Field(ge=0)
+    candidate_issue_fn: int = Field(ge=0)
+    candidate_issue_macro_f1: float = Field(ge=0, le=1)
+    critical_issue_recall: float = Field(ge=0, le=1)
+    employee_role: PropertyPrecisionRecall
+    intended_termination_date: PropertyPrecisionRecall
+    notice_special_case: PropertyPrecisionRecall
+    wage_related: PropertyPrecisionRecall
+    exact_case_count: int = Field(ge=0, le=30)
+    failed_case_ids: tuple[str, ...]
+    live_development_passed: bool
+
+
+class PropertyEligibilityReport(BaseModel):
+    """Write-once synthetic report that cannot carry a release decision."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal["property_eligibility_development_report_v1"] = (
+        "property_eligibility_development_report_v1"
+    )
+    mode: Literal["PROPERTY_ELIGIBILITY_SYNTHETIC_NOT_RELEASE"] = (
+        "PROPERTY_ELIGIBILITY_SYNTHETIC_NOT_RELEASE"
+    )
+    release_decision_emitted: Literal[False] = False
+    run_id: str = Field(min_length=1, max_length=120)
+    started_at: datetime
+    completed_at: datetime
+    matrix_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    prompt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    predictions_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    generation_config: DevelopmentGenerationConfig
+    case_count: Literal[30] = 30
+    live_provider_case_attempts: Literal[30] = 30
+    label_isolation: Literal[True] = True
+    metrics: PropertyEligibilityMetrics
+
+
+class PropertyEligibilityCycleClaim(BaseModel):
+    """Cycle-wide identity claimed before the first synthetic provider request."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal["property_eligibility_cycle_claim_v1"] = (
+        "property_eligibility_cycle_claim_v1"
+    )
+    mode: Literal["PROPERTY_ELIGIBILITY_SYNTHETIC_NOT_RELEASE"] = (
+        "PROPERTY_ELIGIBILITY_SYNTHETIC_NOT_RELEASE"
+    )
+    claim_timing: Literal["BEFORE_PROVIDER_CALL"] = "BEFORE_PROVIDER_CALL"
+    run_id: str = Field(min_length=1, max_length=120)
+    started_at: datetime
+    matrix_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    prompt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    generation_config: DevelopmentGenerationConfig
+    case_count: Literal[30] = 30
+    label_isolation: Literal[True] = True
+
+
+@dataclass(frozen=True, slots=True)
+class PropertyEligibilityArtifactPaths:
+    """One isolated write-once property-eligibility output namespace."""
+
+    output_dir: Path
+    predictions: Path
+    report: Path
+
+    @classmethod
+    def from_output_dir(cls, output_dir: Path) -> PropertyEligibilityArtifactPaths:
+        return cls(
+            output_dir=output_dir,
+            predictions=output_dir / "property_predictions.jsonl",
+            report=output_dir / "property_report.json",
+        )
+
+    @property
+    def cycle_claim(self) -> Path:
+        """Return the one write-once claim shared by every v1 run ID."""
+
+        return _PROPERTY_ELIGIBILITY_RUNS_ROOT / "property_eligibility_v1_cycle_claim.json"
+
+
 @dataclass(frozen=True, slots=True)
 class AtomicDevelopmentArtifactPaths:
     """One isolated synthetic development output namespace."""
@@ -213,6 +407,318 @@ def load_atomic_synthetic_cases(path: Path) -> tuple[AtomicSyntheticCase, ...]:
     if len(cases) != 20 or len({case.case_id for case in cases}) != 20:
         raise ValueError("atomic development matrix requires 20 unique cases")
     return cases
+
+
+def load_property_eligibility_synthetic_cases(
+    path: Path,
+) -> tuple[PropertyEligibilitySyntheticCase, ...]:
+    """Load the fixed 30-row property-eligibility development matrix."""
+
+    return _load_property_eligibility_synthetic_bytes(path.read_bytes())
+
+
+def validate_property_eligibility_authorization(
+    *,
+    report_path: Path,
+    matrix_path: Path,
+) -> PropertyEligibilityReport:
+    """Authorize old-26 development only from passing, hash-bound synthetic artifacts."""
+
+    report = PropertyEligibilityReport.model_validate_json(report_path.read_bytes())
+    if not report.metrics.live_development_passed:
+        raise ValueError("property-eligibility synthetic gate did not pass")
+    paths = PropertyEligibilityArtifactPaths.from_output_dir(report_path.parent)
+    _validate_output_namespace(paths)
+    if report_path.resolve(strict=False) != paths.report.resolve(strict=False):
+        raise ValueError("property-eligibility report must use its canonical artifact path")
+    claim_path = paths.cycle_claim
+    if not claim_path.is_file():
+        raise ValueError("property-eligibility pre-call cycle claim is absent")
+    claim = PropertyEligibilityCycleClaim.model_validate_json(claim_path.read_bytes())
+    if (
+        claim.run_id != report.run_id
+        or claim.started_at != report.started_at
+        or claim.matrix_sha256 != report.matrix_sha256
+        or claim.prompt_sha256 != report.prompt_sha256
+        or claim.generation_config != report.generation_config
+    ):
+        raise ValueError("property-eligibility cycle claim does not bind the report")
+    matrix_bytes = matrix_path.read_bytes()
+    cases = _load_property_eligibility_synthetic_bytes(matrix_bytes)
+    if report.matrix_sha256 != sha256_bytes(matrix_bytes):
+        raise ValueError("property-eligibility matrix checksum does not match")
+    prompt_sha256 = sha256_bytes(CASE_INTAKE_SYSTEM_PROMPT.encode("utf-8"))
+    if report.prompt_sha256 != prompt_sha256:
+        raise ValueError("property-eligibility prompt checksum does not match current code")
+    predictions_path = paths.predictions
+    if not predictions_path.is_file():
+        raise ValueError("property-eligibility prediction artifact is absent")
+    prediction_bytes = predictions_path.read_bytes()
+    if report.predictions_sha256 != sha256_bytes(prediction_bytes):
+        raise ValueError("property-eligibility prediction checksum does not match")
+    records = tuple(
+        PropertyEligibilityPredictionRecord.model_validate_json(line)
+        for line in prediction_bytes.splitlines()
+        if line.strip()
+    )
+    recomputed = evaluate_property_eligibility_records(cases, records)
+    if recomputed != report.metrics:
+        raise ValueError("property-eligibility report metrics differ from recomputed metrics")
+    return report
+
+
+def _load_property_eligibility_synthetic_bytes(
+    payload: bytes,
+) -> tuple[PropertyEligibilitySyntheticCase, ...]:
+    """Parse one immutable matrix byte snapshot."""
+
+    cases = tuple(
+        PropertyEligibilitySyntheticCase.model_validate_json(line)
+        for line in payload.decode("utf-8").splitlines()
+        if line.strip()
+    )
+    if len(cases) != 30 or len({case.case_id for case in cases}) != 30:
+        raise ValueError("property-eligibility matrix requires 30 unique cases")
+    return cases
+
+
+_WAGE_RELATED_KEYS = frozenset(
+    {
+        FactKey.UNPAID_WAGES_AMOUNT,
+        FactKey.UNPAID_WAGES_DURATION,
+        FactKey.WAGE_PAYMENT_PROBLEM,
+        FactKey.WAGE_PAYMENT_DUE_DATE,
+        FactKey.WAGE_PAYMENT_STATUS,
+        FactKey.WAGE_DELAY_FORCE_MAJEURE,
+    }
+)
+_ELIGIBILITY_KEYS = frozenset(
+    {
+        FactKey.EMPLOYEE_ROLE,
+        FactKey.INTENDED_TERMINATION_DATE,
+        FactKey.NOTICE_SPECIAL_CASE,
+    }
+)
+
+
+def evaluate_property_eligibility_records(
+    cases: Sequence[PropertyEligibilitySyntheticCase],
+    records: Sequence[PropertyEligibilityPredictionRecord],
+) -> PropertyEligibilityMetrics:
+    """Evaluate exactness and eligibility without conflating mixed-case valid facts."""
+
+    if len(cases) != 30 or len(records) != 30:
+        raise ValueError("property-eligibility evaluation requires 30 cases and records")
+    case_by_id = {case.case_id: case for case in cases}
+    record_by_id = {record.case_id: record for record in records}
+    if len(case_by_id) != 30 or set(record_by_id) != set(case_by_id):
+        raise ValueError("property-eligibility case and record IDs must match uniquely")
+
+    fact_tp = fact_fp = fact_fn = 0
+    predicted_fact_count = key_count = type_count = grounded_count = minimal_count = 0
+    successful = typed_failures = 0
+    missingness_fp = negation_fp = forbidden_fact_count = forbidden_issue_count = 0
+    normalization_mismatches = 0
+    atomic_total = atomic_exact = exact_cases = 0
+    issue_tp = issue_fp = issue_fn = 0
+    critical_expected = critical_matched = 0
+    issue_counts = {issue: [0, 0, 0] for issue in IssueCode}
+    family_counts: dict[str, list[int]] = {
+        "employee_role": [0, 0, 0],
+        "intended_termination_date": [0, 0, 0],
+        "notice_special_case": [0, 0, 0],
+        "wage_related": [0, 0, 0],
+    }
+    eligibility_key_fp = eligibility_key_fn = 0
+    separation_exact = True
+    failed_ids: list[str] = []
+
+    for case in cases:
+        record = record_by_id[case.case_id]
+        actual_failure = record.status is V11PredictionStatus.ERROR
+        if actual_failure:
+            typed_failures += 1
+        else:
+            successful += 1
+        result = record.result or CaseIntakeResult()
+        predicted_facts = tuple(result.facts)
+        predicted_fact_count += len(predicted_facts)
+        expected_facts = _expected_facts(case)
+        expected_counter = Counter(_fact_signature(fact) for fact in expected_facts)
+        predicted_counter = Counter(_fact_signature(fact) for fact in predicted_facts)
+        intersection = expected_counter & predicted_counter
+        current_tp = sum(intersection.values())
+        current_fp = sum((predicted_counter - expected_counter).values())
+        current_fn = sum((expected_counter - predicted_counter).values())
+        fact_tp += current_tp
+        fact_fp += current_fp
+        fact_fn += current_fn
+
+        expected_key_counter = Counter(
+            fact.fact_key for fact in expected_facts if FactKey(fact.fact_key) in _ELIGIBILITY_KEYS
+        )
+        predicted_key_counter = Counter(
+            fact.fact_key
+            for fact in predicted_facts
+            if _safe_fact_key(fact.fact_key) in _ELIGIBILITY_KEYS
+        )
+        eligibility_key_fp += sum((predicted_key_counter - expected_key_counter).values())
+        eligibility_key_fn += sum((expected_key_counter - predicted_key_counter).values())
+
+        case_input = CaseIntakeInput(source_text=case.source_text, source_ref=case.source_ref)
+        forbidden_keys = set(case.forbidden_fact_keys)
+        case_forbidden_facts = 0
+        for fact in predicted_facts:
+            key = _safe_fact_key(fact.fact_key)
+            if key is not None and key in CANONICAL_FACT_CONTRACT:
+                key_count += 1
+                try:
+                    fact_type = FactType(fact.fact_type)
+                    validate_canonical_fact_value(key, fact_type, fact.normalized_value)
+                except ValueError:
+                    pass
+                else:
+                    type_count += 1
+            if _fact_is_grounded(case_input, fact):
+                grounded_count += 1
+            if fact.raw_value == fact.source_span.text:
+                minimal_count += 1
+            if key in forbidden_keys:
+                case_forbidden_facts += 1
+        forbidden_fact_count += case_forbidden_facts
+        if "missingness" in case.tags:
+            missingness_fp += len(predicted_facts) if not expected_facts else case_forbidden_facts
+        if "unsupported_negation" in case.tags:
+            negation_fp += len(predicted_facts) if not expected_facts else case_forbidden_facts
+        normalization_mismatches += _normalization_mismatches(expected_facts, predicted_facts)
+
+        expected_issues = set(case.expected_candidate_issues)
+        predicted_issues = {item.issue_code for item in result.candidate_issues}
+        forbidden_issues = predicted_issues.intersection(case.forbidden_candidate_issues)
+        forbidden_issue_count += len(forbidden_issues)
+        if "issue_fact_separation" in case.tags and expected_issues != predicted_issues:
+            separation_exact = False
+        for issue in IssueCode:
+            expected = issue in expected_issues
+            predicted = issue in predicted_issues
+            if expected and predicted:
+                issue_tp += 1
+                issue_counts[issue][0] += 1
+            elif predicted:
+                issue_fp += 1
+                issue_counts[issue][1] += 1
+            elif expected:
+                issue_fn += 1
+                issue_counts[issue][2] += 1
+        if "critical_issue" in case.tags:
+            critical_expected += len(expected_issues)
+            critical_matched += len(expected_issues.intersection(predicted_issues))
+
+        for family, keys in _property_families().items():
+            expected_family = Counter(
+                _fact_signature(fact)
+                for fact in expected_facts
+                if _safe_fact_key(fact.fact_key) in keys
+            )
+            predicted_family = Counter(
+                _fact_signature(fact)
+                for fact in predicted_facts
+                if _safe_fact_key(fact.fact_key) in keys
+            )
+            family_counts[family][0] += sum((expected_family & predicted_family).values())
+            family_counts[family][1] += sum((predicted_family - expected_family).values())
+            family_counts[family][2] += sum((expected_family - predicted_family).values())
+
+        facts_exact = expected_counter == predicted_counter and not actual_failure
+        issues_exact = expected_issues == predicted_issues and not actual_failure
+        if "atomic" in case.tags:
+            atomic_total += 1
+            if facts_exact:
+                atomic_exact += 1
+        if facts_exact and issues_exact:
+            exact_cases += 1
+        else:
+            failed_ids.append(case.case_id)
+
+    fact_precision = _ratio(fact_tp, fact_tp + fact_fp)
+    fact_recall = _ratio(fact_tp, fact_tp + fact_fn)
+    fact_f1 = _f1(fact_precision, fact_recall)
+    denominator = predicted_fact_count or 1
+    key_compliance = key_count / denominator if predicted_fact_count else 1.0
+    type_compliance = type_count / denominator if predicted_fact_count else 1.0
+    grounding = grounded_count / denominator if predicted_fact_count else 1.0
+    minimal_span = minimal_count / denominator if predicted_fact_count else 1.0
+    atomic_accuracy = atomic_exact / atomic_total if atomic_total else 1.0
+    issue_macro = sum(
+        _f1(_ratio(tp, tp + fp), _ratio(tp, tp + fn)) for tp, fp, fn in issue_counts.values()
+    ) / len(issue_counts)
+    critical_recall = _ratio(critical_matched, critical_expected)
+    property_passed = bool(
+        forbidden_fact_count == 0 and eligibility_key_fp == 0 and eligibility_key_fn == 0
+    )
+    issue_separation_passed = forbidden_issue_count == 0 and separation_exact
+    normalization_passed = normalization_mismatches == 0 and type_compliance == 1.0
+    passed = bool(
+        successful == 30
+        and typed_failures == 0
+        and key_compliance == 1.0
+        and type_compliance == 1.0
+        and predicted_fact_count - key_count == 0
+        and grounding == 1.0
+        and missingness_fp == 0
+        and negation_fp == 0
+        and property_passed
+        and issue_separation_passed
+        and normalization_passed
+        and fact_f1 >= 0.85
+        and atomic_accuracy >= 0.85
+        and issue_macro >= 0.90
+        and critical_recall >= 0.90
+    )
+    property_metrics = {
+        family: _property_precision_recall(*counts) for family, counts in family_counts.items()
+    }
+    return PropertyEligibilityMetrics(
+        terminal_case_count=len(records),
+        successful_result_count=successful,
+        typed_failure_count=typed_failures,
+        expected_fact_count=sum(len(_expected_facts(case)) for case in cases),
+        predicted_fact_count=predicted_fact_count,
+        fact_exact_tp=fact_tp,
+        fact_exact_fp=fact_fp,
+        fact_exact_fn=fact_fn,
+        fact_exact_precision=fact_precision,
+        fact_exact_recall=fact_recall,
+        fact_exact_f1=fact_f1,
+        atomic_case_count=atomic_total,
+        atomic_exact_case_count=atomic_exact,
+        atomic_case_accuracy=atomic_accuracy,
+        canonical_fact_key_compliance=key_compliance,
+        canonical_fact_type_compliance=type_compliance,
+        invalid_unregistered_key_count=predicted_fact_count - key_count,
+        source_grounding_accuracy=grounding,
+        minimal_span_accuracy=minimal_span,
+        missingness_false_positive_count=missingness_fp,
+        negation_false_positive_count=negation_fp,
+        forbidden_fact_violation_count=forbidden_fact_count,
+        forbidden_issue_violation_count=forbidden_issue_count,
+        normalization_mismatch_count=normalization_mismatches,
+        property_eligibility_contract_passed=property_passed,
+        issue_fact_separation_passed=issue_separation_passed,
+        normalization_contract_passed=normalization_passed,
+        candidate_issue_tp=issue_tp,
+        candidate_issue_fp=issue_fp,
+        candidate_issue_fn=issue_fn,
+        candidate_issue_macro_f1=issue_macro,
+        critical_issue_recall=critical_recall,
+        employee_role=property_metrics["employee_role"],
+        intended_termination_date=property_metrics["intended_termination_date"],
+        notice_special_case=property_metrics["notice_special_case"],
+        wage_related=property_metrics["wage_related"],
+        exact_case_count=exact_cases,
+        failed_case_ids=tuple(failed_ids),
+        live_development_passed=passed,
+    )
 
 
 def evaluate_atomic_synthetic_records(
@@ -449,7 +955,86 @@ async def run_atomic_synthetic_development(
     return report
 
 
-def _expected_facts(case: AtomicSyntheticCase) -> tuple[CaseFact, ...]:
+async def run_property_eligibility_synthetic_development(
+    cases: Sequence[PropertyEligibilitySyntheticCase],
+    settings: Settings,
+    paths: PropertyEligibilityArtifactPaths,
+    *,
+    extractor: CaseIntakeExtractor,
+    run_id: str,
+    started_at: datetime,
+    completed_at: datetime | None,
+    matrix_path: Path | None = None,
+    now: Callable[[], datetime] = _utc_now,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+) -> PropertyEligibilityReport:
+    """Run one paced, label-isolated synthetic eligibility capture and evaluation."""
+
+    _validate_output_namespace(paths)
+    generation_config = validate_development_provider_settings(settings)
+    if len(cases) != 30 or len({case.case_id for case in cases}) != 30:
+        raise ValueError("property-eligibility run requires 30 unique cases")
+    matrix_bytes = matrix_path.read_bytes() if matrix_path is not None else _jsonl_bytes(cases)
+    matrix_cases = _load_property_eligibility_synthetic_bytes(matrix_bytes)
+    if tuple(cases) != matrix_cases:
+        raise ValueError("supplied cases differ from the immutable matrix snapshot")
+    cases = matrix_cases
+    matrix_sha256 = sha256_bytes(matrix_bytes)
+    prompt_sha256 = sha256_bytes(CASE_INTAKE_SYSTEM_PROMPT.encode("utf-8"))
+    claim = PropertyEligibilityCycleClaim(
+        run_id=run_id,
+        started_at=started_at,
+        matrix_sha256=matrix_sha256,
+        prompt_sha256=prompt_sha256,
+        generation_config=generation_config,
+    )
+    _require_absent_outputs(paths)
+    write_exclusive(paths.cycle_claim, canonical_json_bytes(claim.model_dump(mode="json")))
+
+    records: list[PropertyEligibilityPredictionRecord] = []
+    for sequence, case in enumerate(cases, start=1):
+        case_input = CaseIntakeInput(source_text=case.source_text, source_ref=case.source_ref)
+        try:
+            result = await extractor.extract(case_input)
+            result = validate_case_intake_result(case_input, result)
+            record = PropertyEligibilityPredictionRecord(
+                sequence=sequence,
+                case_id=case.case_id,
+                status=V11PredictionStatus.SUCCESS,
+                result=result,
+            )
+        except CaseIntakeError as exc:
+            record = _property_failure_record(sequence, case.case_id, exc.reason)
+        except Exception:
+            record = _property_failure_record(
+                sequence,
+                case.case_id,
+                V11PredictionFailureReason.UNEXPECTED_ERROR.value,
+            )
+        records.append(record)
+        if sequence < len(cases):
+            await sleep(DEVELOPMENT_PACING_SECONDS)
+
+    prediction_bytes = _jsonl_bytes(records)
+    write_exclusive(paths.predictions, prediction_bytes)
+    metrics = evaluate_property_eligibility_records(cases, records)
+    report = PropertyEligibilityReport(
+        run_id=run_id,
+        started_at=started_at,
+        completed_at=completed_at or now(),
+        matrix_sha256=matrix_sha256,
+        prompt_sha256=prompt_sha256,
+        predictions_sha256=sha256_bytes(prediction_bytes),
+        generation_config=generation_config,
+        metrics=metrics,
+    )
+    write_exclusive(paths.report, canonical_json_bytes(report.model_dump(mode="json")))
+    return report
+
+
+def _expected_facts(
+    case: AtomicSyntheticCase | PropertyEligibilitySyntheticCase,
+) -> tuple[CaseFact, ...]:
     facts: list[CaseFact] = []
     for index, expected in enumerate(case.expected_facts, start=1):
         start = case.source_text.index(expected.source_span_text)
@@ -472,6 +1057,65 @@ def _expected_facts(case: AtomicSyntheticCase) -> tuple[CaseFact, ...]:
             )
         )
     return tuple(facts)
+
+
+def _safe_fact_key(value: str) -> FactKey | None:
+    try:
+        return FactKey(value)
+    except ValueError:
+        return None
+
+
+def _property_families() -> dict[str, frozenset[FactKey]]:
+    return {
+        "employee_role": frozenset({FactKey.EMPLOYEE_ROLE}),
+        "intended_termination_date": frozenset({FactKey.INTENDED_TERMINATION_DATE}),
+        "notice_special_case": frozenset({FactKey.NOTICE_SPECIAL_CASE}),
+        "wage_related": _WAGE_RELATED_KEYS,
+    }
+
+
+def _property_precision_recall(tp: int, fp: int, fn: int) -> PropertyPrecisionRecall:
+    return PropertyPrecisionRecall(
+        true_positive=tp,
+        false_positive=fp,
+        false_negative=fn,
+        precision=_ratio(tp, tp + fp),
+        recall=_ratio(tp, tp + fn),
+    )
+
+
+def _normalization_mismatches(
+    expected_facts: Sequence[CaseFact],
+    predicted_facts: Sequence[CaseFact],
+) -> int:
+    expected_by_key: dict[str, Counter[tuple[str, str, str]]] = defaultdict(Counter)
+    predicted_by_key: dict[str, Counter[tuple[str, str, str]]] = defaultdict(Counter)
+    for fact in expected_facts:
+        expected_by_key[fact.fact_key][_normalization_signature(fact)] += 1
+    for fact in predicted_facts:
+        predicted_by_key[fact.fact_key][_normalization_signature(fact)] += 1
+
+    mismatches = 0
+    # Missing or unexpected properties are extraction errors, not normalization errors.
+    # Compare normalization only where both sides selected the same canonical property;
+    # the max below still catches extra conflicting values for that property.
+    for fact_key in expected_by_key.keys() & predicted_by_key.keys():
+        expected = expected_by_key[fact_key]
+        predicted = predicted_by_key[fact_key]
+        matched = sum((expected & predicted).values())
+        unmatched_expected = sum(expected.values()) - matched
+        unmatched_predicted = sum(predicted.values()) - matched
+        mismatches += max(unmatched_expected, unmatched_predicted)
+    return mismatches
+
+
+def _normalization_signature(fact: CaseFact) -> tuple[str, str, str]:
+    return (
+        fact.fact_type,
+        type(fact.normalized_value).__name__,
+        json.dumps(fact.normalized_value, ensure_ascii=False, sort_keys=True),
+    )
 
 
 def _fact_signature(fact: CaseFact) -> _FactSignature:
@@ -527,8 +1171,32 @@ def _failure_record(
     )
 
 
-def _validate_output_namespace(paths: AtomicDevelopmentArtifactPaths) -> None:
-    lowered = tuple(part.casefold() for part in paths.output_dir.parts)
+def _property_failure_record(
+    sequence: int,
+    case_id: str,
+    reason: str,
+) -> PropertyEligibilityPredictionRecord:
+    try:
+        failure_reason = V11PredictionFailureReason(reason)
+    except ValueError:
+        failure_reason = V11PredictionFailureReason.UNEXPECTED_ERROR
+    return PropertyEligibilityPredictionRecord(
+        sequence=sequence,
+        case_id=case_id,
+        status=V11PredictionStatus.ERROR,
+        failure_reason=failure_reason,
+    )
+
+
+def _validate_output_namespace(
+    paths: AtomicDevelopmentArtifactPaths | PropertyEligibilityArtifactPaths,
+) -> None:
+    expected = type(paths).from_output_dir(paths.output_dir)
+    if paths.predictions.resolve(strict=False) != expected.predictions.resolve(
+        strict=False
+    ) or paths.report.resolve(strict=False) != expected.report.resolve(strict=False):
+        raise ValueError("development artifacts must use their canonical output namespace")
+    lowered = tuple(part.casefold() for part in paths.output_dir.resolve(strict=False).parts)
     protected = (
         ("evaluation", "results", "decision_support", "v1_1", "rc1"),
         ("evaluation", "results", "decision_support", "v1_1", "rc2"),
@@ -539,10 +1207,26 @@ def _validate_output_namespace(paths: AtomicDevelopmentArtifactPaths) -> None:
         for index in range(len(lowered) - len(marker) + 1)
     ):
         raise ValueError("development output cannot use a historical release namespace")
+    if isinstance(paths, PropertyEligibilityArtifactPaths):
+        resolved_root = _PROPERTY_ELIGIBILITY_RUNS_ROOT.resolve(strict=False)
+        resolved_output = paths.output_dir.resolve(strict=False)
+        if resolved_output.parent != resolved_root:
+            raise ValueError(
+                "property-eligibility output must remain under the fixed development runs root"
+            )
+        if resolved_output == paths.cycle_claim.resolve(strict=False):
+            raise ValueError("property-eligibility run directory collides with the cycle claim")
+        if paths.output_dir.exists() and not paths.output_dir.is_dir():
+            raise ValueError("property-eligibility run directory must not be a regular file")
 
 
-def _require_absent_outputs(paths: AtomicDevelopmentArtifactPaths) -> None:
-    for path in (paths.predictions, paths.report):
+def _require_absent_outputs(
+    paths: AtomicDevelopmentArtifactPaths | PropertyEligibilityArtifactPaths,
+) -> None:
+    final_paths = [paths.predictions, paths.report]
+    if isinstance(paths, PropertyEligibilityArtifactPaths):
+        final_paths.insert(0, paths.cycle_claim)
+    for path in final_paths:
         if path.exists():
             raise FileExistsError(f"development artifact already exists: {path}")
 

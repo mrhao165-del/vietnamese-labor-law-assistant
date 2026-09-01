@@ -125,3 +125,81 @@ the protected-artifact guard, the architecture test, and both production MCP dem
 typecheck, lint, production build, 16 component tests, the three-scenario Playwright suite, and three
 repeated Playwright lifecycles (9/9) terminated successfully with no hang. These regression results
 do not override the failed extraction-development gate.
+
+## Property-eligibility synthetic cycle
+
+The next bounded cycle made one further prompt-only revision. Prompt SHA-256 changed from
+`249fc81530c2401899488348bb6de61820c4ff06f29ecbb7e783eb97d7e9a393` to
+`fdb8de5f08dacbcc441290a2c0ffb5198fa90f4da04f1e1d782a0c7fca9553d3`. The revision defines
+direct-evidence eligibility and exclusion for `EMPLOYEE_ROLE`, `INTENDED_TERMINATION_DATE`, and
+`NOTICE_SPECIAL_CASE`; preserves the explicit-presence/absence contract for
+`WAGE_DELAY_FORCE_MAJEURE`; and separates wage facts from candidate-issue selection. It did not
+change the closed transport schema, canonical vocabulary, public Case Intake model, source-span
+resolver, downstream semantics, or legal-analysis policy.
+
+The new 30-row matrix SHA-256 is
+`c488fb35ffa321800a826de21bbca57d4c25588a952ea5b642cf6285c53a50c2`. It contains new synthetic
+wording, exact and forbidden fact/issue expectations, natural-language and token-valued positive
+properties, missingness, direct unsupported negation, wage/issue separation, and mixed inputs. The
+amount-only row is intentionally schema-labelled to isolate money normalization; it is development
+scaffolding rather than representative natural-language evidence.
+
+The single authorized run
+`property-eligibility-v1-mistral-small-2603-20260901` used the pinned OpenAI-compatible
+`mistral-small-2603` configuration. It produced 30/30 terminal structured successes with no typed
+provider failure. Prediction SHA-256 is
+`51c2aa0cc5665666444a100477501e6380dac66cb081d067b7bf8bb2d1a57bff`; report SHA-256 is
+`afabcf4f7c9bfdf73e7d4ba3597cc1fc56ca18e0f920cf2298c09a476c57a097`. Canonical keys, canonical
+types, and internal source grounding were each 100%, but the fixed authorization gate failed:
+
+- exact fact TP/FP/FN was `13/22/10`, for F1 `0.4482758620689655`;
+- atomic exactness was `1/7` (`0.14285714285714285`);
+- missingness and unsupported-negation false positives were `6` and `3`;
+- property eligibility, issue/fact separation, and normalization contracts failed;
+- candidate issue macro-F1 was `0.803030303030303`, and critical issue recall was `0.5`.
+
+The dominant remaining general family is `FACT_VS_ISSUE_EVIDENCE_THRESHOLD_SEPARATION`: the model
+still promotes topical, missing, negated, or intent-only language into positive facts while omitting
+the broader supported termination-family candidate issue. This accounts for 14 forbidden fact
+emissions, most termination candidate false negatives, and wage-triggered issue contamination.
+Seven additional fact errors were literal-boundary mismatches, two wage-status facts were not
+decomposed, and one special-case token was assigned to the wrong property.
+
+Two diagnostic limitations are preserved rather than corrected after seeing provider output. First,
+four pre-run candidate labels treat explicit or missing employee-role context as sufficient to open
+the preliminary termination family, following the existing prompt/registry association; the design
+prose can also be read as requiring a separate termination trigger. Candidate issue recall and the
+combined next-hypothesis attribution therefore include that disclosed interpretation ambiguity.
+Second, the report field named `minimal_span_accuracy` measures the structural invariant
+`raw_value == source_span.text`; it does not compare the literal boundary with the expected minimal
+boundary. The separate exact-signature audit, not that field, establishes the seven boundary
+mismatches. Neither limitation changes the failed authorization decision because the exact fact,
+missingness, negation, property-eligibility, normalization, and issue-separation gates fail
+independently.
+
+The single-cycle stop was enforced. There was no second prompt revision, no second synthetic
+provider round, and no old-26 provider regression. The historical RC2 evidence remains unchanged;
+no holdout, review packet, freeze, RC3 identity, capture, release evaluation, or Week-5 capability
+was created.
+
+A post-run offline review found that the first property runner had claimed only its per-run output
+paths, not the whole one-cycle namespace. No second run occurred, but a different run ID could have
+bypassed that original check. The runner now claims a cycle-wide file before its first extractor
+call, binds the exact matrix byte snapshot and canonical output paths, and rejects extra conflicting
+normalizations. The core runner, not merely its CLI, resolves every run directly beneath the fixed
+development runs root and iterates the parsed matrix snapshot rather than a caller-mutable sequence.
+Because the authorized failed run predated that fix, the committed cycle lock is
+truthfully marked `RECORDED_AFTER_FIRST_RUN_DURING_OFFLINE_HARDENING`; it does not claim to have
+preceded the provider calls. The original predictions and report were not regenerated or changed.
+The old-26 development adapter now additionally requires a checksum-bound passing property report
+and its genuine pre-call claim before it can construct a provider-backed extractor. Authorization
+parses the bound prediction stream and recomputes all metrics from the bound matrix rather than
+trusting the report's gate boolean. The failed recorded report therefore cannot authorize old-26.
+
+Offline repository checks remained green after the stop and final fail-closed hardening: 878 Python
+tests passed with two accepted Windows/POSIX skips and 87.05% coverage; Ruff formatting/lint,
+Pyright, protected-artifact guard,
+architecture review, and both production MCP demos passed. Frontend typecheck, lint, build, 16
+component tests, the three-case Playwright suite, and three repeated Playwright lifecycles (9/9)
+all terminated without a hang or leaked Vite listener. These results clear the secondary blockers
+but do not override the failed synthetic extraction gate.

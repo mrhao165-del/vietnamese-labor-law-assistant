@@ -372,7 +372,28 @@ def test_prompt_operationalizes_minimality_negation_and_issue_independence() -> 
         "WAGE_PAYMENT_PROBLEM_REPORTED",
     )
 
-    missing = [rule for rule in required_rules if rule not in CASE_INTAKE_SYSTEM_PROMPT]
+    compact_prompt = " ".join(CASE_INTAKE_SYSTEM_PROMPT.split())
+    missing = [rule for rule in required_rules if rule not in compact_prompt]
+    assert missing == []
+
+
+def test_prompt_defines_property_eligibility_and_wage_issue_exclusions() -> None:
+    required_rules = (
+        "PROPERTY ELIGIBILITY",
+        "EMPLOYEE_ROLE requires a directly stated job, position, or worker category",
+        "resignation intent does not state EMPLOYEE_ROLE",
+        "INTENDED_TERMINATION_DATE requires an actual temporal expression",
+        "intent to resign by itself is not a date",
+        "NOTICE_SPECIAL_CASE requires a directly stated supported exception circumstance",
+        "ordinary notice duration is not NOTICE_SPECIAL_CASE",
+        "WAGE FACTS AND ISSUES",
+        "A wage fact by itself selects neither candidate issue",
+        "Never select CONTRACT_TERM from wages or generic employment context",
+        "WAGE_DELAY_FORCE_MAJEURE is the only target property here that accepts",
+    )
+
+    compact_prompt = " ".join(CASE_INTAKE_SYSTEM_PROMPT.split())
+    missing = [rule for rule in required_rules if rule not in compact_prompt]
     assert missing == []
 
 

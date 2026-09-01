@@ -1,0 +1,114 @@
+{
+  "run_id": "property-eligibility-v1-mistral-small-2603-20260901",
+  "mode": "PROPERTY_ELIGIBILITY_SYNTHETIC_NOT_RELEASE",
+  "live_development_passed": false,
+  "matrix_sha256": "c488fb35ffa321800a826de21bbca57d4c25588a952ea5b642cf6285c53a50c2",
+  "prompt_sha256": "fdb8de5f08dacbcc441290a2c0ffb5198fa90f4da04f1e1d782a0c7fca9553d3",
+  "predictions_sha256": "51c2aa0cc5665666444a100477501e6380dac66cb081d067b7bf8bb2d1a57bff",
+  "report_sha256": "afabcf4f7c9bfdf73e7d4ba3597cc1fc56ca18e0f920cf2298c09a476c57a097",
+  "repository_observations": {
+    "property_run_directory_count": 1,
+    "provider_case_attempts_recorded_by_report": 30,
+    "prompt_checksum_after_run_unchanged": true,
+    "second_synthetic_run_artifact_count": 0,
+    "old_26_post_run_artifact_count": 0,
+    "post_run_cycle_lock_present": true,
+    "observation_limit": "Repository evidence cannot independently prove the absence of an unrecorded external provider request."
+  },
+  "summary": {
+    "terminal_cases": 30,
+    "successful_results": 30,
+    "typed_failures": 0,
+    "expected_facts": 23,
+    "predicted_facts": 35,
+    "fact_exact_tp": 13,
+    "fact_exact_fp": 22,
+    "fact_exact_fn": 10,
+    "fact_exact_f1": 0.4482758620689655,
+    "atomic_exact_cases": 1,
+    "atomic_case_count": 7,
+    "atomic_case_accuracy": 0.14285714285714285,
+    "canonical_key_compliance": 1.0,
+    "canonical_type_compliance": 1.0,
+    "source_grounding_accuracy": 1.0,
+    "missingness_false_positive_count": 6,
+    "unsupported_negation_false_positive_count": 3,
+    "candidate_issue_macro_f1": 0.803030303030303,
+    "critical_issue_recall": 0.5
+  },
+  "eligibility_false_positives": {
+    "EMPLOYEE_ROLE": {
+      "count": 2,
+      "case_ids": ["property-dev-018", "property-dev-027"],
+      "pattern": "A pronoun or missing-role clause was promoted into a positive role fact."
+    },
+    "INTENDED_TERMINATION_DATE": {
+      "count": 4,
+      "case_ids": ["property-dev-002", "property-dev-006", "property-dev-023", "property-dev-028"],
+      "pattern": "Termination intent without an actual temporal expression was promoted into a date fact."
+    },
+    "NOTICE_SPECIAL_CASE": {
+      "count": 7,
+      "case_ids": ["property-dev-005", "property-dev-012", "property-dev-013", "property-dev-014", "property-dev-015", "property-dev-028", "property-dev-029"],
+      "pattern": "Unsupported negation, missing or unknown information, and ordinary notice duration were promoted into a special-case fact."
+    },
+    "WAGE_DELAY_FORCE_MAJEURE": {
+      "count": 1,
+      "case_ids": ["property-dev-021"],
+      "pattern": "A missing-cause statement was promoted into a positive force-majeure fact."
+    }
+  },
+  "fact_difference_audit": {
+    "forbidden_property_emissions": 14,
+    "too_broad": {
+      "count": 6,
+      "case_ids": ["property-dev-016", "property-dev-020", "property-dev-021", "property-dev-022", "property-dev-026"]
+    },
+    "too_narrow": {
+      "count": 1,
+      "case_ids": ["property-dev-017"]
+    },
+    "missing_atomic_decomposition": {
+      "count": 2,
+      "case_ids": ["property-dev-020", "property-dev-021"],
+      "fact_key": "WAGE_PAYMENT_STATUS"
+    },
+    "wrong_property": {
+      "count": 1,
+      "case_ids": ["property-dev-025"],
+      "pattern": "The notice-special-case token was emitted as WAGE_PAYMENT_PROBLEM."
+    },
+    "normalization_mismatch": {
+      "count": 1,
+      "case_ids": ["property-dev-020"]
+    },
+    "assertion_mode_mismatch": {
+      "count": 0,
+      "case_ids": []
+    }
+  },
+  "candidate_issue_audit": {
+    "true_positive_count": 12,
+    "false_positive_count": 1,
+    "false_negative_count": 12,
+    "CONTRACT_TERM": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "EMPLOYEE_UNILATERAL_TERMINATION": {
+      "precision": 0.9090909090909091,
+      "recall": 0.45454545454545453,
+      "f1": 0.6060606060606061,
+      "false_positive_case_ids": ["property-dev-026"],
+      "false_negative_case_ids": ["property-dev-001", "property-dev-003", "property-dev-004", "property-dev-005", "property-dev-009", "property-dev-010", "property-dev-011", "property-dev-012", "property-dev-013", "property-dev-014", "property-dev-015", "property-dev-029"]
+    }
+  },
+  "known_diagnostic_limitations": {
+    "candidate_label_interpretation": "Four pre-run role or missing-role rows use the existing prompt/registry association to open the preliminary termination family, while the design prose can be read as requiring a separate termination trigger. Candidate recall is therefore not an interpretation-free estimate.",
+    "minimal_span_metric_name": "minimal_span_accuracy measures raw_value equality with source_span.text, not equality with the expected minimal boundary. Exact-signature comparison found seven boundary mismatches despite this structural metric being 1.0.",
+    "decision_impact": "NONE. Exact fact, missingness, negation, property eligibility, normalization, and issue/fact-separation gates fail independently."
+  },
+  "next_hypothesis": "FACT_VS_ISSUE_EVIDENCE_THRESHOLD_SEPARATION",
+  "next_hypothesis_scope": "Separate strict positive-fact evidence eligibility from broader preliminary candidate-issue recall without changing the canonical vocabulary, deterministic downstream semantics, or legal scope."
+}

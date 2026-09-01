@@ -1,0 +1,18 @@
+{
+  "schema_version": "property_eligibility_cycle_lock_v1",
+  "mode": "PROPERTY_ELIGIBILITY_SYNTHETIC_NOT_RELEASE",
+  "lock_timing": "RECORDED_AFTER_FIRST_RUN_DURING_OFFLINE_HARDENING",
+  "reason": "ENFORCE_SINGLE_CYCLE_AFTER_PRECLAIM_DEFECT_DISCOVERY",
+  "run_id": "property-eligibility-v1-mistral-small-2603-20260901",
+  "capture_started_at": "2026-09-01T16:16:28.390402Z",
+  "capture_completed_at": "2026-09-01T16:17:46.621602Z",
+  "lock_recorded_at": "2026-09-01T16:41:28.2550884Z",
+  "matrix_sha256": "c488fb35ffa321800a826de21bbca57d4c25588a952ea5b642cf6285c53a50c2",
+  "prompt_sha256": "fdb8de5f08dacbcc441290a2c0ffb5198fa90f4da04f1e1d782a0c7fca9553d3",
+  "predictions_sha256": "51c2aa0cc5665666444a100477501e6380dac66cb081d067b7bf8bb2d1a57bff",
+  "report_sha256": "afabcf4f7c9bfdf73e7d4ba3597cc1fc56ca18e0f920cf2298c09a476c57a097",
+  "provider_case_attempts_recorded_by_report": 30,
+  "second_synthetic_provider_round": false,
+  "old_26_regression_run": false,
+  "release_state_emitted": false
+}
