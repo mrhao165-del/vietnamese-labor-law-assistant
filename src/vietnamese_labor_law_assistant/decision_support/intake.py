@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from enum import StrEnum
 from typing import Any
 
 import structlog
@@ -95,6 +96,17 @@ expresses that canonical property and a literal value that can be grounded, type
 faithfully. LEVEL I independently detects an allowlisted issue family raised by the raw message. A
 preliminary issue may have zero or incomplete Level-F facts. Never fabricate or complete facts to
 justify a candidate issue; MissingFactDetector handles absent required facts downstream.
+For every proposed fact observation, set evidence_status to exactly one of PRESENT_ASSERTED,
+MISSING, UNKNOWN, or NEGATED. Only PRESENT_ASSERTED observations may become canonical facts: use it
+only when the source directly asserts a representable value. MISSING means the value was not
+provided, UNKNOWN means the value is not known or cannot be determined, and NEGATED means the
+proposed positive value is explicitly denied. These non-PRESENT observations are transport
+diagnostics and are excluded from canonical facts without affecting independent candidate-issue
+detection.
+An explicit canonical value NONE may be PRESENT_ASSERTED when the source directly asserts NONE;
+unknown or missing NONE information is not the canonical NONE value. A directly asserted absence of
+WAGE_DELAY_FORCE_MAJEURE is also PRESENT_ASSERTED because that canonical property represents both
+presence and explicit absence of the circumstance.
 Wage facts alone select neither supported issue and never CONTRACT_TERM. Wage facts accompanied by
 independent employee termination intent may support EMPLOYEE_UNILATERAL_TERMINATION. That issue does
 not require EMPLOYEE_ROLE, INTENDED_TERMINATION_DATE, or NOTICE_SPECIAL_CASE to be fabricated; omit
@@ -113,7 +125,9 @@ extra fields and no prose outside the structured schema."""
 _CASE_INTAKE_REPAIR_PROMPT = """Repair the response to the same structured Case Intake schema and
 policy. Return facts and candidate_issues together. Each source_span must contain only text copied
 literally from the source; do not add offsets. Preserve exact source grounding, use only allowlisted
-enums and issue codes, add no fields, and do not add legal analysis or conclusions."""
+enums and issue codes. Every proposed fact observation must classify evidence_status as
+PRESENT_ASSERTED, MISSING, UNKNOWN, or NEGATED; do not use PRESENT_ASSERTED for missing, unknown, or
+negated evidence. Add no fields beyond the schema and do not add legal analysis or conclusions."""
 
 
 class CaseIntakeError(RuntimeError):
@@ -140,27 +154,56 @@ class _ProviderSourceSpan(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
 
 
+class _ProviderEvidenceStatus(StrEnum):
+    """Private evidence classification for one provider fact observation."""
+
+    PRESENT_ASSERTED = "PRESENT_ASSERTED"
+    MISSING = "MISSING"
+    UNKNOWN = "UNKNOWN"
+    NEGATED = "NEGATED"
+
+
 class _ProviderCaseFact(CaseFact):
     """Internal provider fact carrying literal source text but no model-generated offsets."""
 
     fact_key: FactKey
     fact_type: FactType
     source_span: _ProviderSourceSpan
-
-    @model_validator(mode="after")
-    def validate_canonical_transport_contract(self) -> _ProviderCaseFact:
-        validate_canonical_fact_value(
-            self.fact_key,
-            self.fact_type,
-            self.normalized_value,
-        )
-        return self
+    evidence_status: _ProviderEvidenceStatus
 
 
 class _ProviderCaseIntakeResult(CaseIntakeResult):
     """Internal structured-response model converted immediately to the canonical contract."""
 
     facts: list[_ProviderCaseFact] = Field(default_factory=list, max_length=50)
+
+
+class CaseIntakeTransportAudit(BaseModel):
+    """Internal adapter diagnostics; never part of the canonical Case Intake result."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    present_asserted_count: int = Field(ge=0)
+    missing_count: int = Field(ge=0)
+    unknown_count: int = Field(ge=0)
+    negated_count: int = Field(ge=0)
+    present_admitted_count: int = Field(ge=0)
+    present_validator_rejected_count: int = Field(ge=0)
+    non_present_excluded_count: int = Field(ge=0)
+    non_present_incorrectly_admitted_count: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def validate_accounting(self) -> CaseIntakeTransportAudit:
+        if self.present_asserted_count != (
+            self.present_admitted_count + self.present_validator_rejected_count
+        ):
+            raise ValueError("present observation accounting is inconsistent")
+        non_present_count = self.missing_count + self.unknown_count + self.negated_count
+        if non_present_count != (
+            self.non_present_excluded_count + self.non_present_incorrectly_admitted_count
+        ):
+            raise ValueError("non-present observation accounting is inconsistent")
+        return self
 
 
 def _resolve_literal_source_span(source_text: str, literal_span_text: str) -> dict[str, object]:
@@ -180,10 +223,26 @@ def _resolve_literal_source_span(source_text: str, literal_span_text: str) -> di
 
 def _canonicalize_provider_result(
     case_input: CaseIntakeInput, provider_result: _ProviderCaseIntakeResult
-) -> CaseIntakeResult:
+) -> tuple[CaseIntakeResult, CaseIntakeTransportAudit]:
     facts: list[dict[str, object]] = []
+    status_counts = {status: 0 for status in _ProviderEvidenceStatus}
+    present_validator_rejected_count = 0
+    non_present_excluded_count = 0
     for provider_fact in provider_result.facts:
-        fact_payload = provider_fact.model_dump(mode="python")
+        status_counts[provider_fact.evidence_status] += 1
+        if provider_fact.evidence_status is not _ProviderEvidenceStatus.PRESENT_ASSERTED:
+            non_present_excluded_count += 1
+            continue
+        try:
+            validate_canonical_fact_value(
+                provider_fact.fact_key,
+                provider_fact.fact_type,
+                provider_fact.normalized_value,
+            )
+        except ValueError:
+            present_validator_rejected_count += 1
+            continue
+        fact_payload = provider_fact.model_dump(mode="python", exclude={"evidence_status"})
         literal_span_text = provider_fact.source_span.text
         fact_payload["source_span"] = _resolve_literal_source_span(
             case_input.source_text, literal_span_text
@@ -197,7 +256,18 @@ def _canonicalize_provider_result(
             ],
         }
     )
-    return validate_case_intake_result(case_input, result)
+    canonical_result = validate_case_intake_result(case_input, result)
+    audit = CaseIntakeTransportAudit(
+        present_asserted_count=status_counts[_ProviderEvidenceStatus.PRESENT_ASSERTED],
+        missing_count=status_counts[_ProviderEvidenceStatus.MISSING],
+        unknown_count=status_counts[_ProviderEvidenceStatus.UNKNOWN],
+        negated_count=status_counts[_ProviderEvidenceStatus.NEGATED],
+        present_admitted_count=len(facts),
+        present_validator_rejected_count=present_validator_rejected_count,
+        non_present_excluded_count=non_present_excluded_count,
+        non_present_incorrectly_admitted_count=0,
+    )
+    return canonical_result, audit
 
 
 def validate_case_intake_result(
@@ -259,11 +329,19 @@ class OpenAIStructuredCaseIntakeExtractor:
     async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
         """Return facts and candidate issues from one structured request per attempt."""
 
+        result, _audit = await self.extract_with_transport_audit(case_input)
+        return result
+
+    async def extract_with_transport_audit(
+        self, case_input: CaseIntakeInput
+    ) -> tuple[CaseIntakeResult, CaseIntakeTransportAudit]:
+        """Return the canonical result plus private transport admission diagnostics."""
+
         client = self._client_or_raise()
         last_error: Exception | None = None
         last_reason = "CASE_INTAKE_PROVIDER_ERROR"
 
-        def request(attempt: int) -> CaseIntakeResult:
+        def request(attempt: int) -> tuple[CaseIntakeResult, CaseIntakeTransportAudit]:
             messages: list[ChatCompletionMessageParam] = [
                 {"role": "system", "content": CASE_INTAKE_SYSTEM_PROMPT},
                 {"role": "user", "content": _case_input_message(case_input)},
@@ -286,15 +364,18 @@ class OpenAIStructuredCaseIntakeExtractor:
         for attempt in range(1, self.settings.agent_structured_output_max_retries + 2):
             started = time.perf_counter()
             try:
-                result = await asyncio.to_thread(request, attempt)
+                result, audit = await asyncio.to_thread(request, attempt)
                 self.logger.info(
                     "case_intake_completed",
                     attempt=attempt,
                     fact_count=len(result.facts),
                     candidate_issue_count=len(result.candidate_issues),
+                    present_admitted_count=audit.present_admitted_count,
+                    non_present_excluded_count=audit.non_present_excluded_count,
+                    present_validator_rejected_count=audit.present_validator_rejected_count,
                     latency_ms=(time.perf_counter() - started) * 1000,
                 )
-                return result
+                return result, audit
             except Exception as exc:
                 reason = _failure_reason(exc)
                 last_error = exc

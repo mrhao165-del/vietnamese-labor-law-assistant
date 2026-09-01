@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -86,6 +87,7 @@ def fact_payload(
     fact_key: str = "UNPAID_WAGES_DURATION",
     fact_type: str = "DURATION",
     normalized_value: object | None = None,
+    evidence_status: str = "PRESENT_ASSERTED",
 ) -> dict[str, object]:
     if normalized_value is None:
         if fact_type in {"DURATION", "MONEY"} and raw_value.split()[0].isdigit():
@@ -103,11 +105,13 @@ def fact_payload(
         "source_type": "USER_MESSAGE",
         "source_ref": "user_message:case-1",
         "source_span": {"text": raw_value},
+        "evidence_status": evidence_status,
     }
 
 
 def canonical_fact_payload(source_text: str) -> dict[str, object]:
     payload = fact_payload(source_text)
+    payload.pop("evidence_status")
     raw_value = payload["raw_value"]
     assert isinstance(raw_value, str)
     start = source_text.index(raw_value)
@@ -137,6 +141,7 @@ def provider_fact_payload(
     fact_type: str,
     normalized_value: object,
     literal_span_text: str | None = None,
+    evidence_status: str = "PRESENT_ASSERTED",
 ) -> dict[str, object]:
     return {
         "fact_id": fact_id,
@@ -149,6 +154,7 @@ def provider_fact_payload(
         "source_type": "USER_MESSAGE",
         "source_ref": "user_message:case-1",
         "source_span": {"text": literal_span_text or raw_value},
+        "evidence_status": evidence_status,
     }
 
 
@@ -212,14 +218,239 @@ async def test_provider_schema_exposes_closed_fact_key_and_fact_type_enums() -> 
 
 
 @pytest.mark.asyncio
+async def test_provider_schema_requires_closed_evidence_status_without_union_constructs() -> None:
+    source = case_input("Hop dong 18 thang.")
+    client = ParseClient([{"facts": [], "candidate_issues": []}])
+
+    await OpenAIStructuredCaseIntakeExtractor(settings(), client).extract(source)
+
+    response_format = client.requests[0]["response_format"]
+    assert isinstance(response_format, type)
+    schema = response_format.model_json_schema()
+    provider_fact = schema["$defs"]["_ProviderCaseFact"]
+    evidence_status = provider_fact["properties"]["evidence_status"]
+    assert evidence_status["$ref"].endswith("/$defs/_ProviderEvidenceStatus")
+    assert set(schema["$defs"]["_ProviderEvidenceStatus"]["enum"]) == {
+        "PRESENT_ASSERTED",
+        "MISSING",
+        "UNKNOWN",
+        "NEGATED",
+    }
+    assert "evidence_status" in provider_fact["required"]
+    assert "discriminator" not in json.dumps(schema, sort_keys=True)
+
+
+@pytest.mark.asyncio
+async def test_present_asserted_observation_is_admitted_with_transport_audit() -> None:
+    source = case_input("Thoi han duoc ghi la 18 thang.")
+    payload = provider_payload(
+        provider_fact_payload(
+            raw_value="18 thang",
+            fact_id="CF-duration-present-1",
+            fact_key="CONTRACT_DURATION",
+            fact_type="DURATION",
+            normalized_value=18,
+        )
+    )
+    extractor = OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload]))
+
+    result, audit = await extractor.extract_with_transport_audit(source)
+
+    assert [fact.fact_key for fact in result.facts] == ["CONTRACT_DURATION"]
+    assert "evidence_status" not in result.facts[0].model_dump()
+    assert audit.present_asserted_count == 1
+    assert audit.present_admitted_count == 1
+    assert audit.present_validator_rejected_count == 0
+    assert audit.non_present_excluded_count == 0
+    assert audit.non_present_incorrectly_admitted_count == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("evidence_status", ["MISSING", "UNKNOWN", "NEGATED"])
+async def test_non_present_observation_is_excluded_without_removing_candidate_issue(
+    evidence_status: str,
+) -> None:
+    literal = "chuc danh chua duoc cung cap"
+    source = case_input(f"Toi muon nghi viec; {literal}.")
+    payload = {
+        "facts": [
+            provider_fact_payload(
+                raw_value=literal,
+                fact_id=f"CF-role-{evidence_status.lower()}-1",
+                fact_key="EMPLOYEE_ROLE",
+                fact_type="TEXT",
+                normalized_value=literal,
+                evidence_status=evidence_status,
+            )
+        ],
+        "candidate_issues": [{"issue_code": "EMPLOYEE_UNILATERAL_TERMINATION"}],
+    }
+    extractor = OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload]))
+
+    result, audit = await extractor.extract_with_transport_audit(source)
+
+    assert result.facts == []
+    assert [issue.issue_code for issue in result.candidate_issues] == [
+        IssueCode.EMPLOYEE_UNILATERAL_TERMINATION
+    ]
+    assert audit.non_present_excluded_count == 1
+    assert audit.non_present_incorrectly_admitted_count == 0
+    assert getattr(audit, f"{evidence_status.casefold()}_count") == 1
+
+
+@pytest.mark.asyncio
+async def test_explicit_canonical_none_is_present_asserted_and_admitted() -> None:
+    source = case_input("Truong hop mien bao truoc duoc ghi la NONE.")
+    payload = provider_payload(
+        provider_fact_payload(
+            raw_value="NONE",
+            fact_id="CF-notice-none-1",
+            fact_key="NOTICE_SPECIAL_CASE",
+            fact_type="TEXT",
+            normalized_value="NONE",
+        )
+    )
+    extractor = OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload]))
+
+    result, audit = await extractor.extract_with_transport_audit(source)
+
+    assert [(fact.fact_key, fact.normalized_value) for fact in result.facts] == [
+        ("NOTICE_SPECIAL_CASE", "NONE")
+    ]
+    assert audit.present_admitted_count == 1
+    assert audit.negated_count == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("fact_key", "fact_type", "raw_value", "normalized_value"),
+    [
+        ("CONTRACT_DURATION", "DURATION", "18 thang", 18),
+        ("CONTRACT_EXPIRY_STATEMENT", "TEXT", "sap het han", "sap het han"),
+        ("CONTRACT_SIGNED_DATE", "DATE", "2026-03-01", "2026-03-01"),
+        ("CONTRACT_TYPE", "TEXT", "hop dong xac dinh thoi han", "hop dong xac dinh thoi han"),
+        ("EVENT_TIME", "TEMPORAL_EXPRESSION", "vao cuoi quy", "vao cuoi quy"),
+        ("UNPAID_WAGES_AMOUNT", "MONEY", "7500000", 7_500_000),
+        ("UNPAID_WAGES_DURATION", "DURATION", "2 thang", 2),
+        ("CONTRACT_START_DATE", "DATE", "2026-04-01", "2026-04-01"),
+        ("CONTRACT_END_DATE", "DATE", "2027-03-31", "2027-03-31"),
+        ("NOTICE_SPECIAL_CASE", "TEXT", "NONE", "NONE"),
+        ("EMPLOYEE_ROLE", "TEXT", "nhan vien ke toan", "nhan vien ke toan"),
+        (
+            "INTENDED_TERMINATION_DATE",
+            "TEMPORAL_EXPRESSION",
+            "sau Tet",
+            "sau Tet",
+        ),
+        (
+            "INTENDED_TERMINATION_REFERENCE_DATE",
+            "DATE",
+            "2026-02-15",
+            "2026-02-15",
+        ),
+        (
+            "WAGE_PAYMENT_PROBLEM",
+            "TEXT",
+            "cham tra luong",
+            "WAGE_PAYMENT_PROBLEM_REPORTED",
+        ),
+        ("WAGE_PAYMENT_DUE_DATE", "DATE", "2026-05-10", "2026-05-10"),
+        ("WAGE_PAYMENT_STATUS", "TEXT", "van chua tra", "van chua tra"),
+        (
+            "WAGE_DELAY_FORCE_MAJEURE",
+            "TEXT",
+            "khong co su kien bat kha khang",
+            "khong co su kien bat kha khang",
+        ),
+    ],
+)
+async def test_every_registered_present_fact_value_is_admitted(
+    fact_key: str,
+    fact_type: str,
+    raw_value: str,
+    normalized_value: object,
+) -> None:
+    source = case_input(f"Gia tri duoc neu truc tiep: {raw_value}.")
+    payload = provider_payload(
+        provider_fact_payload(
+            raw_value=raw_value,
+            fact_id=f"CF-{fact_key.lower().replace('_', '-')}-1",
+            fact_key=fact_key,
+            fact_type=fact_type,
+            normalized_value=normalized_value,
+        )
+    )
+
+    result, audit = await OpenAIStructuredCaseIntakeExtractor(
+        settings(), ParseClient([payload])
+    ).extract_with_transport_audit(source)
+
+    assert [(fact.fact_key, fact.fact_type, fact.normalized_value) for fact in result.facts] == [
+        (fact_key, fact_type, normalized_value)
+    ]
+    assert audit.present_admitted_count == 1
+    assert audit.present_validator_rejected_count == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("fact_key", "fact_type", "normalized_value"),
+    [
+        ("CONTRACT_DURATION", "TEXT", "18 thang"),
+        ("CONTRACT_DURATION", "DURATION", "18"),
+        ("UNPAID_WAGES_AMOUNT", "MONEY", 5_000_000.0),
+    ],
+)
+async def test_present_observation_with_invalid_canonical_value_is_rejected_not_admitted(
+    fact_key: str,
+    fact_type: str,
+    normalized_value: object,
+) -> None:
+    source = case_input("18 thang")
+    payload = provider_payload(
+        provider_fact_payload(
+            raw_value="18 thang",
+            fact_id="CF-invalid-present-1",
+            fact_key=fact_key,
+            fact_type=fact_type,
+            normalized_value=normalized_value,
+        )
+    )
+    extractor = OpenAIStructuredCaseIntakeExtractor(settings(), ParseClient([payload]))
+
+    result, audit = await extractor.extract_with_transport_audit(source)
+
+    assert result.facts == []
+    assert audit.present_asserted_count == 1
+    assert audit.present_admitted_count == 0
+    assert audit.present_validator_rejected_count == 1
+
+
+@pytest.mark.asyncio
+async def test_missing_evidence_status_fails_closed_at_transport_schema() -> None:
+    source = case_input("18 thang")
+    observation = provider_fact_payload(
+        raw_value="18 thang",
+        fact_id="CF-no-status-1",
+        fact_key="CONTRACT_DURATION",
+        fact_type="DURATION",
+        normalized_value=18,
+    )
+    del observation["evidence_status"]
+
+    with pytest.raises(CaseIntakeError, match="CASE_INTAKE_SCHEMA_INVALID"):
+        await OpenAIStructuredCaseIntakeExtractor(
+            settings(), ParseClient([provider_payload(observation)])
+        ).extract(source)
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("fact_key", "fact_type", "normalized_value"),
     [
         ("USER_MESSAGE_CONTENT", "TEXT", "24 thang"),
         ("CONTRACT_TERM", "TEXT", "24 thang"),
         ("CONTRACT_DURATION", "CONTRACT_TERM", 24),
-        ("CONTRACT_DURATION", "DURATION", "24"),
-        ("UNPAID_WAGES_AMOUNT", "MONEY", 5_000_000.0),
     ],
 )
 async def test_provider_fact_vocabulary_and_normalization_drift_fail_closed(
@@ -394,6 +625,24 @@ def test_prompt_separates_fact_and_candidate_issue_evidence_thresholds() -> None
     assert missing == []
     assert "PROPERTY ELIGIBILITY" not in compact_prompt
     assert "WAGE FACTS AND ISSUES" not in compact_prompt
+
+
+def test_prompt_defines_transport_evidence_status_and_canonical_admission() -> None:
+    required_rules = (
+        "PRESENT_ASSERTED",
+        "MISSING",
+        "UNKNOWN",
+        "NEGATED",
+        "Only PRESENT_ASSERTED observations may become canonical facts",
+        "non-PRESENT observations are transport diagnostics",
+        "explicit canonical value NONE",
+        "unknown or missing NONE",
+        "directly asserted absence of WAGE_DELAY_FORCE_MAJEURE is also PRESENT_ASSERTED",
+    )
+
+    compact_prompt = " ".join(CASE_INTAKE_SYSTEM_PROMPT.split())
+    missing = [rule for rule in required_rules if rule not in compact_prompt]
+    assert missing == []
 
 
 @pytest.mark.asyncio

@@ -263,3 +263,59 @@ offline quality gate passed 892 tests with two accepted platform skips and 87.17
 coverage; Ruff, formatting, Pyright, architecture, protected-evidence review, both MCP demos,
 frontend typecheck/lint/build, 16 component tests, the 3-case Playwright suite, and 9/9 repeated
 Playwright lifecycle checks were green. These results do not override the failed synthetic gate.
+
+## Fact-value eligibility and exclusion cycle
+
+This cycle retained the fact-versus-issue separation prompt at
+`47a07e19c081151470d4dc8ac10ba6d764e4ec90e864ae131a54760579562788` and added one private
+provider-transport evidence status with the closed values `PRESENT_ASSERTED`, `MISSING`, `UNKNOWN`,
+and `NEGATED`. Only `PRESENT_ASSERTED` observations that also satisfy the existing canonical
+key/type/value and deterministic source-grounding contracts may enter `CaseIntakeResult.facts`.
+The other statuses remain transport diagnostics and are excluded without removing an independently
+detected candidate issue. Explicit canonical `NOTICE_SPECIAL_CASE=NONE` and an explicitly asserted
+absence of `WAGE_DELAY_FORCE_MAJEURE` remain representable present values. The public
+`CaseIntakeResult`, the 17 FactKeys, five FactTypes, Unicode source-span resolver, and legal semantics
+were unchanged. The resulting prompt SHA-256 is
+`723138a67943fc4660028502d358d6316b5b70ddcf8b2e282dfe63d00869432f`.
+
+The fresh development-only matrix contains 28 synthetic cases and has SHA-256
+`9afaac885198895403a1733c091e337e72657a9bb0e6fc983a1feebe7bd99b5a`. Before the first provider
+request, the runner exclusively wrote a cycle-wide claim (SHA-256
+`88dbc5fa760e8ce7d37e2f02fd869dbcc9bad46936bd8d8e15e7aac6aeba08fd`) binding the matrix, prompt,
+pinned Mistral configuration, and fixed development gates. The sole run,
+`fact-value-eligibility-v1-mistral-small-2603-20260902`, produced 28/28 terminal structured results
+with no typed failure. Predictions SHA-256 is
+`f409f52946bfd598ff1c081dc3e4b18116c696205826a8d111e925d873009bbb`; report SHA-256 is
+`0219da0af217fb0bc14d0df64334a0115c55dbb86a6e3a6ccb90b0aef3c74fe7`.
+
+The fixed synthetic authorization gate failed, with 6/14 metrics passing and 8/14 failing. The
+application admission boundary itself passed: canonical key/type compliance and source grounding
+were each 100%, 12 provider-declared non-present observations were excluded, and none was admitted.
+The provider emitted 24 `PRESENT_ASSERTED`, eight `MISSING`, zero `UNKNOWN`, and four `NEGATED`
+observations; 23 present observations were admitted and one failed the canonical value validator.
+Independent labels still found two unknown-value false-positive facts, nine exact false-positive fact
+signatures, and five facts fabricated on issue-present/zero-fact rows.
+
+Exact fact TP/FP/FN was `14/9/4`, yielding precision `0.6086956521739131`, recall
+`0.7777777777777778`, and F1 `0.6829268292682927`. Atomic exactness was `11/15`
+(`0.7333333333333333`), and normalization accuracy was `0.6666666666666666`. Candidate issue
+macro-F1 was `0.8991596638655461`, narrowly below the fixed `0.90` gate; critical issue recall was
+`0.875`. The cross-layer contracts also failed: only 2/8 issue-present/zero-fact cases and 5/7
+fact-present/no-issue cases were exact. The remaining failure is therefore `MULTIPLE`: model
+evidence-status classification, atomic decomposition/value selection, and candidate-issue detection
+all remain below the preregistered development authorization requirements. Deterministic
+application admission logic is not the remaining boundary.
+
+The single-cycle stop was enforced. No prompt or production code was changed after observing the
+result, no second provider round occurred, and the old-26 regression was not executed.
+`OLD26_REGRESSION_AUTHORIZED` remains `NO`; no fresh holdout, review packet, freeze, RC3, release
+evaluation, or Week-5 capability was created.
+
+Offline quality evidence is mixed and does not alter the synthetic failure. Ruff, formatting,
+Pyright, protected-artifact review, architecture checks, 87.25% coverage, both canonical MCP demos,
+frontend typecheck/lint/build, 16 component tests, the canonical 3-case Playwright run, and three
+repeated Playwright lifecycles (9/9) passed. The full Python run reported 933 passed and two accepted
+skips, but three real-stdio retrieval integration tests failed because the retrieval MCP process did
+not initialize within their 30-second timeout on this machine. The standalone retrieval demo
+completed successfully after its heavier model initialization, so this remains a visible secondary
+quality blocker rather than an extraction-contract remediation in this bounded cycle.
