@@ -57,7 +57,8 @@ Browser
                       -> deterministic Article 20/35 rules
                  -> fail-closed citation / semantic guardrail
             -> CASE_ANALYSIS -> finite v1.1 CaseGraph
-                 -> one structured Case Intake call
+                 -> independent fact-proposal and candidate-issue calls
+                 -> deterministic fact compilation and merge
                  -> deterministic missing facts / clarification
                  -> refined issues / non-executing evidence-request metadata
             -> OUT_OF_SCOPE -> bounded refusal
@@ -85,8 +86,13 @@ uses the outer composition `AssistantService -> RequestMode.DIRECT_QA -> existin
 
 `AgentIntent` and `WorkflowStatus` are unchanged v1.0 backend contracts; clarification remains an
 execution outcome, not an outer request mode. Week 2 introduces a typed, user-message Case Intake
-contract, a two-code preliminary issue allowlist for the existing Article 20/35 capability scope,
-and a one-stage structured provider adapter with source-span validation. Week 3 adds an immutable
+contract and a two-code preliminary issue allowlist for the existing Article 20/35 capability
+scope. Production Case Intake now uses two independent structured boundaries over the same raw
+input: the fact provider proposes only a closed `FactKey` and literal source span, while the issue
+provider emits only candidate issues. Application-owned deterministic policies classify evidence,
+normalize and atomize values, derive provenance, and admit or reject each fact proposal before the
+unchanged public result is merged. `CASE_INTAKE_FACT_MODEL` and `CASE_INTAKE_ISSUE_MODEL` optionally
+override the two models and each falls back independently to `LLM_MODEL`. Week 3 adds an immutable
 issue registry, pure deterministic missing-fact detection, and bounded targeted clarification
 metadata. Clarification uses neutral field-specific
 templates, prioritizes critical and multi-issue gaps, skips caller-supplied previously requested

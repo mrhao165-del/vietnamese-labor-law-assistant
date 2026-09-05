@@ -1,4 +1,4 @@
-"""Canonical fact vocabulary shared by provider transport and decision support."""
+"""Canonical fact vocabulary shared by the application compiler and decision support."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from vietnamese_labor_law_assistant.decision_support.issues import IssueCode
 
 
 class FactType(StrEnum):
-    """Closed semantic types accepted from the structured intake provider."""
+    """Closed semantic types assigned by the deterministic application compiler."""
 
     TEXT = "TEXT"
     DATE = "DATE"
@@ -24,7 +24,7 @@ class FactType(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class CanonicalFactDefinition:
-    """One provider-facing fact contract tied to the existing registry vocabulary."""
+    """One canonical fact contract tied to the existing registry vocabulary."""
 
     fact_key: FactKey
     allowed_fact_types: tuple[FactType, ...]
@@ -200,7 +200,7 @@ def validate_canonical_fact_value(
     fact_type: FactType,
     normalized_value: object,
 ) -> None:
-    """Reject provider type or primitive drift without rewriting the emitted value."""
+    """Reject compiler type or primitive drift without rewriting the emitted value."""
 
     definition = CANONICAL_FACT_CONTRACT[fact_key]
     if fact_type not in definition.allowed_fact_types:

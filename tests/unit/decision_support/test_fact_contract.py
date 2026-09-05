@@ -1,4 +1,4 @@
-"""Canonical production vocabulary shared by intake transport and domain registry."""
+"""Canonical production vocabulary shared by the compiler and domain registry."""
 
 from __future__ import annotations
 

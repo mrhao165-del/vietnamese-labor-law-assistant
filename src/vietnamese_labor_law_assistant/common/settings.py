@@ -54,6 +54,8 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = None
     openai_base_url: str | None = None
     llm_model: str | None = None
+    case_intake_fact_model: str | None = None
+    case_intake_issue_model: str | None = None
     llm_provider: Literal["openai", "gemini_openai_compatible"] = "openai"
     llm_timeout_seconds: float = Field(default=60, gt=0)
     llm_max_retries: int = Field(default=2, ge=0, le=10)
@@ -82,7 +84,7 @@ class Settings(BaseSettings):
     cors_allowed_origins: str = "http://localhost:5173,http://localhost:8080"
     api_max_page_size: int = Field(default=50, ge=1, le=100)
 
-    @field_validator("llm_model")
+    @field_validator("llm_model", "case_intake_fact_model", "case_intake_issue_model")
     @classmethod
     def strip_optional_model(cls, value: str | None) -> str | None:
         return value.strip() or None if value else None
@@ -124,6 +126,29 @@ class Settings(BaseSettings):
         return (
             self.openai_api_key is not None
             and self.llm_model is not None
+            and (self.llm_provider == "openai" or self.openai_base_url is not None)
+        )
+
+    @property
+    def resolved_case_intake_fact_model(self) -> str | None:
+        """Return the Fact boundary override or the global model fallback."""
+
+        return self.case_intake_fact_model or self.llm_model
+
+    @property
+    def resolved_case_intake_issue_model(self) -> str | None:
+        """Return the Issue boundary override or the global model fallback."""
+
+        return self.case_intake_issue_model or self.llm_model
+
+    @property
+    def case_intake_configured(self) -> bool:
+        """Whether both Case Intake boundaries and provider credentials are configured."""
+
+        return (
+            self.openai_api_key is not None
+            and self.resolved_case_intake_fact_model is not None
+            and self.resolved_case_intake_issue_model is not None
             and (self.llm_provider == "openai" or self.openai_base_url is not None)
         )
 

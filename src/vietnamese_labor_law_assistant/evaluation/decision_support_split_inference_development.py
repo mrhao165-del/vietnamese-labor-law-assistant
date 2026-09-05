@@ -416,42 +416,13 @@ def derive_split_inference_gates(
     )
 
 
-async def run_split_inference_synthetic_development(
+async def capture_split_inference_predictions(
     cases: Sequence[SplitInferenceSyntheticCase],
-    settings: Settings,
-    paths: SplitInferenceArtifactPaths,
     *,
     extractor: AuditedCaseIntakeExtractor,
-    run_id: str,
-    started_at: datetime,
-    completed_at: datetime | None,
-    matrix_path: Path,
-    now: Callable[[], datetime] = _utc_now,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
-) -> SplitInferenceDevelopmentReport:
-    """Execute exactly one label-isolated, paced, write-once synthetic split cycle."""
-
-    _validate_output_namespace(paths)
-    generation_config = validate_development_provider_settings(settings)
-    matrix_bytes = matrix_path.read_bytes()
-    matrix_cases = _load_split_inference_synthetic_bytes(matrix_bytes)
-    if tuple(cases) != matrix_cases:
-        raise ValueError("supplied cases differ from the immutable split matrix snapshot")
-    matrix_sha256 = sha256_bytes(matrix_bytes)
-    prior_prompt_sha256 = sha256_bytes(CASE_INTAKE_SYSTEM_PROMPT.encode("utf-8"))
-    fact_prompt_sha256 = sha256_bytes(FACT_EXTRACTION_SYSTEM_PROMPT.encode("utf-8"))
-    issue_prompt_sha256 = sha256_bytes(CANDIDATE_ISSUE_SYSTEM_PROMPT.encode("utf-8"))
-    claim = SplitInferenceCycleClaim(
-        run_id=run_id,
-        started_at=started_at,
-        matrix_sha256=matrix_sha256,
-        prior_combined_prompt_sha256=prior_prompt_sha256,
-        fact_prompt_sha256=fact_prompt_sha256,
-        issue_prompt_sha256=issue_prompt_sha256,
-        generation_config=generation_config,
-    )
-    _require_absent_outputs(paths)
-    write_exclusive(paths.cycle_claim, canonical_json_bytes(claim.model_dump(mode="json")))
+) -> tuple[SplitInferencePredictionRecord, ...]:
+    """Capture label-free split-boundary predictions with deterministic pacing."""
 
     records: list[SplitInferencePredictionRecord] = []
     for sequence, case in enumerate(cases, start=1):
@@ -490,6 +461,51 @@ async def run_split_inference_synthetic_development(
         records.append(record)
         if sequence < len(cases):
             await sleep(DEVELOPMENT_PACING_SECONDS)
+    return tuple(records)
+
+
+async def run_split_inference_synthetic_development(
+    cases: Sequence[SplitInferenceSyntheticCase],
+    settings: Settings,
+    paths: SplitInferenceArtifactPaths,
+    *,
+    extractor: AuditedCaseIntakeExtractor,
+    run_id: str,
+    started_at: datetime,
+    completed_at: datetime | None,
+    matrix_path: Path,
+    now: Callable[[], datetime] = _utc_now,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+) -> SplitInferenceDevelopmentReport:
+    """Execute exactly one label-isolated, paced, write-once synthetic split cycle."""
+
+    _validate_output_namespace(paths)
+    generation_config = validate_development_provider_settings(settings)
+    matrix_bytes = matrix_path.read_bytes()
+    matrix_cases = _load_split_inference_synthetic_bytes(matrix_bytes)
+    if tuple(cases) != matrix_cases:
+        raise ValueError("supplied cases differ from the immutable split matrix snapshot")
+    matrix_sha256 = sha256_bytes(matrix_bytes)
+    prior_prompt_sha256 = sha256_bytes(CASE_INTAKE_SYSTEM_PROMPT.encode("utf-8"))
+    fact_prompt_sha256 = sha256_bytes(FACT_EXTRACTION_SYSTEM_PROMPT.encode("utf-8"))
+    issue_prompt_sha256 = sha256_bytes(CANDIDATE_ISSUE_SYSTEM_PROMPT.encode("utf-8"))
+    claim = SplitInferenceCycleClaim(
+        run_id=run_id,
+        started_at=started_at,
+        matrix_sha256=matrix_sha256,
+        prior_combined_prompt_sha256=prior_prompt_sha256,
+        fact_prompt_sha256=fact_prompt_sha256,
+        issue_prompt_sha256=issue_prompt_sha256,
+        generation_config=generation_config,
+    )
+    _require_absent_outputs(paths)
+    write_exclusive(paths.cycle_claim, canonical_json_bytes(claim.model_dump(mode="json")))
+
+    records = await capture_split_inference_predictions(
+        cases,
+        extractor=extractor,
+        sleep=sleep,
+    )
 
     prediction_bytes = _jsonl_bytes(records)
     write_exclusive(paths.predictions, prediction_bytes)

@@ -165,22 +165,52 @@ label-free predictions under `evaluation/development/`; and recomputes every met
 old-26 task can be authorized. Its script is a thin acknowledged adapter. It cannot emit release
 state, run the old-26 diagnostic set, create a holdout, or create an RC identity.
 
-The production-development `OpenAIStructuredCaseIntakeExtractor` now executes two private,
-sequential inference boundaries over the same original `CaseIntakeInput`. The fact boundary returns
-only evidence-status observations; the issue boundary returns only the existing two-code candidate
-allowlist. Neither result is supplied to the other call. After both boundaries succeed, application
-code filters and canonically validates facts, validates the issue list, and deterministically merges
-the two private results into the unchanged public `CaseIntakeResult`. A failure at either boundary
-fails the intake without exposing a partial result. Normal execution therefore uses two structured
-provider calls; with three structured attempts and the OpenAI SDK's two transport retries per
-attempt, the theoretical maximum is 18 HTTP transmissions per intake. This is Case Intake
-infrastructure, not MCP/tool-efficiency work.
+The production-development `OpenAIStructuredCaseIntakeExtractor` executes two private, sequential
+inference boundaries over the same original `CaseIntakeInput`. The fact boundary returns only a
+closed `FactKey` plus literal `source_span.text` for each proposal; it cannot supply a fact type,
+value, normalization, assertion/evidence state, source offsets, or ID. The issue boundary returns
+only the existing two-code candidate allowlist. Neither result is supplied to the other call.
+Application code passes every structurally valid proposal through an application-owned compiler
+seam, where invalid or ambiguous grounding is a typed local rejection rather than a provider retry.
+It requires every compiler-produced `CaseFact` to match one unused, uniquely grounded proposal's key
+and bounded span as well as the existing canonical key/type/primitive contract. The default compiler
+is now the deterministic policy layer in `fact_compiler.py`, backed by the complete immutable overlay
+in `fact_policies.py`, bounded polarity classification in `fact_evidence.py`, and atomic value
+extraction in `fact_normalization.py`. It rejects missing, unknown, negated, semantically unsupported,
+ambiguous, unsafe, and ungrounded proposals; derives type, normalization, minimal offsets,
+`EXPLICIT`/`UNVERIFIED` state, and a stable hashed ID; deduplicates only exact representations; and
+preserves separately grounded conflicts. No compiler module imports a provider, issue output,
+calculator, retrieval, API, MCP, or agent capability. The adapter records proposal, admission and
+rejection counts, ordered rejection reasons, missing/unknown/negated classifications, and compiler
+latency before deterministically merging facts with the independent issue result into the unchanged
+public `CaseIntakeResult`. One rejected proposal does not remove another admitted fact or an
+independently detected issue. A provider failure at either boundary or structurally invalid compiler
+output fails the intake without exposing a partial result. Normal
+execution therefore uses two structured provider calls; with three structured attempts and the
+OpenAI SDK's two transport retries per attempt, the theoretical maximum is 18 HTTP transmissions per
+intake. This is Case Intake infrastructure, not MCP/tool-efficiency work.
+The legacy `present_asserted_count` and `present_admitted_count` audit fields mirror final compiler
+admissions only for existing development-evaluator compatibility; they no longer describe a
+provider-supplied evidence-status decision.
+`CASE_INTAKE_FACT_MODEL` and `CASE_INTAKE_ISSUE_MODEL` are optional per-boundary configuration;
+each resolves independently to `LLM_MODEL` when blank. They retain the configured OpenAI-compatible
+provider, endpoint, credentials, timeout, and retry machinery and introduce no new provider stack.
 
 `evaluation/decision_support_split_inference_development.py` owns the corresponding one-shot 28-row
 synthetic split-boundary experiment. It records boundary-specific success, retry and latency data;
 fact, issue, and cross-layer metrics; and the unchanged authorization gates in a write-once
 development claim/report. Its thin script cannot run the old-26 set, write release evidence, create
 a holdout, or create an RC identity.
+
+`evaluation/decision_support_hybrid_fact_development.py` additively owns the Hybrid Fact V2 replay
+of that same 28-row development matrix. It leaves the historical split-v1 schema and artifacts
+unchanged, writes a pre-call claim plus predictions and report into a new per-run namespace, binds
+the matrix, both prompts, both resolved boundary models, fixed thresholds, and deterministic
+production-pipeline files, and records compiler rejection reasons. Its 16-gate decision restores the
+already registered `non_present_incorrectly_admitted = 0` gate omitted from the historical split-v1
+projection. The offline stability reducer accepts exactly three identity-matched reports and cannot
+authorize old-26 unless every run passes; a mean score cannot mask a failed run. Its script remains a
+thin fixed-matrix development adapter and cannot access old-26, a release holdout, or release output.
 
 `AgentIntent` remains a direct-QA tool-plan contract and `WorkflowStatus` remains an execution
 status; `CLARIFICATION_REQUIRED` is not a request mode. No decision-support MCP server is planned
