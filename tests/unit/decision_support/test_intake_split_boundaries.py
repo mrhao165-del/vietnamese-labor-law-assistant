@@ -56,6 +56,16 @@ def _settings(*, retries: int = 0) -> Settings:
     )
 
 
+def _gemini_settings() -> Settings:
+    return Settings(
+        openai_api_key=SecretStr("test-key"),
+        openai_base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        llm_model="gemini-test-model",
+        llm_provider="gemini_openai_compatible",
+        agent_structured_output_max_retries=0,
+    )
+
+
 def _case_input(source_text: str = "Hợp đồng có thời hạn 18 tháng.") -> CaseIntakeInput:
     return CaseIntakeInput(
         source_text=source_text,
@@ -195,6 +205,69 @@ def test_issue_schema_has_no_fact_transport_fields() -> None:
     assert "fact_proposals" not in serialized
     assert '"facts"' not in serialized
     assert "discriminator" not in serialized
+
+
+@pytest.mark.asyncio
+async def test_gemini_transport_omits_unsupported_array_limits() -> None:
+    client = BoundaryParseClient([_fact_payload(), _issue_payload()])
+
+    await OpenAIStructuredCaseIntakeExtractor(
+        _gemini_settings(),
+        client,
+        fact_proposal_compiler=_compile_duration_proposals,
+    ).extract(_case_input())
+
+    fact_transport = client.requests[0]["response_format"]
+    issue_transport = client.requests[1]["response_format"]
+    assert isinstance(fact_transport, type)
+    assert isinstance(issue_transport, type)
+    assert "maxItems" not in json.dumps(fact_transport.model_json_schema())
+    assert "maxItems" not in json.dumps(issue_transport.model_json_schema())
+    assert (
+        intake._ProviderFactExtractionResult.model_json_schema()["properties"]["fact_proposals"][
+            "maxItems"
+        ]
+        == 50
+    )
+    assert (
+        intake._ProviderCandidateIssueResult.model_json_schema()["properties"]["candidate_issues"][
+            "maxItems"
+        ]
+        == 2
+    )
+
+
+@pytest.mark.asyncio
+async def test_gemini_fact_transport_still_enforces_domain_array_limit_after_parsing() -> None:
+    client = BoundaryParseClient([_fact_payload(*[_fact_proposal() for _ in range(51)])])
+
+    with pytest.raises(CaseIntakeError, match="CASE_INTAKE_SCHEMA_INVALID"):
+        await OpenAIStructuredCaseIntakeExtractor(
+            _gemini_settings(),
+            client,
+            fact_proposal_compiler=_compile_duration_proposals,
+        ).extract(_case_input())
+
+    assert len(client.requests) == 1
+
+
+@pytest.mark.asyncio
+async def test_gemini_issue_transport_still_enforces_domain_array_limit_after_parsing() -> None:
+    client = BoundaryParseClient(
+        [
+            _fact_payload(),
+            _issue_payload("CONTRACT_TERM", "CONTRACT_TERM", "CONTRACT_TERM"),
+        ]
+    )
+
+    with pytest.raises(CaseIntakeError, match="CASE_INTAKE_SCHEMA_INVALID"):
+        await OpenAIStructuredCaseIntakeExtractor(
+            _gemini_settings(),
+            client,
+            fact_proposal_compiler=_compile_duration_proposals,
+        ).extract(_case_input())
+
+    assert len(client.requests) == 2
 
 
 @pytest.mark.asyncio

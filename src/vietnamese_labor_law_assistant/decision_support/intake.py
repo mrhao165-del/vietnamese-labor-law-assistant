@@ -305,6 +305,37 @@ class _ProviderCandidateIssueResult(BaseModel):
     candidate_issues: list[CandidateIssue] = Field(default_factory=list, max_length=2)
 
 
+class _GeminiFactExtractionTransport(BaseModel):
+    """Gemini transport without its unsupported array-length schema keyword."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    fact_proposals: list[_ProviderFactProposal] = Field(default_factory=list)
+
+
+class _GeminiCandidateIssueTransport(BaseModel):
+    """Gemini transport without its unsupported array-length schema keyword."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    candidate_issues: list[CandidateIssue] = Field(default_factory=list)
+
+
+def _provider_transport_response_format(
+    provider: str,
+    response_format: type[_ProviderResultT],
+) -> type[BaseModel]:
+    """Select only provider-facing schema adaptations; canonical validation stays separate."""
+
+    if provider != "gemini_openai_compatible":
+        return response_format
+    if response_format is _ProviderFactExtractionResult:
+        return _GeminiFactExtractionTransport
+    if response_format is _ProviderCandidateIssueResult:
+        return _GeminiCandidateIssueTransport
+    return response_format
+
+
 class _ProviderCaseIntakeResult(CaseIntakeResult):
     """Historical combined schema identity; the production extractor no longer requests it."""
 
@@ -761,6 +792,10 @@ class OpenAIStructuredCaseIntakeExtractor:
         last_error: Exception | None = None
         last_reason = "CASE_INTAKE_PROVIDER_ERROR"
         cumulative_latency_ms = 0.0
+        transport_response_format = _provider_transport_response_format(
+            self.settings.llm_provider,
+            response_format,
+        )
 
         def request(attempt: int) -> _ProviderResultT:
             messages: list[ChatCompletionMessageParam] = [
@@ -772,7 +807,7 @@ class OpenAIStructuredCaseIntakeExtractor:
             completion = client.beta.chat.completions.parse(
                 model=model,
                 messages=messages,
-                response_format=response_format,
+                response_format=transport_response_format,
                 temperature=0,
             )
             if not completion.choices or completion.choices[0].message.parsed is None:

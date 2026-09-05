@@ -45,6 +45,8 @@ def _settings() -> Settings:
         openai_api_key=SecretStr("development-only"),
         openai_base_url="https://api.mistral.ai/v1",
         llm_model="mistral-small-2603",
+        case_intake_fact_model="mistral-small-2603",
+        case_intake_issue_model="mistral-small-2603",
         llm_provider="openai",
         llm_timeout_seconds=60,
         llm_max_retries=2,
