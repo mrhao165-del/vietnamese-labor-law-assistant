@@ -1,0 +1,1770 @@
+{
+  "runs": [
+    {
+      "report": {
+        "schema_version": "hybrid_fact_development_report_v2",
+        "mode": "HYBRID_FACT_V2_SYNTHETIC_NOT_RELEASE",
+        "release_decision_emitted": false,
+        "old26_executed": false,
+        "old26_regression_authorized": false,
+        "release_holdout_accessed": false,
+        "run_id": "hybrid-fact-v2-gemini-3.5-flash-lite-20260906-stability-r1",
+        "started_at": "2026-09-05T17:51:55.467962Z",
+        "completed_at": "2026-09-05T18:01:06.984990Z",
+        "matrix_sha256": "61da4f246bb995672b1645442ef64f517597a0862ecd951a98a43e7fb35ce18a",
+        "fact_prompt_sha256": "e3179fb7b8f131fc5129521642a78195ef85ba009c24a0aae1dc2c4d76ca4e5f",
+        "issue_prompt_sha256": "c7a62996ea6fdb513b0beb2e57e6f0312c3ffdd071079993819b2eccb13ddedf",
+        "production_pipeline_sha256": "f597abeaab3a25d4ba5f204c8539026d324d8f551413d49bca66c071cc729b88",
+        "predictions_sha256": "ce10529609ad2d983d0808f79ef46f6cfbc8febc61ab1d460d44ceaf1419c491",
+        "generation_config": {
+          "provider": "gemini_openai_compatible",
+          "fact_model": "gemini-3.5-flash-lite",
+          "issue_model": "gemini-3.5-flash-lite",
+          "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+          "temperature": 0,
+          "timeout_seconds": 60,
+          "sdk_retries": 0,
+          "retry_stack_version": "application_v2",
+          "transport_policy": {
+            "initial_backoff_seconds": 10,
+            "max_backoff_seconds": 60,
+            "max_retries": 3,
+            "max_wait_seconds": 120,
+            "jitter_fraction": 0.2
+          },
+          "request_pacing_seconds": 10,
+          "structured_retries": 2,
+          "concurrency": 1,
+          "inter_case_pacing_seconds": 1
+        },
+        "thresholds": {
+          "canonical_fact_key_compliance": 1,
+          "canonical_fact_type_compliance": 1,
+          "source_grounding_accuracy": 1,
+          "maximum_non_present_incorrectly_admitted": 0,
+          "maximum_missingness_false_positives": 0,
+          "maximum_unknown_false_positives": 0,
+          "maximum_negation_false_positives": 0,
+          "maximum_fabricated_facts_for_issue": 0,
+          "issue_zero_fact_contract_accuracy": 1,
+          "fact_no_issue_contract_accuracy": 1,
+          "minimum_fact_exact_f1": 0.85,
+          "minimum_atomic_case_accuracy": 0.85,
+          "minimum_candidate_issue_macro_f1": 0.9,
+          "minimum_critical_issue_recall": 0.9,
+          "fact_call_structured_success": 1,
+          "issue_call_structured_success": 1
+        },
+        "gates": {
+          "fact_structured": true,
+          "issue_structured": true,
+          "canonical_key": true,
+          "canonical_type": true,
+          "grounding": true,
+          "non_present_admission": true,
+          "missingness": true,
+          "unknown": true,
+          "negation": true,
+          "fabricated": true,
+          "zero_fact_issue": false,
+          "fact_no_issue": true,
+          "fact_f1": true,
+          "atomic": true,
+          "candidate_macro_f1": true,
+          "critical_recall": true,
+          "passed_gate_count": 15,
+          "failed_gate_count": 1,
+          "overall_passed": false,
+          "thresholds": {
+            "canonical_fact_key_compliance": 1,
+            "canonical_fact_type_compliance": 1,
+            "source_grounding_accuracy": 1,
+            "maximum_non_present_incorrectly_admitted": 0,
+            "maximum_missingness_false_positives": 0,
+            "maximum_unknown_false_positives": 0,
+            "maximum_negation_false_positives": 0,
+            "maximum_fabricated_facts_for_issue": 0,
+            "issue_zero_fact_contract_accuracy": 1,
+            "fact_no_issue_contract_accuracy": 1,
+            "minimum_fact_exact_f1": 0.85,
+            "minimum_atomic_case_accuracy": 0.85,
+            "minimum_candidate_issue_macro_f1": 0.9,
+            "minimum_critical_issue_recall": 0.9,
+            "fact_call_structured_success": 1,
+            "issue_call_structured_success": 1
+          }
+        },
+        "metrics": {
+          "case_count": 28,
+          "fact_call_structured_success_count": 28,
+          "issue_call_structured_success_count": 28,
+          "typed_failure_count": 0,
+          "fact_request_attempt_count": 28,
+          "issue_request_attempt_count": 28,
+          "total_structured_request_count": 56,
+          "fact_retry_count": 0,
+          "issue_retry_count": 0,
+          "mean_fact_latency_ms": 8817.849571428658,
+          "mean_issue_latency_ms": 9895.37097857133,
+          "mean_total_intake_latency_ms": 18714.00877142839,
+          "unsupported_issue_count": 0,
+          "fact_output_changed_by_issue_output": false,
+          "issue_output_changed_by_fact_output": false,
+          "fact_metrics": {
+            "case_count": 28,
+            "terminal_case_count": 28,
+            "successful_result_count": 28,
+            "typed_failure_count": 0,
+            "present_asserted_observation_count": 25,
+            "missing_observation_count": 2,
+            "unknown_observation_count": 1,
+            "negated_observation_count": 3,
+            "present_admitted_count": 24,
+            "present_validator_rejected_count": 1,
+            "non_present_excluded_count": 6,
+            "non_present_incorrectly_admitted_count": 0,
+            "expected_fact_count": 25,
+            "predicted_fact_count": 24,
+            "fact_exact_tp": 24,
+            "fact_exact_fp": 0,
+            "fact_exact_fn": 1,
+            "fact_exact_precision": 1,
+            "fact_exact_recall": 0.96,
+            "fact_exact_f1": 0.9795918367346939,
+            "atomic_case_count": 18,
+            "atomic_exact_case_count": 17,
+            "atomic_case_accuracy": 0.9444444444444444,
+            "canonical_fact_key_compliance": 1,
+            "canonical_fact_type_compliance": 1,
+            "invalid_unregistered_key_count": 0,
+            "normalization_accuracy": 0.96,
+            "normalization_mismatch_count": 1,
+            "source_grounding_accuracy": 1,
+            "fabricated_positive_fact_count": 0,
+            "missingness_false_positive_count": 0,
+            "unknown_false_positive_count": 0,
+            "negation_false_positive_count": 0,
+            "forbidden_fact_violation_count": 0,
+            "forbidden_issue_violation_count": 2,
+            "contract_term": {
+              "true_positive": 7,
+              "false_positive": 1,
+              "false_negative": 0,
+              "precision": 0.875,
+              "recall": 1,
+              "f1": 0.9333333333333333
+            },
+            "employee_unilateral_termination": {
+              "true_positive": 10,
+              "false_positive": 1,
+              "false_negative": 0,
+              "precision": 0.9090909090909091,
+              "recall": 1,
+              "f1": 0.9523809523809523
+            },
+            "candidate_issue_macro_f1": 0.9428571428571428,
+            "critical_issue_recall": 1,
+            "issue_zero_fact_case_count": 6,
+            "issue_zero_fact_correct_count": 5,
+            "issue_zero_fact_contract_accuracy": 0.8333333333333334,
+            "fact_no_issue_case_count": 7,
+            "fact_no_issue_correct_count": 7,
+            "fact_no_issue_contract_accuracy": 1,
+            "fabricated_fact_to_justify_issue_count": 0,
+            "unrelated_fact_issue_contamination_count": 0,
+            "exact_case_count": 25,
+            "failed_case_ids": [
+              "split-inference-dev-009",
+              "split-inference-dev-015",
+              "split-inference-dev-020"
+            ],
+            "live_development_passed": false
+          },
+          "live_development_passed": false
+        },
+        "compiler_rejection_distribution": {
+          "ATOMIC_VALUE_AMBIGUOUS": 0,
+          "ATOMIC_VALUE_NOT_FOUND": 1,
+          "DUPLICATE_PROPOSAL": 0,
+          "EVIDENCE_MISSING": 2,
+          "EVIDENCE_NEGATED": 3,
+          "EVIDENCE_UNKNOWN": 1,
+          "NORMALIZATION_UNSAFE": 0,
+          "SEMANTIC_CONTEXT_UNSUPPORTED": 0,
+          "SOURCE_LITERAL_AMBIGUOUS": 0,
+          "SOURCE_LITERAL_NOT_FOUND": 0
+        },
+        "case_count": 28,
+        "label_isolation": true
+      },
+      "capture": {
+        "admissions": 24,
+        "application_transport_attempts": 56,
+        "artifact_sha256": {
+          "hybrid_fact_claim.json": "5f02d2c6fc4addc67e4761434698afaa2f33c755e9afb8dbf50ed866135fce6a",
+          "hybrid_fact_predictions.jsonl": "ce10529609ad2d983d0808f79ef46f6cfbc8febc61ab1d460d44ceaf1419c491",
+          "hybrid_fact_report.json": "6e7eb576b74249dff0897d6f6b386861c585001b23a4847c756b650ca5651db9"
+        },
+        "capture_complete": true,
+        "case_count": 28,
+        "identity_unchanged": true,
+        "logical_fact_calls": 28,
+        "logical_issue_calls": 28,
+        "proposals": 31,
+        "provider_failures": 0,
+        "rate_limit_errors": 0,
+        "rate_limit_events": [],
+        "rejection_distribution": {
+          "ATOMIC_VALUE_AMBIGUOUS": 0,
+          "ATOMIC_VALUE_NOT_FOUND": 1,
+          "DUPLICATE_PROPOSAL": 0,
+          "EVIDENCE_MISSING": 2,
+          "EVIDENCE_NEGATED": 3,
+          "EVIDENCE_UNKNOWN": 1,
+          "NORMALIZATION_UNSAFE": 0,
+          "SEMANTIC_CONTEXT_UNSUPPORTED": 0,
+          "SOURCE_LITERAL_AMBIGUOUS": 0,
+          "SOURCE_LITERAL_NOT_FOUND": 0
+        },
+        "rejections": 7,
+        "retry_sleep_seconds": 0,
+        "sdk_retries": 0,
+        "sdk_transmission_count_independently_observed": false,
+        "structured_attempts": 56,
+        "total_run_duration_seconds": 551.517028
+      },
+      "latency_diagnostics": {
+        "fact": {
+          "mean_ms": 8817.849571428658,
+          "p50_ms": 9087.518049999744,
+          "p95_ms": 9288.411160000487
+        },
+        "issue": {
+          "mean_ms": 9895.37097857133,
+          "p50_ms": 9926.916800000072,
+          "p95_ms": 10119.990259999486
+        },
+        "total": {
+          "mean_ms": 18714.00877142839,
+          "p50_ms": 18979.598549999537,
+          "p95_ms": 19301.297004998924
+        }
+      },
+      "clusters": [
+        {
+          "case_id": "split-inference-dev-009",
+          "missing_fact_signatures": [],
+          "extra_fact_signatures": [],
+          "issue_fp": [
+            "EMPLOYEE_UNILATERAL_TERMINATION"
+          ],
+          "issue_fn": [],
+          "proposal_count": 1,
+          "admitted_count": 0,
+          "rejection_reasons": [
+            "EVIDENCE_UNKNOWN"
+          ]
+        },
+        {
+          "case_id": "split-inference-dev-015",
+          "missing_fact_signatures": [
+            [
+              "CONTRACT_TYPE",
+              "TEXT",
+              "xác định thời hạn",
+              "str",
+              "\"xác định thời hạn\"",
+              "EXPLICIT",
+              "UNVERIFIED",
+              "USER_MESSAGE",
+              "user_message:split-inference-dev-015",
+              9,
+              26,
+              "xác định thời hạn"
+            ]
+          ],
+          "extra_fact_signatures": [],
+          "issue_fp": [],
+          "issue_fn": [],
+          "proposal_count": 3,
+          "admitted_count": 3,
+          "rejection_reasons": []
+        },
+        {
+          "case_id": "split-inference-dev-020",
+          "missing_fact_signatures": [],
+          "extra_fact_signatures": [],
+          "issue_fp": [
+            "CONTRACT_TERM"
+          ],
+          "issue_fn": [],
+          "proposal_count": 1,
+          "admitted_count": 0,
+          "rejection_reasons": [
+            "EVIDENCE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "report": {
+        "schema_version": "hybrid_fact_development_report_v2",
+        "mode": "HYBRID_FACT_V2_SYNTHETIC_NOT_RELEASE",
+        "release_decision_emitted": false,
+        "old26_executed": false,
+        "old26_regression_authorized": false,
+        "release_holdout_accessed": false,
+        "run_id": "hybrid-fact-v2-gemini-3.5-flash-lite-20260906-stability-r2",
+        "started_at": "2026-09-05T18:01:35.072333Z",
+        "completed_at": "2026-09-05T18:10:46.837515Z",
+        "matrix_sha256": "61da4f246bb995672b1645442ef64f517597a0862ecd951a98a43e7fb35ce18a",
+        "fact_prompt_sha256": "e3179fb7b8f131fc5129521642a78195ef85ba009c24a0aae1dc2c4d76ca4e5f",
+        "issue_prompt_sha256": "c7a62996ea6fdb513b0beb2e57e6f0312c3ffdd071079993819b2eccb13ddedf",
+        "production_pipeline_sha256": "f597abeaab3a25d4ba5f204c8539026d324d8f551413d49bca66c071cc729b88",
+        "predictions_sha256": "7002a33cd6db47e7724eb2d5d1f9b07e07b9e93a6e6921554ce9134720e1204f",
+        "generation_config": {
+          "provider": "gemini_openai_compatible",
+          "fact_model": "gemini-3.5-flash-lite",
+          "issue_model": "gemini-3.5-flash-lite",
+          "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+          "temperature": 0,
+          "timeout_seconds": 60,
+          "sdk_retries": 0,
+          "retry_stack_version": "application_v2",
+          "transport_policy": {
+            "initial_backoff_seconds": 10,
+            "max_backoff_seconds": 60,
+            "max_retries": 3,
+            "max_wait_seconds": 120,
+            "jitter_fraction": 0.2
+          },
+          "request_pacing_seconds": 10,
+          "structured_retries": 2,
+          "concurrency": 1,
+          "inter_case_pacing_seconds": 1
+        },
+        "thresholds": {
+          "canonical_fact_key_compliance": 1,
+          "canonical_fact_type_compliance": 1,
+          "source_grounding_accuracy": 1,
+          "maximum_non_present_incorrectly_admitted": 0,
+          "maximum_missingness_false_positives": 0,
+          "maximum_unknown_false_positives": 0,
+          "maximum_negation_false_positives": 0,
+          "maximum_fabricated_facts_for_issue": 0,
+          "issue_zero_fact_contract_accuracy": 1,
+          "fact_no_issue_contract_accuracy": 1,
+          "minimum_fact_exact_f1": 0.85,
+          "minimum_atomic_case_accuracy": 0.85,
+          "minimum_candidate_issue_macro_f1": 0.9,
+          "minimum_critical_issue_recall": 0.9,
+          "fact_call_structured_success": 1,
+          "issue_call_structured_success": 1
+        },
+        "gates": {
+          "fact_structured": true,
+          "issue_structured": true,
+          "canonical_key": true,
+          "canonical_type": true,
+          "grounding": true,
+          "non_present_admission": true,
+          "missingness": true,
+          "unknown": true,
+          "negation": true,
+          "fabricated": true,
+          "zero_fact_issue": false,
+          "fact_no_issue": true,
+          "fact_f1": true,
+          "atomic": true,
+          "candidate_macro_f1": true,
+          "critical_recall": true,
+          "passed_gate_count": 15,
+          "failed_gate_count": 1,
+          "overall_passed": false,
+          "thresholds": {
+            "canonical_fact_key_compliance": 1,
+            "canonical_fact_type_compliance": 1,
+            "source_grounding_accuracy": 1,
+            "maximum_non_present_incorrectly_admitted": 0,
+            "maximum_missingness_false_positives": 0,
+            "maximum_unknown_false_positives": 0,
+            "maximum_negation_false_positives": 0,
+            "maximum_fabricated_facts_for_issue": 0,
+            "issue_zero_fact_contract_accuracy": 1,
+            "fact_no_issue_contract_accuracy": 1,
+            "minimum_fact_exact_f1": 0.85,
+            "minimum_atomic_case_accuracy": 0.85,
+            "minimum_candidate_issue_macro_f1": 0.9,
+            "minimum_critical_issue_recall": 0.9,
+            "fact_call_structured_success": 1,
+            "issue_call_structured_success": 1
+          }
+        },
+        "metrics": {
+          "case_count": 28,
+          "fact_call_structured_success_count": 28,
+          "issue_call_structured_success_count": 28,
+          "typed_failure_count": 0,
+          "fact_request_attempt_count": 28,
+          "issue_request_attempt_count": 28,
+          "total_structured_request_count": 56,
+          "fact_retry_count": 0,
+          "issue_retry_count": 0,
+          "mean_fact_latency_ms": 8824.17582857137,
+          "mean_issue_latency_ms": 9897.157453571448,
+          "mean_total_intake_latency_ms": 18722.12139999991,
+          "unsupported_issue_count": 0,
+          "fact_output_changed_by_issue_output": false,
+          "issue_output_changed_by_fact_output": false,
+          "fact_metrics": {
+            "case_count": 28,
+            "terminal_case_count": 28,
+            "successful_result_count": 28,
+            "typed_failure_count": 0,
+            "present_asserted_observation_count": 24,
+            "missing_observation_count": 1,
+            "unknown_observation_count": 1,
+            "negated_observation_count": 2,
+            "present_admitted_count": 23,
+            "present_validator_rejected_count": 1,
+            "non_present_excluded_count": 4,
+            "non_present_incorrectly_admitted_count": 0,
+            "expected_fact_count": 25,
+            "predicted_fact_count": 23,
+            "fact_exact_tp": 23,
+            "fact_exact_fp": 0,
+            "fact_exact_fn": 2,
+            "fact_exact_precision": 1,
+            "fact_exact_recall": 0.92,
+            "fact_exact_f1": 0.9583333333333334,
+            "atomic_case_count": 18,
+            "atomic_exact_case_count": 16,
+            "atomic_case_accuracy": 0.8888888888888888,
+            "canonical_fact_key_compliance": 1,
+            "canonical_fact_type_compliance": 1,
+            "invalid_unregistered_key_count": 0,
+            "normalization_accuracy": 0.92,
+            "normalization_mismatch_count": 2,
+            "source_grounding_accuracy": 1,
+            "fabricated_positive_fact_count": 0,
+            "missingness_false_positive_count": 0,
+            "unknown_false_positive_count": 0,
+            "negation_false_positive_count": 0,
+            "forbidden_fact_violation_count": 0,
+            "forbidden_issue_violation_count": 2,
+            "contract_term": {
+              "true_positive": 7,
+              "false_positive": 1,
+              "false_negative": 0,
+              "precision": 0.875,
+              "recall": 1,
+              "f1": 0.9333333333333333
+            },
+            "employee_unilateral_termination": {
+              "true_positive": 10,
+              "false_positive": 1,
+              "false_negative": 0,
+              "precision": 0.9090909090909091,
+              "recall": 1,
+              "f1": 0.9523809523809523
+            },
+            "candidate_issue_macro_f1": 0.9428571428571428,
+            "critical_issue_recall": 1,
+            "issue_zero_fact_case_count": 6,
+            "issue_zero_fact_correct_count": 5,
+            "issue_zero_fact_contract_accuracy": 0.8333333333333334,
+            "fact_no_issue_case_count": 7,
+            "fact_no_issue_correct_count": 7,
+            "fact_no_issue_contract_accuracy": 1,
+            "fabricated_fact_to_justify_issue_count": 0,
+            "unrelated_fact_issue_contamination_count": 0,
+            "exact_case_count": 24,
+            "failed_case_ids": [
+              "split-inference-dev-009",
+              "split-inference-dev-015",
+              "split-inference-dev-020",
+              "split-inference-dev-028"
+            ],
+            "live_development_passed": false
+          },
+          "live_development_passed": false
+        },
+        "compiler_rejection_distribution": {
+          "ATOMIC_VALUE_AMBIGUOUS": 0,
+          "ATOMIC_VALUE_NOT_FOUND": 1,
+          "DUPLICATE_PROPOSAL": 0,
+          "EVIDENCE_MISSING": 1,
+          "EVIDENCE_NEGATED": 2,
+          "EVIDENCE_UNKNOWN": 1,
+          "NORMALIZATION_UNSAFE": 0,
+          "SEMANTIC_CONTEXT_UNSUPPORTED": 0,
+          "SOURCE_LITERAL_AMBIGUOUS": 0,
+          "SOURCE_LITERAL_NOT_FOUND": 0
+        },
+        "case_count": 28,
+        "label_isolation": true
+      },
+      "capture": {
+        "admissions": 23,
+        "application_transport_attempts": 56,
+        "artifact_sha256": {
+          "hybrid_fact_claim.json": "4b6702644a97e6dec1301caeae86a035f75dca0011acda25e465737ac783a5bd",
+          "hybrid_fact_predictions.jsonl": "7002a33cd6db47e7724eb2d5d1f9b07e07b9e93a6e6921554ce9134720e1204f",
+          "hybrid_fact_report.json": "6c8bcc819cbdb09f724a5369684abbd0db8193bea619c2c062b0ceb0b5eb91ff"
+        },
+        "capture_complete": true,
+        "case_count": 28,
+        "identity_unchanged": true,
+        "logical_fact_calls": 28,
+        "logical_issue_calls": 28,
+        "proposals": 28,
+        "provider_failures": 0,
+        "rate_limit_errors": 0,
+        "rate_limit_events": [],
+        "rejection_distribution": {
+          "ATOMIC_VALUE_AMBIGUOUS": 0,
+          "ATOMIC_VALUE_NOT_FOUND": 1,
+          "DUPLICATE_PROPOSAL": 0,
+          "EVIDENCE_MISSING": 1,
+          "EVIDENCE_NEGATED": 2,
+          "EVIDENCE_UNKNOWN": 1,
+          "NORMALIZATION_UNSAFE": 0,
+          "SEMANTIC_CONTEXT_UNSUPPORTED": 0,
+          "SOURCE_LITERAL_AMBIGUOUS": 0,
+          "SOURCE_LITERAL_NOT_FOUND": 0
+        },
+        "rejections": 5,
+        "retry_sleep_seconds": 0,
+        "sdk_retries": 0,
+        "sdk_transmission_count_independently_observed": false,
+        "structured_attempts": 56,
+        "total_run_duration_seconds": 551.765182
+      },
+      "latency_diagnostics": {
+        "fact": {
+          "mean_ms": 8824.17582857137,
+          "p50_ms": 9135.453300000336,
+          "p95_ms": 9379.050579998966
+        },
+        "issue": {
+          "mean_ms": 9897.157453571448,
+          "p50_ms": 9882.457799999429,
+          "p95_ms": 10286.294114999873
+        },
+        "total": {
+          "mean_ms": 18722.12139999991,
+          "p50_ms": 19003.232999999454,
+          "p95_ms": 19222.524170000088
+        }
+      },
+      "clusters": [
+        {
+          "case_id": "split-inference-dev-009",
+          "missing_fact_signatures": [],
+          "extra_fact_signatures": [],
+          "issue_fp": [
+            "EMPLOYEE_UNILATERAL_TERMINATION"
+          ],
+          "issue_fn": [],
+          "proposal_count": 1,
+          "admitted_count": 0,
+          "rejection_reasons": [
+            "EVIDENCE_UNKNOWN"
+          ]
+        },
+        {
+          "case_id": "split-inference-dev-015",
+          "missing_fact_signatures": [
+            [
+              "CONTRACT_TYPE",
+              "TEXT",
+              "xác định thời hạn",
+              "str",
+              "\"xác định thời hạn\"",
+              "EXPLICIT",
+              "UNVERIFIED",
+              "USER_MESSAGE",
+              "user_message:split-inference-dev-015",
+              9,
+              26,
+              "xác định thời hạn"
+            ]
+          ],
+          "extra_fact_signatures": [],
+          "issue_fp": [],
+          "issue_fn": [],
+          "proposal_count": 3,
+          "admitted_count": 3,
+          "rejection_reasons": []
+        },
+        {
+          "case_id": "split-inference-dev-020",
+          "missing_fact_signatures": [],
+          "extra_fact_signatures": [],
+          "issue_fp": [
+            "CONTRACT_TERM"
+          ],
+          "issue_fn": [],
+          "proposal_count": 0,
+          "admitted_count": 0,
+          "rejection_reasons": []
+        },
+        {
+          "case_id": "split-inference-dev-028",
+          "missing_fact_signatures": [
+            [
+              "INTENDED_TERMINATION_DATE",
+              "TEMPORAL_EXPRESSION",
+              "đầu tháng kế tiếp",
+              "str",
+              "\"đầu tháng kế tiếp\"",
+              "EXPLICIT",
+              "UNVERIFIED",
+              "USER_MESSAGE",
+              "user_message:split-inference-dev-028",
+              21,
+              38,
+              "đầu tháng kế tiếp"
+            ]
+          ],
+          "extra_fact_signatures": [],
+          "issue_fp": [],
+          "issue_fn": [],
+          "proposal_count": 0,
+          "admitted_count": 0,
+          "rejection_reasons": []
+        }
+      ]
+    },
+    {
+      "report": {
+        "schema_version": "hybrid_fact_development_report_v2",
+        "mode": "HYBRID_FACT_V2_SYNTHETIC_NOT_RELEASE",
+        "release_decision_emitted": false,
+        "old26_executed": false,
+        "old26_regression_authorized": false,
+        "release_holdout_accessed": false,
+        "run_id": "hybrid-fact-v2-gemini-3.5-flash-lite-20260906-stability-r3",
+        "started_at": "2026-09-05T18:11:19.543306Z",
+        "completed_at": "2026-09-05T18:20:34.461320Z",
+        "matrix_sha256": "61da4f246bb995672b1645442ef64f517597a0862ecd951a98a43e7fb35ce18a",
+        "fact_prompt_sha256": "e3179fb7b8f131fc5129521642a78195ef85ba009c24a0aae1dc2c4d76ca4e5f",
+        "issue_prompt_sha256": "c7a62996ea6fdb513b0beb2e57e6f0312c3ffdd071079993819b2eccb13ddedf",
+        "production_pipeline_sha256": "f597abeaab3a25d4ba5f204c8539026d324d8f551413d49bca66c071cc729b88",
+        "predictions_sha256": "161e4c4296e11acc3d3e26be870dc3292383e787f224c78552cc8fd4e5fffdf0",
+        "generation_config": {
+          "provider": "gemini_openai_compatible",
+          "fact_model": "gemini-3.5-flash-lite",
+          "issue_model": "gemini-3.5-flash-lite",
+          "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+          "temperature": 0,
+          "timeout_seconds": 60,
+          "sdk_retries": 0,
+          "retry_stack_version": "application_v2",
+          "transport_policy": {
+            "initial_backoff_seconds": 10,
+            "max_backoff_seconds": 60,
+            "max_retries": 3,
+            "max_wait_seconds": 120,
+            "jitter_fraction": 0.2
+          },
+          "request_pacing_seconds": 10,
+          "structured_retries": 2,
+          "concurrency": 1,
+          "inter_case_pacing_seconds": 1
+        },
+        "thresholds": {
+          "canonical_fact_key_compliance": 1,
+          "canonical_fact_type_compliance": 1,
+          "source_grounding_accuracy": 1,
+          "maximum_non_present_incorrectly_admitted": 0,
+          "maximum_missingness_false_positives": 0,
+          "maximum_unknown_false_positives": 0,
+          "maximum_negation_false_positives": 0,
+          "maximum_fabricated_facts_for_issue": 0,
+          "issue_zero_fact_contract_accuracy": 1,
+          "fact_no_issue_contract_accuracy": 1,
+          "minimum_fact_exact_f1": 0.85,
+          "minimum_atomic_case_accuracy": 0.85,
+          "minimum_candidate_issue_macro_f1": 0.9,
+          "minimum_critical_issue_recall": 0.9,
+          "fact_call_structured_success": 1,
+          "issue_call_structured_success": 1
+        },
+        "gates": {
+          "fact_structured": true,
+          "issue_structured": true,
+          "canonical_key": true,
+          "canonical_type": true,
+          "grounding": true,
+          "non_present_admission": true,
+          "missingness": true,
+          "unknown": true,
+          "negation": true,
+          "fabricated": true,
+          "zero_fact_issue": false,
+          "fact_no_issue": false,
+          "fact_f1": true,
+          "atomic": true,
+          "candidate_macro_f1": true,
+          "critical_recall": true,
+          "passed_gate_count": 14,
+          "failed_gate_count": 2,
+          "overall_passed": false,
+          "thresholds": {
+            "canonical_fact_key_compliance": 1,
+            "canonical_fact_type_compliance": 1,
+            "source_grounding_accuracy": 1,
+            "maximum_non_present_incorrectly_admitted": 0,
+            "maximum_missingness_false_positives": 0,
+            "maximum_unknown_false_positives": 0,
+            "maximum_negation_false_positives": 0,
+            "maximum_fabricated_facts_for_issue": 0,
+            "issue_zero_fact_contract_accuracy": 1,
+            "fact_no_issue_contract_accuracy": 1,
+            "minimum_fact_exact_f1": 0.85,
+            "minimum_atomic_case_accuracy": 0.85,
+            "minimum_candidate_issue_macro_f1": 0.9,
+            "minimum_critical_issue_recall": 0.9,
+            "fact_call_structured_success": 1,
+            "issue_call_structured_success": 1
+          }
+        },
+        "metrics": {
+          "case_count": 28,
+          "fact_call_structured_success_count": 28,
+          "issue_call_structured_success_count": 28,
+          "typed_failure_count": 0,
+          "fact_request_attempt_count": 28,
+          "issue_request_attempt_count": 28,
+          "total_structured_request_count": 56,
+          "fact_retry_count": 0,
+          "issue_retry_count": 0,
+          "mean_fact_latency_ms": 8757.447492857085,
+          "mean_issue_latency_ms": 9953.888475000049,
+          "mean_total_intake_latency_ms": 18712.13061071408,
+          "unsupported_issue_count": 0,
+          "fact_output_changed_by_issue_output": false,
+          "issue_output_changed_by_fact_output": false,
+          "fact_metrics": {
+            "case_count": 28,
+            "terminal_case_count": 28,
+            "successful_result_count": 28,
+            "typed_failure_count": 0,
+            "present_asserted_observation_count": 25,
+            "missing_observation_count": 2,
+            "unknown_observation_count": 1,
+            "negated_observation_count": 3,
+            "present_admitted_count": 25,
+            "present_validator_rejected_count": 0,
+            "non_present_excluded_count": 6,
+            "non_present_incorrectly_admitted_count": 0,
+            "expected_fact_count": 25,
+            "predicted_fact_count": 25,
+            "fact_exact_tp": 24,
+            "fact_exact_fp": 1,
+            "fact_exact_fn": 1,
+            "fact_exact_precision": 0.96,
+            "fact_exact_recall": 0.96,
+            "fact_exact_f1": 0.96,
+            "atomic_case_count": 18,
+            "atomic_exact_case_count": 16,
+            "atomic_case_accuracy": 0.8888888888888888,
+            "canonical_fact_key_compliance": 1,
+            "canonical_fact_type_compliance": 1,
+            "invalid_unregistered_key_count": 0,
+            "normalization_accuracy": 0.9230769230769231,
+            "normalization_mismatch_count": 2,
+            "source_grounding_accuracy": 1,
+            "fabricated_positive_fact_count": 1,
+            "missingness_false_positive_count": 0,
+            "unknown_false_positive_count": 0,
+            "negation_false_positive_count": 0,
+            "forbidden_fact_violation_count": 0,
+            "forbidden_issue_violation_count": 2,
+            "contract_term": {
+              "true_positive": 7,
+              "false_positive": 1,
+              "false_negative": 0,
+              "precision": 0.875,
+              "recall": 1,
+              "f1": 0.9333333333333333
+            },
+            "employee_unilateral_termination": {
+              "true_positive": 10,
+              "false_positive": 1,
+              "false_negative": 0,
+              "precision": 0.9090909090909091,
+              "recall": 1,
+              "f1": 0.9523809523809523
+            },
+            "candidate_issue_macro_f1": 0.9428571428571428,
+            "critical_issue_recall": 1,
+            "issue_zero_fact_case_count": 6,
+            "issue_zero_fact_correct_count": 5,
+            "issue_zero_fact_contract_accuracy": 0.8333333333333334,
+            "fact_no_issue_case_count": 7,
+            "fact_no_issue_correct_count": 6,
+            "fact_no_issue_contract_accuracy": 0.8571428571428571,
+            "fabricated_fact_to_justify_issue_count": 0,
+            "unrelated_fact_issue_contamination_count": 0,
+            "exact_case_count": 24,
+            "failed_case_ids": [
+              "split-inference-dev-005",
+              "split-inference-dev-009",
+              "split-inference-dev-015",
+              "split-inference-dev-020"
+            ],
+            "live_development_passed": false
+          },
+          "live_development_passed": false
+        },
+        "compiler_rejection_distribution": {
+          "ATOMIC_VALUE_AMBIGUOUS": 0,
+          "ATOMIC_VALUE_NOT_FOUND": 0,
+          "DUPLICATE_PROPOSAL": 0,
+          "EVIDENCE_MISSING": 2,
+          "EVIDENCE_NEGATED": 3,
+          "EVIDENCE_UNKNOWN": 1,
+          "NORMALIZATION_UNSAFE": 0,
+          "SEMANTIC_CONTEXT_UNSUPPORTED": 0,
+          "SOURCE_LITERAL_AMBIGUOUS": 0,
+          "SOURCE_LITERAL_NOT_FOUND": 0
+        },
+        "case_count": 28,
+        "label_isolation": true
+      },
+      "capture": {
+        "admissions": 25,
+        "application_transport_attempts": 56,
+        "artifact_sha256": {
+          "hybrid_fact_claim.json": "1f1919ca2b7fd7cc294bb257b998e9be5b740948258444fd643509cda620770c",
+          "hybrid_fact_predictions.jsonl": "161e4c4296e11acc3d3e26be870dc3292383e787f224c78552cc8fd4e5fffdf0",
+          "hybrid_fact_report.json": "f90d57461c5d72520cd832f8ba50f87ebfb912eae1dd65a7ff75d6d99ebca19c"
+        },
+        "capture_complete": true,
+        "case_count": 28,
+        "identity_unchanged": true,
+        "logical_fact_calls": 28,
+        "logical_issue_calls": 28,
+        "proposals": 31,
+        "provider_failures": 0,
+        "rate_limit_errors": 0,
+        "rate_limit_events": [],
+        "rejection_distribution": {
+          "ATOMIC_VALUE_AMBIGUOUS": 0,
+          "ATOMIC_VALUE_NOT_FOUND": 0,
+          "DUPLICATE_PROPOSAL": 0,
+          "EVIDENCE_MISSING": 2,
+          "EVIDENCE_NEGATED": 3,
+          "EVIDENCE_UNKNOWN": 1,
+          "NORMALIZATION_UNSAFE": 0,
+          "SEMANTIC_CONTEXT_UNSUPPORTED": 0,
+          "SOURCE_LITERAL_AMBIGUOUS": 0,
+          "SOURCE_LITERAL_NOT_FOUND": 0
+        },
+        "rejections": 6,
+        "retry_sleep_seconds": 0,
+        "sdk_retries": 0,
+        "sdk_transmission_count_independently_observed": false,
+        "structured_attempts": 56,
+        "total_run_duration_seconds": 554.918014
+      },
+      "latency_diagnostics": {
+        "fact": {
+          "mean_ms": 8757.447492857085,
+          "p50_ms": 9012.278649999644,
+          "p95_ms": 9254.912774999138
+        },
+        "issue": {
+          "mean_ms": 9953.888475000049,
+          "p50_ms": 9980.962399999953,
+          "p95_ms": 10274.856815001021
+        },
+        "total": {
+          "mean_ms": 18712.13061071408,
+          "p50_ms": 18975.880650000363,
+          "p95_ms": 19296.12293500013
+        }
+      },
+      "clusters": [
+        {
+          "case_id": "split-inference-dev-005",
+          "missing_fact_signatures": [],
+          "extra_fact_signatures": [
+            [
+              "WAGE_PAYMENT_STATUS",
+              "TEXT",
+              "chậm trả lương",
+              "str",
+              "\"chậm trả lương\"",
+              "EXPLICIT",
+              "UNVERIFIED",
+              "USER_MESSAGE",
+              "user_message:split-inference-dev-005",
+              18,
+              32,
+              "chậm trả lương"
+            ]
+          ],
+          "issue_fp": [],
+          "issue_fn": [],
+          "proposal_count": 2,
+          "admitted_count": 2,
+          "rejection_reasons": []
+        },
+        {
+          "case_id": "split-inference-dev-009",
+          "missing_fact_signatures": [],
+          "extra_fact_signatures": [],
+          "issue_fp": [
+            "EMPLOYEE_UNILATERAL_TERMINATION"
+          ],
+          "issue_fn": [],
+          "proposal_count": 1,
+          "admitted_count": 0,
+          "rejection_reasons": [
+            "EVIDENCE_UNKNOWN"
+          ]
+        },
+        {
+          "case_id": "split-inference-dev-015",
+          "missing_fact_signatures": [
+            [
+              "CONTRACT_TYPE",
+              "TEXT",
+              "xác định thời hạn",
+              "str",
+              "\"xác định thời hạn\"",
+              "EXPLICIT",
+              "UNVERIFIED",
+              "USER_MESSAGE",
+              "user_message:split-inference-dev-015",
+              9,
+              26,
+              "xác định thời hạn"
+            ]
+          ],
+          "extra_fact_signatures": [],
+          "issue_fp": [],
+          "issue_fn": [],
+          "proposal_count": 3,
+          "admitted_count": 3,
+          "rejection_reasons": []
+        },
+        {
+          "case_id": "split-inference-dev-020",
+          "missing_fact_signatures": [],
+          "extra_fact_signatures": [],
+          "issue_fp": [
+            "CONTRACT_TERM"
+          ],
+          "issue_fn": [],
+          "proposal_count": 0,
+          "admitted_count": 0,
+          "rejection_reasons": []
+        }
+      ]
+    }
+  ],
+  "registered_summary": {
+    "run_ids": [
+      "hybrid-fact-v2-gemini-3.5-flash-lite-20260906-stability-r1",
+      "hybrid-fact-v2-gemini-3.5-flash-lite-20260906-stability-r2",
+      "hybrid-fact-v2-gemini-3.5-flash-lite-20260906-stability-r3"
+    ],
+    "all_runs_passed": false,
+    "fact_gates_all_passed": false,
+    "issue_gates_all_passed": true,
+    "old26_regression_authorized": false,
+    "next_prompt": "PROMPT_5A",
+    "metric_ranges": {
+      "fact_exact_f1": {
+        "mean": 0.9659750566893424,
+        "minimum": 0.9583333333333334,
+        "maximum": 0.9795918367346939
+      },
+      "atomic_case_accuracy": {
+        "mean": 0.9074074074074074,
+        "minimum": 0.8888888888888888,
+        "maximum": 0.9444444444444444
+      },
+      "candidate_issue_macro_f1": {
+        "mean": 0.9428571428571427,
+        "minimum": 0.9428571428571428,
+        "maximum": 0.9428571428571428
+      },
+      "critical_issue_recall": {
+        "mean": 1,
+        "minimum": 1,
+        "maximum": 1
+      },
+      "canonical_fact_key_compliance": {
+        "mean": 1,
+        "minimum": 1,
+        "maximum": 1
+      },
+      "canonical_fact_type_compliance": {
+        "mean": 1,
+        "minimum": 1,
+        "maximum": 1
+      },
+      "source_grounding_accuracy": {
+        "mean": 1,
+        "minimum": 1,
+        "maximum": 1
+      },
+      "fabricated_positive_fact_count": {
+        "mean": 0.3333333333333333,
+        "minimum": 0,
+        "maximum": 1
+      },
+      "missingness_false_positive_count": {
+        "mean": 0,
+        "minimum": 0,
+        "maximum": 0
+      },
+      "unknown_false_positive_count": {
+        "mean": 0,
+        "minimum": 0,
+        "maximum": 0
+      },
+      "negation_false_positive_count": {
+        "mean": 0,
+        "minimum": 0,
+        "maximum": 0
+      },
+      "non_present_incorrectly_admitted_count": {
+        "mean": 0,
+        "minimum": 0,
+        "maximum": 0
+      },
+      "issue_zero_fact_contract_accuracy": {
+        "mean": 0.8333333333333334,
+        "minimum": 0.8333333333333334,
+        "maximum": 0.8333333333333334
+      },
+      "fact_no_issue_contract_accuracy": {
+        "mean": 0.9523809523809524,
+        "minimum": 0.8571428571428571,
+        "maximum": 1
+      },
+      "fact_call_structured_success_count": {
+        "mean": 28,
+        "minimum": 28,
+        "maximum": 28
+      },
+      "issue_call_structured_success_count": {
+        "mean": 28,
+        "minimum": 28,
+        "maximum": 28
+      },
+      "mean_fact_latency_ms": {
+        "mean": 8799.824297619038,
+        "minimum": 8757.447492857085,
+        "maximum": 8824.17582857137
+      },
+      "mean_issue_latency_ms": {
+        "mean": 9915.472302380942,
+        "minimum": 9895.37097857133,
+        "maximum": 9953.888475000049
+      },
+      "mean_total_intake_latency_ms": {
+        "mean": 18716.086927380795,
+        "minimum": 18712.13061071408,
+        "maximum": 18722.12139999991
+      }
+    },
+    "failure_case_frequency": {
+      "split-inference-dev-005": 1,
+      "split-inference-dev-009": 3,
+      "split-inference-dev-015": 3,
+      "split-inference-dev-020": 3,
+      "split-inference-dev-028": 1
+    },
+    "compiler_rejection_distribution": {
+      "SOURCE_LITERAL_NOT_FOUND": 0,
+      "SOURCE_LITERAL_AMBIGUOUS": 0,
+      "EVIDENCE_MISSING": 5,
+      "EVIDENCE_UNKNOWN": 3,
+      "EVIDENCE_NEGATED": 8,
+      "SEMANTIC_CONTEXT_UNSUPPORTED": 0,
+      "ATOMIC_VALUE_NOT_FOUND": 2,
+      "ATOMIC_VALUE_AMBIGUOUS": 0,
+      "NORMALIZATION_UNSAFE": 0,
+      "DUPLICATE_PROPOSAL": 0
+    }
+  },
+  "stability_table": [
+    {
+      "gate": "fact_structured",
+      "metric": "fact_call_structured_success_count",
+      "values": [
+        28,
+        28,
+        28
+      ],
+      "mean": 28,
+      "min": 28,
+      "max": 28,
+      "threshold": "=28/28",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "issue_structured",
+      "metric": "issue_call_structured_success_count",
+      "values": [
+        28,
+        28,
+        28
+      ],
+      "mean": 28,
+      "min": 28,
+      "max": 28,
+      "threshold": "=28/28",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "fact_f1",
+      "metric": "fact_exact_f1",
+      "values": [
+        0.9795918367346939,
+        0.9583333333333334,
+        0.96
+      ],
+      "mean": 0.9659750566893424,
+      "min": 0.9583333333333334,
+      "max": 0.9795918367346939,
+      "threshold": ">=0.85",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "atomic",
+      "metric": "atomic_case_accuracy",
+      "values": [
+        0.9444444444444444,
+        0.8888888888888888,
+        0.8888888888888888
+      ],
+      "mean": 0.9074074074074074,
+      "min": 0.8888888888888888,
+      "max": 0.9444444444444444,
+      "threshold": ">=0.85",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "candidate_macro_f1",
+      "metric": "candidate_issue_macro_f1",
+      "values": [
+        0.9428571428571428,
+        0.9428571428571428,
+        0.9428571428571428
+      ],
+      "mean": 0.9428571428571427,
+      "min": 0.9428571428571428,
+      "max": 0.9428571428571428,
+      "threshold": ">=0.90",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "critical_recall",
+      "metric": "critical_issue_recall",
+      "values": [
+        1,
+        1,
+        1
+      ],
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "threshold": ">=0.90",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "canonical_key",
+      "metric": "canonical_fact_key_compliance",
+      "values": [
+        1,
+        1,
+        1
+      ],
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "threshold": "=1",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "canonical_type",
+      "metric": "canonical_fact_type_compliance",
+      "values": [
+        1,
+        1,
+        1
+      ],
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "threshold": "=1",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "grounding",
+      "metric": "source_grounding_accuracy",
+      "values": [
+        1,
+        1,
+        1
+      ],
+      "mean": 1,
+      "min": 1,
+      "max": 1,
+      "threshold": "=1",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "fabricated",
+      "metric": "fabricated_fact_to_justify_issue_count",
+      "values": [
+        0,
+        0,
+        0
+      ],
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "threshold": "=0",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "missingness",
+      "metric": "missingness_false_positive_count",
+      "values": [
+        0,
+        0,
+        0
+      ],
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "threshold": "=0",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "unknown",
+      "metric": "unknown_false_positive_count",
+      "values": [
+        0,
+        0,
+        0
+      ],
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "threshold": "=0",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "negation",
+      "metric": "negation_false_positive_count",
+      "values": [
+        0,
+        0,
+        0
+      ],
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "threshold": "=0",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "non_present_admission",
+      "metric": "non_present_incorrectly_admitted_count",
+      "values": [
+        0,
+        0,
+        0
+      ],
+      "mean": 0,
+      "min": 0,
+      "max": 0,
+      "threshold": "=0",
+      "passed_runs": [
+        true,
+        true,
+        true
+      ],
+      "three_of_three_pass": true
+    },
+    {
+      "gate": "zero_fact_issue",
+      "metric": "issue_zero_fact_contract_accuracy",
+      "values": [
+        0.8333333333333334,
+        0.8333333333333334,
+        0.8333333333333334
+      ],
+      "mean": 0.8333333333333334,
+      "min": 0.8333333333333334,
+      "max": 0.8333333333333334,
+      "threshold": "=1",
+      "passed_runs": [
+        false,
+        false,
+        false
+      ],
+      "three_of_three_pass": false
+    },
+    {
+      "gate": "fact_no_issue",
+      "metric": "fact_no_issue_contract_accuracy",
+      "values": [
+        1,
+        1,
+        0.8571428571428571
+      ],
+      "mean": 0.9523809523809524,
+      "min": 0.8571428571428571,
+      "max": 1,
+      "threshold": "=1",
+      "passed_runs": [
+        true,
+        true,
+        false
+      ],
+      "three_of_three_pass": false
+    }
+  ],
+  "mixed_gate_names": [
+    "fact_no_issue"
+  ],
+  "status": "FAIL_UNSTABLE",
+  "next_prompt": "STOP_FOR_ANALYSIS",
+  "stability_complete": true,
+  "historical": {
+    "historical_mistral_split": {
+      "case_count": 28,
+      "completed_at": "2026-09-01T19:39:09.754377Z",
+      "fact_prompt_sha256": "d81441d9027f69a835ef2d803e62e637c73d91059aa6115324d4ba651a316998",
+      "gates": {
+        "atomic": false,
+        "candidate_macro_f1": false,
+        "canonical_key": true,
+        "canonical_type": true,
+        "critical_recall": false,
+        "fabricated": false,
+        "fact_f1": false,
+        "fact_no_issue": false,
+        "fact_structured": false,
+        "failed_gate_count": 11,
+        "grounding": true,
+        "issue_structured": false,
+        "missingness": false,
+        "negation": false,
+        "overall_passed": false,
+        "passed_gate_count": 4,
+        "unknown": true,
+        "zero_fact_issue": false
+      },
+      "generation_config": {
+        "base_url": "https://api.mistral.ai/v1",
+        "concurrency": 1,
+        "inter_case_pacing_seconds": 1,
+        "model": "mistral-small-2603",
+        "provider": "openai",
+        "sdk_retries": 2,
+        "structured_retries": 2,
+        "temperature": 0,
+        "timeout_seconds": 60
+      },
+      "issue_prompt_sha256": "c7a62996ea6fdb513b0beb2e57e6f0312c3ffdd071079993819b2eccb13ddedf",
+      "label_isolation": true,
+      "matrix_sha256": "61da4f246bb995672b1645442ef64f517597a0862ecd951a98a43e7fb35ce18a",
+      "metrics": {
+        "case_count": 28,
+        "fact_call_structured_success_count": 27,
+        "fact_metrics": {
+          "atomic_case_accuracy": 0.5555555555555556,
+          "atomic_case_count": 18,
+          "atomic_exact_case_count": 10,
+          "candidate_issue_macro_f1": 0.8819444444444445,
+          "canonical_fact_key_compliance": 1,
+          "canonical_fact_type_compliance": 1,
+          "case_count": 28,
+          "contract_term": {
+            "f1": 0.8750000000000001,
+            "false_negative": 0,
+            "false_positive": 2,
+            "precision": 0.7777777777777778,
+            "recall": 1,
+            "true_positive": 7
+          },
+          "critical_issue_recall": 0.8823529411764706,
+          "employee_unilateral_termination": {
+            "f1": 0.888888888888889,
+            "false_negative": 2,
+            "false_positive": 0,
+            "precision": 1,
+            "recall": 0.8,
+            "true_positive": 8
+          },
+          "exact_case_count": 16,
+          "expected_fact_count": 25,
+          "fabricated_fact_to_justify_issue_count": 4,
+          "fabricated_positive_fact_count": 11,
+          "fact_exact_f1": 0.6909090909090909,
+          "fact_exact_fn": 6,
+          "fact_exact_fp": 11,
+          "fact_exact_precision": 0.6333333333333333,
+          "fact_exact_recall": 0.76,
+          "fact_exact_tp": 19,
+          "fact_no_issue_case_count": 7,
+          "fact_no_issue_contract_accuracy": 0.14285714285714285,
+          "fact_no_issue_correct_count": 1,
+          "failed_case_ids": [
+            "split-inference-dev-004",
+            "split-inference-dev-005",
+            "split-inference-dev-014",
+            "split-inference-dev-015",
+            "split-inference-dev-018",
+            "split-inference-dev-019",
+            "split-inference-dev-020",
+            "split-inference-dev-021",
+            "split-inference-dev-022",
+            "split-inference-dev-023",
+            "split-inference-dev-025",
+            "split-inference-dev-026"
+          ],
+          "forbidden_fact_violation_count": 4,
+          "forbidden_issue_violation_count": 2,
+          "invalid_unregistered_key_count": 0,
+          "issue_zero_fact_case_count": 6,
+          "issue_zero_fact_contract_accuracy": 0.3333333333333333,
+          "issue_zero_fact_correct_count": 2,
+          "live_development_passed": false,
+          "missing_observation_count": 2,
+          "missingness_false_positive_count": 2,
+          "negated_observation_count": 0,
+          "negation_false_positive_count": 2,
+          "non_present_excluded_count": 2,
+          "non_present_incorrectly_admitted_count": 0,
+          "normalization_accuracy": 0.6060606060606061,
+          "normalization_mismatch_count": 13,
+          "predicted_fact_count": 30,
+          "present_admitted_count": 30,
+          "present_asserted_observation_count": 30,
+          "present_validator_rejected_count": 0,
+          "source_grounding_accuracy": 1,
+          "successful_result_count": 27,
+          "terminal_case_count": 28,
+          "typed_failure_count": 1,
+          "unknown_false_positive_count": 0,
+          "unknown_observation_count": 0,
+          "unrelated_fact_issue_contamination_count": 0
+        },
+        "fact_output_changed_by_issue_output": false,
+        "fact_request_attempt_count": 30,
+        "fact_retry_count": 2,
+        "issue_call_structured_success_count": 27,
+        "issue_output_changed_by_fact_output": false,
+        "issue_request_attempt_count": 27,
+        "issue_retry_count": 0,
+        "live_development_passed": false,
+        "mean_fact_latency_ms": 2537.3557392865355,
+        "mean_issue_latency_ms": 1006.7467285714104,
+        "mean_total_intake_latency_ms": 3544.962100000183,
+        "total_structured_request_count": 57,
+        "typed_failure_count": 1,
+        "unsupported_issue_count": 0
+      },
+      "mode": "SPLIT_INFERENCE_SYNTHETIC_NOT_RELEASE",
+      "old26_executed": false,
+      "old26_regression_authorized": false,
+      "predictions_sha256": "cfd0792df2396213e025d2f6b4f9a3d876c94ed08c2c73be1d3df8bff07db903",
+      "prior_combined_prompt_sha256": "723138a67943fc4660028502d358d6316b5b70ddcf8b2e282dfe63d00869432f",
+      "release_decision_emitted": false,
+      "run_id": "split-inference-v1-mistral-small-2603-20260902",
+      "schema_version": "split_inference_development_report_v1",
+      "started_at": "2026-09-01T19:37:03.236588Z",
+      "thresholds": {
+        "canonical_fact_key_compliance": 1,
+        "canonical_fact_type_compliance": 1,
+        "fact_call_structured_success": 1,
+        "fact_no_issue_contract_accuracy": 1,
+        "issue_call_structured_success": 1,
+        "issue_zero_fact_contract_accuracy": 1,
+        "maximum_fabricated_facts_for_issue": 0,
+        "maximum_missingness_false_positives": 0,
+        "maximum_negation_false_positives": 0,
+        "maximum_non_present_incorrectly_admitted": 0,
+        "maximum_unknown_false_positives": 0,
+        "minimum_atomic_case_accuracy": 0.85,
+        "minimum_candidate_issue_macro_f1": 0.9,
+        "minimum_critical_issue_recall": 0.9,
+        "minimum_fact_exact_f1": 0.85,
+        "source_grounding_accuracy": 1
+      }
+    },
+    "prior_blocked_gemini": {
+      "case_count": 28,
+      "compiler_rejection_distribution": {
+        "ATOMIC_VALUE_AMBIGUOUS": 0,
+        "ATOMIC_VALUE_NOT_FOUND": 1,
+        "DUPLICATE_PROPOSAL": 0,
+        "EVIDENCE_MISSING": 2,
+        "EVIDENCE_NEGATED": 0,
+        "EVIDENCE_UNKNOWN": 1,
+        "NORMALIZATION_UNSAFE": 0,
+        "SEMANTIC_CONTEXT_UNSUPPORTED": 0,
+        "SOURCE_LITERAL_AMBIGUOUS": 0,
+        "SOURCE_LITERAL_NOT_FOUND": 0
+      },
+      "completed_at": "2026-09-05T17:00:45.088510Z",
+      "fact_prompt_sha256": "e3179fb7b8f131fc5129521642a78195ef85ba009c24a0aae1dc2c4d76ca4e5f",
+      "gates": {
+        "atomic": false,
+        "candidate_macro_f1": false,
+        "canonical_key": true,
+        "canonical_type": true,
+        "critical_recall": false,
+        "fabricated": true,
+        "fact_f1": false,
+        "fact_no_issue": false,
+        "fact_structured": false,
+        "failed_gate_count": 7,
+        "grounding": true,
+        "issue_structured": false,
+        "missingness": true,
+        "negation": true,
+        "non_present_admission": true,
+        "overall_passed": false,
+        "passed_gate_count": 9,
+        "thresholds": {
+          "canonical_fact_key_compliance": 1,
+          "canonical_fact_type_compliance": 1,
+          "fact_call_structured_success": 1,
+          "fact_no_issue_contract_accuracy": 1,
+          "issue_call_structured_success": 1,
+          "issue_zero_fact_contract_accuracy": 1,
+          "maximum_fabricated_facts_for_issue": 0,
+          "maximum_missingness_false_positives": 0,
+          "maximum_negation_false_positives": 0,
+          "maximum_non_present_incorrectly_admitted": 0,
+          "maximum_unknown_false_positives": 0,
+          "minimum_atomic_case_accuracy": 0.85,
+          "minimum_candidate_issue_macro_f1": 0.9,
+          "minimum_critical_issue_recall": 0.9,
+          "minimum_fact_exact_f1": 0.85,
+          "source_grounding_accuracy": 1
+        },
+        "unknown": true,
+        "zero_fact_issue": true
+      },
+      "generation_config": {
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "concurrency": 1,
+        "fact_model": "gemini-3.5-flash-lite",
+        "inter_case_pacing_seconds": 1,
+        "issue_model": "gemini-3.5-flash-lite",
+        "provider": "gemini_openai_compatible",
+        "sdk_retries": 2,
+        "structured_retries": 2,
+        "temperature": 0,
+        "timeout_seconds": 60
+      },
+      "issue_prompt_sha256": "c7a62996ea6fdb513b0beb2e57e6f0312c3ffdd071079993819b2eccb13ddedf",
+      "label_isolation": true,
+      "matrix_sha256": "61da4f246bb995672b1645442ef64f517597a0862ecd951a98a43e7fb35ce18a",
+      "metrics": {
+        "case_count": 28,
+        "fact_call_structured_success_count": 22,
+        "fact_metrics": {
+          "atomic_case_accuracy": 0.6111111111111112,
+          "atomic_case_count": 18,
+          "atomic_exact_case_count": 11,
+          "candidate_issue_macro_f1": 0.8373205741626795,
+          "canonical_fact_key_compliance": 1,
+          "canonical_fact_type_compliance": 1,
+          "case_count": 28,
+          "contract_term": {
+            "f1": 0.7272727272727273,
+            "false_negative": 3,
+            "false_positive": 0,
+            "precision": 1,
+            "recall": 0.5714285714285714,
+            "true_positive": 4
+          },
+          "critical_issue_recall": 0.7647058823529411,
+          "employee_unilateral_termination": {
+            "f1": 0.9473684210526316,
+            "false_negative": 1,
+            "false_positive": 0,
+            "precision": 1,
+            "recall": 0.9,
+            "true_positive": 9
+          },
+          "exact_case_count": 19,
+          "expected_fact_count": 25,
+          "fabricated_fact_to_justify_issue_count": 0,
+          "fabricated_positive_fact_count": 0,
+          "fact_exact_f1": 0.717948717948718,
+          "fact_exact_fn": 11,
+          "fact_exact_fp": 0,
+          "fact_exact_precision": 1,
+          "fact_exact_recall": 0.56,
+          "fact_exact_tp": 14,
+          "fact_no_issue_case_count": 7,
+          "fact_no_issue_contract_accuracy": 0.7142857142857143,
+          "fact_no_issue_correct_count": 5,
+          "failed_case_ids": [
+            "split-inference-dev-010",
+            "split-inference-dev-011",
+            "split-inference-dev-012",
+            "split-inference-dev-013",
+            "split-inference-dev-015",
+            "split-inference-dev-024",
+            "split-inference-dev-025",
+            "split-inference-dev-026",
+            "split-inference-dev-027"
+          ],
+          "forbidden_fact_violation_count": 0,
+          "forbidden_issue_violation_count": 0,
+          "invalid_unregistered_key_count": 0,
+          "issue_zero_fact_case_count": 6,
+          "issue_zero_fact_contract_accuracy": 1,
+          "issue_zero_fact_correct_count": 6,
+          "live_development_passed": false,
+          "missing_observation_count": 2,
+          "missingness_false_positive_count": 0,
+          "negated_observation_count": 0,
+          "negation_false_positive_count": 0,
+          "non_present_excluded_count": 3,
+          "non_present_incorrectly_admitted_count": 0,
+          "normalization_accuracy": 0.56,
+          "normalization_mismatch_count": 11,
+          "predicted_fact_count": 14,
+          "present_admitted_count": 14,
+          "present_asserted_observation_count": 15,
+          "present_validator_rejected_count": 1,
+          "source_grounding_accuracy": 1,
+          "successful_result_count": 20,
+          "terminal_case_count": 28,
+          "typed_failure_count": 8,
+          "unknown_false_positive_count": 0,
+          "unknown_observation_count": 1,
+          "unrelated_fact_issue_contamination_count": 0
+        },
+        "fact_output_changed_by_issue_output": false,
+        "fact_request_attempt_count": 45,
+        "fact_retry_count": 17,
+        "issue_call_structured_success_count": 20,
+        "issue_output_changed_by_fact_output": false,
+        "issue_request_attempt_count": 30,
+        "issue_retry_count": 8,
+        "live_development_passed": false,
+        "mean_fact_latency_ms": 2211.450675000086,
+        "mean_issue_latency_ms": 1184.8660928571267,
+        "mean_total_intake_latency_ms": 3396.837835714353,
+        "total_structured_request_count": 75,
+        "typed_failure_count": 8,
+        "unsupported_issue_count": 0
+      },
+      "mode": "HYBRID_FACT_V2_SYNTHETIC_NOT_RELEASE",
+      "old26_executed": false,
+      "old26_regression_authorized": false,
+      "predictions_sha256": "e55a19ff1c1b9f2308a0e60a5e29cc9cc39161700bc922dc2d5777fa4b226b7e",
+      "production_pipeline_sha256": "82dbba06720a26b00b539ef99a24d132dbbe1d88145a79cf6674c1ea6609e6e0",
+      "release_decision_emitted": false,
+      "release_holdout_accessed": false,
+      "run_id": "hybrid-fact-v2-gemini-3.5-flash-lite-20260905-235815-r1",
+      "schema_version": "hybrid_fact_development_report_v2",
+      "started_at": "2026-09-05T16:58:42.678435Z",
+      "thresholds": {
+        "canonical_fact_key_compliance": 1,
+        "canonical_fact_type_compliance": 1,
+        "fact_call_structured_success": 1,
+        "fact_no_issue_contract_accuracy": 1,
+        "issue_call_structured_success": 1,
+        "issue_zero_fact_contract_accuracy": 1,
+        "maximum_fabricated_facts_for_issue": 0,
+        "maximum_missingness_false_positives": 0,
+        "maximum_negation_false_positives": 0,
+        "maximum_non_present_incorrectly_admitted": 0,
+        "maximum_unknown_false_positives": 0,
+        "minimum_atomic_case_accuracy": 0.85,
+        "minimum_candidate_issue_macro_f1": 0.9,
+        "minimum_critical_issue_recall": 0.9,
+        "minimum_fact_exact_f1": 0.85,
+        "source_grounding_accuracy": 1
+      }
+    }
+  },
+  "final_identity_verified": true,
+  "latency_quantile_method": "Linear interpolation over n=28 per-case boundary latencies; includes external pacing and retry waits; descriptive, not a registered gate."
+}

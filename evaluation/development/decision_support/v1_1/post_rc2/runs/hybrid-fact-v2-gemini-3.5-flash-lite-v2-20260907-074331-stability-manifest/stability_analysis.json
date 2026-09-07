@@ -1,0 +1,280 @@
+{
+  "schema_version": "hybrid_fact_v2_synthetic_v2_stability_analysis_v1",
+  "classification": "DEVELOPMENT_SYNTHETIC_V2_STABILITY",
+  "completed_at_utc": "2026-09-07T12:25:52.4501681Z",
+  "matrix_sha256": "c53e1d19d3507ee047e03973e58e9f3109db601e3a4272e56bb3e8d68671c72d",
+  "all_runs_complete": true,
+  "all_registered_gates_3_of_3": false,
+  "status": "FAIL_UNSTABLE",
+  "failure_category": "FACT_PROPOSAL_INSTABILITY",
+  "next_prompt": "STOP_FOR_ANALYSIS",
+  "old26_executed": false,
+  "release_holdout_accessed": false,
+  "runs": [
+    {
+      "run_id": "hybrid-fact-v2-gemini-3.5-flash-lite-v2-20260907-074331-r1",
+      "completed_cases": 28,
+      "passed_gate_count": 15,
+      "failed_gate_count": 1,
+      "failed_gates": ["fact_no_issue_contract_accuracy"],
+      "metrics": {
+        "fact_call_structured_success_count": 28,
+        "issue_call_structured_success_count": 28,
+        "fact_exact_precision": 1.0,
+        "fact_exact_recall": 0.9230769230769231,
+        "fact_exact_f1": 0.9600000000000001,
+        "atomic_case_accuracy": 0.8888888888888888,
+        "canonical_fact_key_compliance": 1.0,
+        "canonical_fact_type_compliance": 1.0,
+        "source_grounding_accuracy": 1.0,
+        "normalization_accuracy": 0.9230769230769231,
+        "fabricated_fact_to_justify_issue_count": 0,
+        "fabricated_positive_fact_count": 0,
+        "missingness_false_positive_count": 0,
+        "unknown_false_positive_count": 0,
+        "negation_false_positive_count": 0,
+        "non_present_incorrectly_admitted_count": 0,
+        "candidate_issue_macro_f1": 1.0,
+        "critical_issue_recall": 1.0,
+        "issue_zero_fact_contract_accuracy": 1.0,
+        "fact_no_issue_contract_accuracy": 0.8571428571428571,
+        "exact_case_count": 26
+      },
+      "fact_audit": {
+        "proposals": 29,
+        "admissions": 24,
+        "rejections": 5,
+        "rejection_reasons": {
+          "EVIDENCE_MISSING": 1,
+          "EVIDENCE_UNKNOWN": 1,
+          "EVIDENCE_NEGATED": 3
+        }
+      },
+      "issue_audit": {
+        "proposals": 18,
+        "admissions": 17,
+        "rejections": 1,
+        "rejection_reasons": {
+          "ISSUE_TERMINATION_EVIDENCE_MISSING_OR_UNKNOWN_ONLY": 1
+        }
+      },
+      "transport": {
+        "logical_calls": 56,
+        "application_transport_attempts": 56,
+        "structured_attempts": 56,
+        "transport_retries": 0,
+        "structured_retries": 0,
+        "rate_limit_errors": 0,
+        "retry_sleep_seconds": 0,
+        "provider_failures": 0,
+        "duration_seconds": 551.536249
+      },
+      "artifact_sha256": {
+        "hybrid_fact_claim.json": "c9a0cbab6c67386f225db661d0688144da38ba5daa90a7750f012ab2331723a8",
+        "hybrid_fact_predictions.jsonl": "52d9246178e3b862f7e97ef51ee587560622b8a814542b739074302f4e74dd81",
+        "hybrid_fact_report.json": "af8fdfc3058b06f04062cb53897562a7ba23eaa900c3764f19fc2f7a2fdb8135"
+      }
+    },
+    {
+      "run_id": "hybrid-fact-v2-gemini-3.5-flash-lite-v2-20260907-074331-r2",
+      "completed_cases": 28,
+      "passed_gate_count": 16,
+      "failed_gate_count": 0,
+      "failed_gates": [],
+      "metrics": {
+        "fact_call_structured_success_count": 28,
+        "issue_call_structured_success_count": 28,
+        "fact_exact_precision": 1.0,
+        "fact_exact_recall": 0.9615384615384616,
+        "fact_exact_f1": 0.9803921568627451,
+        "atomic_case_accuracy": 0.9444444444444444,
+        "canonical_fact_key_compliance": 1.0,
+        "canonical_fact_type_compliance": 1.0,
+        "source_grounding_accuracy": 1.0,
+        "normalization_accuracy": 0.9615384615384616,
+        "fabricated_fact_to_justify_issue_count": 0,
+        "fabricated_positive_fact_count": 0,
+        "missingness_false_positive_count": 0,
+        "unknown_false_positive_count": 0,
+        "negation_false_positive_count": 0,
+        "non_present_incorrectly_admitted_count": 0,
+        "candidate_issue_macro_f1": 1.0,
+        "critical_issue_recall": 1.0,
+        "issue_zero_fact_contract_accuracy": 1.0,
+        "fact_no_issue_contract_accuracy": 1.0,
+        "exact_case_count": 27
+      },
+      "fact_audit": {
+        "proposals": 33,
+        "admissions": 25,
+        "rejections": 8,
+        "rejection_reasons": {
+          "ATOMIC_VALUE_NOT_FOUND": 2,
+          "EVIDENCE_MISSING": 2,
+          "EVIDENCE_UNKNOWN": 1,
+          "EVIDENCE_NEGATED": 3
+        }
+      },
+      "issue_audit": {
+        "proposals": 19,
+        "admissions": 17,
+        "rejections": 2,
+        "rejection_reasons": {
+          "ISSUE_TERMINATION_EVIDENCE_MISSING_OR_UNKNOWN_ONLY": 1,
+          "ISSUE_CONTRACT_TERM_SIGNAL_ABSENT": 1
+        }
+      },
+      "transport": {
+        "logical_calls": 56,
+        "application_transport_attempts": 56,
+        "structured_attempts": 56,
+        "transport_retries": 0,
+        "structured_retries": 0,
+        "rate_limit_errors": 0,
+        "retry_sleep_seconds": 0,
+        "provider_failures": 0,
+        "duration_seconds": 551.534122
+      },
+      "artifact_sha256": {
+        "hybrid_fact_claim.json": "4d3232116c4dac8160f56845b8cadea997b4e9f5366cecc0d80d793785c12917",
+        "hybrid_fact_predictions.jsonl": "3b54864fe13f4354cd81d599d5235bcdd50c58744a7a0d4e1c03ca833fdee745",
+        "hybrid_fact_report.json": "2ae1cb586ae43bd25f99fd5bff7b57ef05049e261cbd3a64c4ad4a4ee9046a33"
+      }
+    },
+    {
+      "run_id": "hybrid-fact-v2-gemini-3.5-flash-lite-v2-20260907-074331-r3",
+      "completed_cases": 28,
+      "passed_gate_count": 15,
+      "failed_gate_count": 1,
+      "failed_gates": ["fact_no_issue_contract_accuracy"],
+      "metrics": {
+        "fact_call_structured_success_count": 28,
+        "issue_call_structured_success_count": 28,
+        "fact_exact_precision": 1.0,
+        "fact_exact_recall": 0.9230769230769231,
+        "fact_exact_f1": 0.9600000000000001,
+        "atomic_case_accuracy": 0.8888888888888888,
+        "canonical_fact_key_compliance": 1.0,
+        "canonical_fact_type_compliance": 1.0,
+        "source_grounding_accuracy": 1.0,
+        "normalization_accuracy": 0.9230769230769231,
+        "fabricated_fact_to_justify_issue_count": 0,
+        "fabricated_positive_fact_count": 0,
+        "missingness_false_positive_count": 0,
+        "unknown_false_positive_count": 0,
+        "negation_false_positive_count": 0,
+        "non_present_incorrectly_admitted_count": 0,
+        "candidate_issue_macro_f1": 1.0,
+        "critical_issue_recall": 1.0,
+        "issue_zero_fact_contract_accuracy": 1.0,
+        "fact_no_issue_contract_accuracy": 0.8571428571428571,
+        "exact_case_count": 26
+      },
+      "fact_audit": {
+        "proposals": 29,
+        "admissions": 24,
+        "rejections": 5,
+        "rejection_reasons": {
+          "EVIDENCE_MISSING": 1,
+          "EVIDENCE_UNKNOWN": 1,
+          "EVIDENCE_NEGATED": 3
+        }
+      },
+      "issue_audit": {
+        "proposals": 19,
+        "admissions": 17,
+        "rejections": 2,
+        "rejection_reasons": {
+          "ISSUE_TERMINATION_EVIDENCE_MISSING_OR_UNKNOWN_ONLY": 1,
+          "ISSUE_CONTRACT_TERM_SIGNAL_ABSENT": 1
+        }
+      },
+      "transport": {
+        "logical_calls": 56,
+        "application_transport_attempts": 56,
+        "structured_attempts": 56,
+        "transport_retries": 0,
+        "structured_retries": 0,
+        "rate_limit_errors": 0,
+        "retry_sleep_seconds": 0,
+        "provider_failures": 0,
+        "duration_seconds": 551.723164
+      },
+      "artifact_sha256": {
+        "hybrid_fact_claim.json": "df28eea4ebeba696a78aed54500469cd7e5a0426d76ff96358246ba0f38f57ff",
+        "hybrid_fact_predictions.jsonl": "a075134a0702647e001c947ed31a4d6317edfd3dea8a8e650c669217618ce194",
+        "hybrid_fact_report.json": "3c4b06be4818219d1f59b17c2c16cd47a008d5d2bd4a2d27f1ce28612922eb28"
+      }
+    }
+  ],
+  "stability": {
+    "fact_exact_f1": {"mean": 0.966797385620915, "minimum": 0.9600000000000001, "maximum": 0.9803921568627451, "passed_3_of_3": true},
+    "atomic_case_accuracy": {"mean": 0.9074074074074074, "minimum": 0.8888888888888888, "maximum": 0.9444444444444444, "passed_3_of_3": true},
+    "candidate_issue_macro_f1": {"mean": 1.0, "minimum": 1.0, "maximum": 1.0, "passed_3_of_3": true},
+    "critical_issue_recall": {"mean": 1.0, "minimum": 1.0, "maximum": 1.0, "passed_3_of_3": true},
+    "issue_zero_fact_contract_accuracy": {"mean": 1.0, "minimum": 1.0, "maximum": 1.0, "passed_3_of_3": true},
+    "fact_no_issue_contract_accuracy": {"mean": 0.9047619047619048, "minimum": 0.8571428571428571, "maximum": 1.0, "passed_3_of_3": false}
+  },
+  "targeted_findings": {
+    "split-inference-dev-005": {
+      "expected_fact_keys": ["WAGE_PAYMENT_PROBLEM", "WAGE_PAYMENT_STATUS"],
+      "r1_admitted_fact_keys": ["WAGE_PAYMENT_PROBLEM"],
+      "r2_admitted_fact_keys": ["WAGE_PAYMENT_PROBLEM", "WAGE_PAYMENT_STATUS"],
+      "r3_admitted_fact_keys": ["WAGE_PAYMENT_PROBLEM"],
+      "compiler_rejections": 0,
+      "classification": "FACT_LLM_PROPOSAL_FALSE_NEGATIVE_STOCHASTIC"
+    },
+    "split-inference-dev-009": {
+      "r1_r2_r3_fact_rejection": "EVIDENCE_UNKNOWN",
+      "r1_r2_r3_issue_rejection": "ISSUE_TERMINATION_EVIDENCE_MISSING_OR_UNKNOWN_ONLY",
+      "final_facts_all_runs": [],
+      "final_issues_all_runs": [],
+      "correct_all_runs": true
+    },
+    "split-inference-dev-020": {
+      "r1_issue_proposals": 1,
+      "r2_issue_proposals": 2,
+      "r3_issue_proposals": 2,
+      "r2_r3_issue_rejection": "ISSUE_CONTRACT_TERM_SIGNAL_ABSENT",
+      "final_issue_all_runs": "EMPLOYEE_UNILATERAL_TERMINATION",
+      "correct_all_runs": true
+    },
+    "split-inference-dev-015": {
+      "expected_fact_keys": ["CONTRACT_TYPE", "CONTRACT_DURATION", "CONTRACT_START_DATE", "CONTRACT_END_DATE"],
+      "admitted_fact_keys_all_runs": ["CONTRACT_DURATION", "CONTRACT_START_DATE", "CONTRACT_END_DATE"],
+      "compiler_rejections": 0,
+      "classification": "STABLE_FACT_LLM_PROPOSAL_FALSE_NEGATIVE"
+    },
+    "split-inference-dev-028": {
+      "admitted_fact_key_all_runs": "INTENDED_TERMINATION_DATE",
+      "correct_all_runs": true
+    }
+  },
+  "quality_checks": {
+    "targeted_pytest": "464 passed",
+    "uv_lock_check": "PASS",
+    "ruff_format_check": "PASS (375 files already formatted)",
+    "ruff_check": "PASS",
+    "pyright": "PASS (0 errors, 0 warnings, 0 informations)",
+    "full_pytest": "1208 passed, 2 skipped, 1 warning",
+    "coverage_percent": 87.70,
+    "production_mcp_demos": "PASS (2/2)",
+    "git_diff_check": "PASS",
+    "protected_artifact_guard": "CLEAR"
+  },
+  "protected_artifact_status": {
+    "old26_executed": false,
+    "release_holdout_accessed": false,
+    "rc3_created": false,
+    "synthetic_v1_modified": false,
+    "synthetic_v2_modified_during_capture": false,
+    "previous_v1_stability_runs_modified": false,
+    "mistral_blocked_run_modified": false,
+    "gemini_blocked_run_modified": false,
+    "thresholds_modified": false,
+    "fact_prompt_modified": false,
+    "issue_prompt_modified": false,
+    "fact_compiler_modified_during_capture": false,
+    "issue_eligibility_modified_during_capture": false
+  }
+}

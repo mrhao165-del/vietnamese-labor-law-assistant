@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from enum import StrEnum
+from functools import partial
 from typing import Any, TypeVar, cast
 
+import openai
 import structlog
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
@@ -26,6 +27,16 @@ from vietnamese_labor_law_assistant.decision_support.fact_contract import (
     validate_canonical_fact_value,
 )
 from vietnamese_labor_law_assistant.decision_support.fact_evidence import FactEvidenceStatus
+from vietnamese_labor_law_assistant.decision_support.intake_transport import (
+    IntakeTransport,
+    IntakeTransportPolicy,
+    TransportBudget,
+    safe_case_id,
+)
+from vietnamese_labor_law_assistant.decision_support.issue_eligibility import (
+    IssueEligibilityRejectionCode,
+    evaluate_issue_eligibility,
+)
 from vietnamese_labor_law_assistant.decision_support.issue_registry import FactKey
 from vietnamese_labor_law_assistant.decision_support.models import (
     CandidateIssue,
@@ -351,6 +362,10 @@ class CaseIntakeTransportAudit(BaseModel):
     fact_compiler_admitted_count: int = Field(default=0, ge=0)
     fact_compiler_rejected_count: int = Field(default=0, ge=0)
     fact_compiler_rejection_reasons: tuple[FactRejectionReasonCode, ...] = ()
+    issue_proposal_count: int = Field(default=0, ge=0)
+    issue_eligibility_admitted_count: int = Field(default=0, ge=0)
+    issue_eligibility_rejected_count: int = Field(default=0, ge=0)
+    issue_eligibility_rejection_reasons: tuple[IssueEligibilityRejectionCode, ...] = ()
     present_asserted_count: int = Field(ge=0)
     missing_count: int = Field(ge=0)
     unknown_count: int = Field(ge=0)
@@ -376,6 +391,12 @@ class CaseIntakeTransportAudit(BaseModel):
             raise ValueError("fact proposal compiler accounting is inconsistent")
         if self.fact_compiler_rejected_count != len(self.fact_compiler_rejection_reasons):
             raise ValueError("fact compiler rejection reason accounting is inconsistent")
+        if self.issue_proposal_count != (
+            self.issue_eligibility_admitted_count + self.issue_eligibility_rejected_count
+        ):
+            raise ValueError("issue eligibility accounting is inconsistent")
+        if self.issue_eligibility_rejected_count != len(self.issue_eligibility_rejection_reasons):
+            raise ValueError("issue eligibility rejection reason accounting is inconsistent")
         if self.present_asserted_count != (
             self.present_admitted_count + self.present_validator_rejected_count
         ):
@@ -635,9 +656,17 @@ class OpenAIStructuredCaseIntakeExtractor:
         client: OpenAI | Any | None = None,
         *,
         fact_proposal_compiler: _FactProposalCompiler | None = None,
+        transport_policy: IntakeTransportPolicy | None = None,
+        before_request: Callable[[], Awaitable[None]] | None = None,
+        transport_observer: Callable[[dict[str, object]], None] | None = None,
     ) -> None:
         self.settings = settings
         self._client = client
+        self._transport = IntakeTransport(
+            transport_policy or IntakeTransportPolicy.from_settings(settings),
+            before_request=before_request,
+            observer=transport_observer,
+        )
         self._fact_proposal_compiler = (
             fact_proposal_compiler
             if fact_proposal_compiler is not None
@@ -655,8 +684,10 @@ class OpenAIStructuredCaseIntakeExtractor:
                 else None,
                 base_url=self.settings.openai_base_url,
                 timeout=self.settings.llm_timeout_seconds,
-                max_retries=self.settings.llm_max_retries,
+                max_retries=0,
             )
+        elif isinstance(self._client, openai.OpenAI) and self._client.max_retries != 0:
+            self._client = self._client.with_options(max_retries=0)
         return self._client
 
     async def extract(self, case_input: CaseIntakeInput) -> CaseIntakeResult:
@@ -737,9 +768,13 @@ class OpenAIStructuredCaseIntakeExtractor:
                 issue_latency_ms=exc.issue_latency_ms,
                 total_latency_ms=total_latency_ms,
             ) from exc
+        issue_eligibility = evaluate_issue_eligibility(
+            case_input,
+            issue_result.candidate_issues,
+        )
         result = CaseIntakeResult(
             facts=canonical_facts,
-            candidate_issues=issue_result.candidate_issues,
+            candidate_issues=list(issue_eligibility.admitted_issues),
         )
         canonical_result = validate_case_intake_result(case_input, result)
         total_latency_ms = (time.perf_counter() - total_started) * 1000
@@ -749,6 +784,12 @@ class OpenAIStructuredCaseIntakeExtractor:
                 "issue_request_attempt_count": issue_attempts,
                 "fact_retry_count": fact_attempts - 1,
                 "issue_retry_count": issue_attempts - 1,
+                "issue_proposal_count": len(issue_result.candidate_issues),
+                "issue_eligibility_admitted_count": len(issue_eligibility.admitted_issues),
+                "issue_eligibility_rejected_count": len(issue_eligibility.rejected_issues),
+                "issue_eligibility_rejection_reasons": tuple(
+                    rejected.reason_code for rejected in issue_eligibility.rejected_issues
+                ),
                 "fact_latency_ms": fact_latency_ms,
                 "issue_latency_ms": issue_latency_ms,
                 "total_latency_ms": total_latency_ms,
@@ -766,6 +807,11 @@ class OpenAIStructuredCaseIntakeExtractor:
                 reason.value for reason in audit.fact_compiler_rejection_reasons
             ],
             candidate_issue_count=len(canonical_result.candidate_issues),
+            issue_proposal_count=audit.issue_proposal_count,
+            issue_eligibility_rejected_count=audit.issue_eligibility_rejected_count,
+            issue_eligibility_rejection_reasons=[
+                reason.value for reason in audit.issue_eligibility_rejection_reasons
+            ],
             present_admitted_count=audit.present_admitted_count,
             non_present_excluded_count=audit.non_present_excluded_count,
             present_validator_rejected_count=audit.present_validator_rejected_count,
@@ -792,6 +838,7 @@ class OpenAIStructuredCaseIntakeExtractor:
         last_error: Exception | None = None
         last_reason = "CASE_INTAKE_PROVIDER_ERROR"
         cumulative_latency_ms = 0.0
+        budget = TransportBudget()
         transport_response_format = _provider_transport_response_format(
             self.settings.llm_provider,
             response_format,
@@ -824,7 +871,13 @@ class OpenAIStructuredCaseIntakeExtractor:
         for attempt in range(1, self.settings.agent_structured_output_max_retries + 2):
             started = time.perf_counter()
             try:
-                result = await asyncio.to_thread(request, attempt)
+                result = await self._transport.request(
+                    partial(request, attempt),
+                    budget=budget,
+                    boundary=boundary,
+                    case_id=safe_case_id(case_input.source_ref),
+                    structured_attempt=attempt,
+                )
                 cumulative_latency_ms += (time.perf_counter() - started) * 1000
                 self.logger.info(
                     "case_intake_boundary_completed",
@@ -832,7 +885,7 @@ class OpenAIStructuredCaseIntakeExtractor:
                     attempt=attempt,
                     latency_ms=cumulative_latency_ms,
                 )
-                return result, attempt, cumulative_latency_ms
+                return result, budget.attempts, cumulative_latency_ms
             except Exception as exc:
                 attempt_latency_ms = (time.perf_counter() - started) * 1000
                 cumulative_latency_ms += attempt_latency_ms
@@ -847,6 +900,8 @@ class OpenAIStructuredCaseIntakeExtractor:
                     latency_ms=attempt_latency_ms,
                     exception_type=type(exc).__name__,
                 )
+                if not isinstance(exc, (_EmptyParsedOutputError, ValidationError)):
+                    break
                 if attempt > self.settings.agent_structured_output_max_retries:
                     break
         assert last_error is not None
@@ -854,8 +909,8 @@ class OpenAIStructuredCaseIntakeExtractor:
         raise CaseIntakeError(
             last_reason,
             boundary=boundary,
-            fact_request_attempt_count=attempt if is_fact else 0,
-            issue_request_attempt_count=0 if is_fact else attempt,
+            fact_request_attempt_count=budget.attempts if is_fact else 0,
+            issue_request_attempt_count=0 if is_fact else budget.attempts,
             fact_latency_ms=cumulative_latency_ms if is_fact else 0.0,
             issue_latency_ms=0.0 if is_fact else cumulative_latency_ms,
             total_latency_ms=cumulative_latency_ms,

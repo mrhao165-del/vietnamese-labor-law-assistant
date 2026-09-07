@@ -1,0 +1,131 @@
+{
+  "schema_version": "decision_support_synthetic_reconciliation_manifest_v1",
+  "classification": "DEVELOPMENT_CONTRACT_RECONCILIATION",
+  "created_at": "2026-09-07T07:16:41.8785533+00:00",
+  "git_head": "7dae0d6f1946b8fb67659c4e6a994a7c98111e22",
+  "working_tree_clean": false,
+  "source_matrix": {
+    "path": "evaluation/development/decision_support/v1_1/post_rc2/split_inference_synthetic_v1.jsonl",
+    "sha256": "61da4f246bb995672b1645442ef64f517597a0862ecd951a98a43e7fb35ce18a"
+  },
+  "reconciled_matrix": {
+    "path": "evaluation/development/decision_support/v1_1/post_rc2/split_inference_synthetic_v2.jsonl",
+    "sha256": "c53e1d19d3507ee047e03973e58e9f3109db601e3a4272e56bb3e8d68671c72d"
+  },
+  "changed_case_ids": [
+    "split-inference-dev-005"
+  ],
+  "field_level_diff": {
+    "split-inference-dev-005": {
+      "expected_observations": {
+        "before": [
+          {
+            "fact_key": "WAGE_PAYMENT_PROBLEM",
+            "evidence_status": "PRESENT_ASSERTED"
+          }
+        ],
+        "after": [
+          {
+            "fact_key": "WAGE_PAYMENT_PROBLEM",
+            "evidence_status": "PRESENT_ASSERTED"
+          },
+          {
+            "fact_key": "WAGE_PAYMENT_STATUS",
+            "evidence_status": "PRESENT_ASSERTED"
+          }
+        ]
+      },
+      "expected_facts": {
+        "before": [
+          {
+            "fact_key": "WAGE_PAYMENT_PROBLEM",
+            "fact_type": "TEXT",
+            "raw_value": "chậm trả lương",
+            "normalized_value": "WAGE_PAYMENT_PROBLEM_REPORTED",
+            "source_span_text": "chậm trả lương",
+            "assertion_mode": "EXPLICIT"
+          }
+        ],
+        "after": [
+          {
+            "fact_key": "WAGE_PAYMENT_PROBLEM",
+            "fact_type": "TEXT",
+            "raw_value": "chậm trả lương",
+            "normalized_value": "WAGE_PAYMENT_PROBLEM_REPORTED",
+            "source_span_text": "chậm trả lương",
+            "assertion_mode": "EXPLICIT"
+          },
+          {
+            "fact_key": "WAGE_PAYMENT_STATUS",
+            "fact_type": "TEXT",
+            "raw_value": "chậm trả lương",
+            "normalized_value": "chậm trả lương",
+            "source_span_text": "chậm trả lương",
+            "assertion_mode": "EXPLICIT"
+          }
+        ]
+      }
+    }
+  },
+  "adjudication": {
+    "wage_payment_problem_and_status_can_coexist": true,
+    "rationale": "The canonical contract describes delayed wages as a WAGE_PAYMENT_PROBLEM and a paid-late status as WAGE_PAYMENT_STATUS. The production policy independently admits the literal 'chậm trả lương' for both properties. Pre-existing unit tests and independently labelled development examples already encode coexistence. Provider output was a discovery signal only and was not an adjudication authority.",
+    "canonical_sources": [
+      {
+        "path": "src/vietnamese_labor_law_assistant/decision_support/fact_contract.py",
+        "sha256": "4e32c17d7e69529fa18ca7529fade284be2edc7867712dadf02b6378e08716e5"
+      },
+      {
+        "path": "src/vietnamese_labor_law_assistant/decision_support/fact_policies.py",
+        "sha256": "218c5105019816cebb735b77fd97920dfb3705cd38dda4c03e29629e58e0465e"
+      }
+    ],
+    "pre_existing_test_evidence": [
+      {
+        "path": "tests/unit/decision_support/test_fact_compiler.py",
+        "sha256": "9152f9ecbdc7f7428fd01f4a479d33a9ba00b55a7bbc086fdd22e7ded00d87ac",
+        "test": "test_compiler_has_positive_deterministic_behavior_for_all_17_keys[WAGE_PAYMENT_STATUS]"
+      }
+    ],
+    "pre_existing_development_examples": [
+      {
+        "path": "evaluation/development/decision_support/v1_1/post_rc2/fact_value_eligibility_synthetic_v1.jsonl",
+        "sha256": "9afaac885198895403a1733c091e337e72657a9bb0e6fc983a1feebe7bd99b5a",
+        "case_id": "fact-value-dev-019"
+      },
+      {
+        "path": "evaluation/development/decision_support/v1_1/post_rc2/property_eligibility_synthetic_v1.jsonl",
+        "sha256": "c488fb35ffa321800a826de21bbca57d4c25588a952ea5b642cf6285c53a50c2",
+        "case_ids": [
+          "property-dev-020",
+          "property-dev-021"
+        ]
+      }
+    ]
+  },
+  "offline_verification": {
+    "command": "uv run pytest tests/unit/decision_support/test_issue_eligibility.py tests/unit/decision_support/test_intake.py tests/unit/decision_support/test_intake_split_boundaries.py tests/unit/decision_support/test_fact_compiler.py tests/unit/decision_support/test_fact_policies.py tests/unit/decision_support/test_fact_normalization.py tests/unit/evaluation/test_decision_support_hybrid_fact_development.py tests/unit/evaluation/test_decision_support_split_inference_development.py tests/unit/evaluation/test_decision_support_fact_value_eligibility_development.py tests/integration/test_week4_case_analysis_workflow.py -q",
+    "exit_code": 0,
+    "result": "PASS",
+    "canonical_quality_gate": {
+      "command": "python .agents/skills/project-quality-gate/scripts/run_project_quality_gate.py",
+      "result": "PASS",
+      "ruff_format": "PASS",
+      "ruff_check": "PASS",
+      "pyright": "0 errors, 0 warnings, 0 informations",
+      "pytest": "1208 passed, 2 skipped",
+      "coverage_percent": 87.70,
+      "coverage_required_percent": 82.0,
+      "production_mcp_demos": "2 passed",
+      "live_llm_provider_calls": 0
+    }
+  },
+  "governance": {
+    "not_release_holdout": true,
+    "not_rc1_or_rc2": true,
+    "not_old26": true,
+    "not_fresh_holdout": true,
+    "historical_v1_preserved": true,
+    "historical_stability_reports_rewritten": false
+  }
+}

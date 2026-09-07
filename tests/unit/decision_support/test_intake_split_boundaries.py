@@ -347,25 +347,34 @@ async def test_boundary_model_overrides_fall_back_independently_to_global_model(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("fact_payload", "issue_payload", "fact_count", "issue_codes"),
+    ("source_text", "fact_payload", "issue_payload", "fact_count", "issue_codes"),
     [
         (
+            "Hợp đồng có thời hạn 18 tháng.",
             _fact_payload(_fact_proposal()),
             _issue_payload("CONTRACT_TERM"),
             1,
             ("CONTRACT_TERM",),
         ),
-        (_fact_payload(_fact_proposal()), _issue_payload(), 1, ()),
         (
+            "Hợp đồng có thời hạn 18 tháng.",
+            _fact_payload(_fact_proposal()),
+            _issue_payload(),
+            1,
+            (),
+        ),
+        (
+            "Tôi muốn nghỉ việc.",
             _fact_payload(),
             _issue_payload("EMPLOYEE_UNILATERAL_TERMINATION"),
             0,
             ("EMPLOYEE_UNILATERAL_TERMINATION",),
         ),
-        (_fact_payload(), _issue_payload(), 0, ()),
+        ("Tôi cần hỗ trợ.", _fact_payload(), _issue_payload(), 0, ()),
     ],
 )
 async def test_all_fact_issue_presence_combinations_are_valid(
+    source_text: str,
     fact_payload: dict[str, object],
     issue_payload: dict[str, object],
     fact_count: int,
@@ -373,16 +382,40 @@ async def test_all_fact_issue_presence_combinations_are_valid(
 ) -> None:
     client = BoundaryParseClient([fact_payload, issue_payload])
 
-    result = await _extractor(client).extract(_case_input())
+    result = await _extractor(client).extract(_case_input(source_text))
 
     assert len(result.facts) == fact_count
     assert tuple(issue.issue_code.value for issue in result.candidate_issues) == issue_codes
 
 
 @pytest.mark.asyncio
+async def test_fact_output_does_not_change_issue_eligibility() -> None:
+    source = _case_input("Hợp đồng có thời hạn 18 tháng; tôi muốn nghỉ việc.")
+    with_fact = BoundaryParseClient(
+        [
+            _fact_payload(_fact_proposal()),
+            _issue_payload("EMPLOYEE_UNILATERAL_TERMINATION"),
+        ]
+    )
+    without_fact = BoundaryParseClient(
+        [_fact_payload(), _issue_payload("EMPLOYEE_UNILATERAL_TERMINATION")]
+    )
+
+    with_fact_result = await _extractor(with_fact).extract(source)
+    without_fact_result = await _extractor(without_fact).extract(source)
+
+    assert len(with_fact_result.facts) == 1
+    assert without_fact_result.facts == []
+    assert with_fact_result.candidate_issues == without_fact_result.candidate_issues
+    assert [issue.issue_code for issue in with_fact_result.candidate_issues] == [
+        IssueCode.EMPLOYEE_UNILATERAL_TERMINATION
+    ]
+
+
+@pytest.mark.asyncio
 async def test_fact_retry_does_not_repeat_or_consume_issue_detection() -> None:
     client = BoundaryParseClient(
-        [RuntimeError("fact schema invalid"), _fact_payload(), _issue_payload("CONTRACT_TERM")]
+        [{"fact_proposals": "invalid"}, _fact_payload(), _issue_payload("CONTRACT_TERM")]
     )
 
     result, audit = await _extractor(client, retries=1).extract_with_transport_audit(_case_input())
@@ -402,7 +435,7 @@ async def test_fact_retry_does_not_repeat_or_consume_issue_detection() -> None:
 @pytest.mark.asyncio
 async def test_issue_retry_never_repeats_successful_fact_extraction() -> None:
     client = BoundaryParseClient(
-        [_fact_payload(_fact_proposal()), RuntimeError("issue invalid"), _issue_payload()]
+        [_fact_payload(_fact_proposal()), {"candidate_issues": "invalid"}, _issue_payload()]
     )
 
     result, audit = await _extractor(client, retries=1).extract_with_transport_audit(_case_input())
@@ -447,7 +480,7 @@ async def test_ungrounded_proposal_is_audited_without_retrying_or_blocking_issue
 
 @pytest.mark.asyncio
 async def test_ambiguous_proposal_is_audited_without_retrying_or_blocking_issue() -> None:
-    literal = "18 months"
+    literal = "18 tháng"
     client = BoundaryParseClient(
         [
             _fact_payload(_fact_proposal(literal)),
@@ -457,7 +490,7 @@ async def test_ambiguous_proposal_is_audited_without_retrying_or_blocking_issue(
     extractor = OpenAIStructuredCaseIntakeExtractor(_settings(retries=1), client)
 
     result, audit = await extractor.extract_with_transport_audit(
-        _case_input(f"{literal} and {literal}")
+        _case_input(f"Hợp đồng có thời hạn {literal} và gia hạn thêm {literal}.")
     )
 
     assert result.facts == []

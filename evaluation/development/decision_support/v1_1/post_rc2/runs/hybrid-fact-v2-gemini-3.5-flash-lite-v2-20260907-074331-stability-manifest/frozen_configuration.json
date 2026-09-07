@@ -1,0 +1,107 @@
+{
+  "schema_version": "hybrid_fact_v2_synthetic_v2_stability_freeze_v1",
+  "classification": "DEVELOPMENT_SYNTHETIC_V2_STABILITY",
+  "frozen_at_utc": "2026-09-07T07:43:31.2603969Z",
+  "run_ids": [
+    "hybrid-fact-v2-gemini-3.5-flash-lite-v2-20260907-074331-r1",
+    "hybrid-fact-v2-gemini-3.5-flash-lite-v2-20260907-074331-r2",
+    "hybrid-fact-v2-gemini-3.5-flash-lite-v2-20260907-074331-r3"
+  ],
+  "git_head": "7dae0d6f1946b8fb67659c4e6a994a7c98111e22",
+  "working_tree_clean": false,
+  "tracked_diff_sha256": "1c7e05436b720b1751472b7dbe713fd3faa6d830e81b06d8034a81d1eb188478",
+  "relevant_source_tree_sha256": "2c2975e268ba6eaec92291ec2f7483df0f1aaed08df4035d8cb492ef25748c60",
+  "production_case_intake_pipeline_sha256": "8295b8afea5901868fdb9160f0c677bb7167cfee1fc022b0b2aedfa8e5f7d46a",
+  "fact_prompt_sha256": "e3179fb7b8f131fc5129521642a78195ef85ba009c24a0aae1dc2c4d76ca4e5f",
+  "issue_prompt_sha256": "c7a62996ea6fdb513b0beb2e57e6f0312c3ffdd071079993819b2eccb13ddedf",
+  "issue_eligibility_sha256": "1d0cf81abaab10e0ccafb18aba2a4f82b80ae24133ff841864958191372462a7",
+  "fact_compiler_policy_hashes": {
+    "fact_compiler.py": "ed397beb427d8c3fc2de373f2b2a15ec93bb4e55f26427b69321035ca9084721",
+    "fact_contract.py": "4e32c17d7e69529fa18ca7529fade284be2edc7867712dadf02b6378e08716e5",
+    "fact_evidence.py": "88914dffc3724ecfcd5a7d4d49013aaa3127d493f4cc043e4a79dc2bea8186f4",
+    "fact_normalization.py": "dbfd64d14243427774a4f029efc15b68d0af31fde3473195baccd5d7799bdff3",
+    "fact_policies.py": "218c5105019816cebb735b77fd97920dfb3705cd38dda4c03e29629e58e0465e"
+  },
+  "relevant_source_files": {
+    "src/vietnamese_labor_law_assistant/common/settings.py": "1c6cf4f0e1b1015829cdcb1c80dab4be9086851307c6e5b35587fd28784b2ee3",
+    "src/vietnamese_labor_law_assistant/decision_support/enums.py": "0cc78b232c60e37747c5198368cf4c078b4e7ee7f1c9cfd02838d072420c4739",
+    "src/vietnamese_labor_law_assistant/decision_support/fact_compiler.py": "ed397beb427d8c3fc2de373f2b2a15ec93bb4e55f26427b69321035ca9084721",
+    "src/vietnamese_labor_law_assistant/decision_support/fact_contract.py": "4e32c17d7e69529fa18ca7529fade284be2edc7867712dadf02b6378e08716e5",
+    "src/vietnamese_labor_law_assistant/decision_support/fact_evidence.py": "88914dffc3724ecfcd5a7d4d49013aaa3127d493f4cc043e4a79dc2bea8186f4",
+    "src/vietnamese_labor_law_assistant/decision_support/fact_normalization.py": "dbfd64d14243427774a4f029efc15b68d0af31fde3473195baccd5d7799bdff3",
+    "src/vietnamese_labor_law_assistant/decision_support/fact_policies.py": "218c5105019816cebb735b77fd97920dfb3705cd38dda4c03e29629e58e0465e",
+    "src/vietnamese_labor_law_assistant/decision_support/intake.py": "553e0b3bfc79b7da92eb2834721dc534e51d4c0b7ddc3180c908fbbd19cc6bc1",
+    "src/vietnamese_labor_law_assistant/decision_support/intake_transport.py": "fed6a065ddafd4eb5101e37131e3ef4a75ca2f92cb5f7740117edd0753ae9692",
+    "src/vietnamese_labor_law_assistant/decision_support/issue_eligibility.py": "1d0cf81abaab10e0ccafb18aba2a4f82b80ae24133ff841864958191372462a7",
+    "src/vietnamese_labor_law_assistant/decision_support/issue_registry.py": "15f4ea77f911d4c029ca16238577cdf0b5470d399bb9be4892c783cdc7936c91",
+    "src/vietnamese_labor_law_assistant/decision_support/issues.py": "9486b9b56314ddc54eef7422bca2c6453b1cb9a1f1461a76b8097ca1c08c47f1",
+    "src/vietnamese_labor_law_assistant/decision_support/models.py": "9487522b79c3491e03bfe34d58e12d9df36594a55d27a9f57e6dbb215fd81e63",
+    "src/vietnamese_labor_law_assistant/evaluation/decision_support_hybrid_fact_development.py": "fdd1323b5b6875c95453f85f8deed799c04e778504997b9baf9b3bb69d5e26a8",
+    "src/vietnamese_labor_law_assistant/evaluation/decision_support_provider_pacing.py": "d6ba78845b276a12cec8ba4315a4ae61a8155eee2c8e32f1ab201e40a0cddae4",
+    "src/vietnamese_labor_law_assistant/evaluation/decision_support_split_inference_development.py": "b2f7ad46237cdfec37436118c6411606969da9d3de9489219ec1242b44a56347",
+    "src/vietnamese_labor_law_assistant/evaluation/decision_support_v1_1_artifacts.py": "85dba3bb266da046ff362cf3fac742f5814383bec88c071f9c75d28014f82faa"
+  },
+  "datasets": {
+    "synthetic_v1_path": "evaluation/development/decision_support/v1_1/post_rc2/split_inference_synthetic_v1.jsonl",
+    "synthetic_v1_sha256": "61da4f246bb995672b1645442ef64f517597a0862ecd951a98a43e7fb35ce18a",
+    "synthetic_v2_path": "evaluation/development/decision_support/v1_1/post_rc2/split_inference_synthetic_v2.jsonl",
+    "synthetic_v2_sha256": "c53e1d19d3507ee047e03973e58e9f3109db601e3a4272e56bb3e8d68671c72d",
+    "v2_reconciliation_manifest_sha256": "f09e7a739bd14506554fa7be4865e06a90af42e53c98bbb34c25d16d4538e0d6"
+  },
+  "thresholds_sha256": "8028fe38f83d471455992233bb28fa06764d46149b0e77c5f74d53f834aabe1e",
+  "thresholds": {
+    "canonical_fact_key_compliance": 1.0,
+    "canonical_fact_type_compliance": 1.0,
+    "source_grounding_accuracy": 1.0,
+    "maximum_non_present_incorrectly_admitted": 0,
+    "maximum_missingness_false_positives": 0,
+    "maximum_unknown_false_positives": 0,
+    "maximum_negation_false_positives": 0,
+    "maximum_fabricated_facts_for_issue": 0,
+    "issue_zero_fact_contract_accuracy": 1.0,
+    "fact_no_issue_contract_accuracy": 1.0,
+    "minimum_fact_exact_f1": 0.85,
+    "minimum_atomic_case_accuracy": 0.85,
+    "minimum_candidate_issue_macro_f1": 0.9,
+    "minimum_critical_issue_recall": 0.9,
+    "fact_call_structured_success": 1.0,
+    "issue_call_structured_success": 1.0
+  },
+  "generation_config": {
+    "provider": "gemini_openai_compatible",
+    "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+    "fact_model": "gemini-3.5-flash-lite",
+    "issue_model": "gemini-3.5-flash-lite",
+    "temperature": 0,
+    "concurrency": 1,
+    "timeout_seconds": 60.0,
+    "sdk_retries": 0,
+    "structured_retries": 2,
+    "retry_stack_version": "application_v2",
+    "transport_policy": {
+      "initial_backoff_seconds": 10.0,
+      "max_backoff_seconds": 60.0,
+      "max_retries": 3,
+      "max_wait_seconds": 120.0,
+      "jitter_fraction": 0.2,
+      "respect_retry_after": true
+    },
+    "request_pacing_seconds": 10.0,
+    "inter_case_pacing_seconds": 1.0
+  },
+  "execution": {
+    "entrypoint": "run_hybrid_fact_development API",
+    "reason": "The frozen CLI remains intentionally bound to synthetic v1; the existing evaluator API accepts the immutable v2 matrix without source changes.",
+    "label_isolation": true,
+    "old26_executed": false,
+    "release_holdout_accessed": false
+  },
+  "protected_baseline_tree_sha256": {
+    "previous_v1_r1": "e26845ee46fbe90632123a78a9fece414ef0b782150d5d169678adf59e2de45b",
+    "previous_v1_r2": "1bfd293f27783202d3fb44fb1cee8c5c11f2e0b727c36a509dee7cc00506997b",
+    "previous_v1_r3": "fadc565ab8015af36cd95fec73848a34c6d190203cc6f5657443faef2a495ece",
+    "gemini_blocked_run": "91bb4af454f3e4fbde1eb286d830f48412534d46c42201ecd57b1ae3e8d43ecc",
+    "mistral_blocked_run": "821224e07a57fec8d9c0b6b547d29774f49cc5de321b0a111f4089f347d92a3a",
+    "historical_mistral_split_baseline": "d7c8687e0684124cabcac0bd059b77cb6aeedfebe0d836a3b632bf1c13c19076"
+  }
+}

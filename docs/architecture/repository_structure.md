@@ -77,8 +77,9 @@ The frozen v1.0 direct path remains `AgentService -> finite LangGraph -> existin
 `CASE_ANALYSIS` to the separate finite `CaseGraph`, and `OUT_OF_SCOPE` to the bounded refusal.
 
 `decision_support/` owns the typed Case Intake vocabulary and adapter, immutable registry,
-missing-fact policy, bounded clarification, refined-issue state, and non-executing evidence-request
-metadata. `refined_issues.py` validates that the supplied missing-fact result still matches the
+deterministic fact compilation and issue eligibility, missing-fact policy, bounded clarification,
+refined-issue state, and non-executing evidence-request metadata. `refined_issues.py` validates that
+the supplied missing-fact result still matches the
 latest facts, candidates, and registry. It emits `ACTIVE` only when all configured requirements are
 satisfied and keeps incomplete candidates `POSSIBLE`; the current contracts do not invent the
 reserved `RESOLVED_OUT` or `UNSUPPORTED_SCOPE` states. `evidence_requests.py` selects only
@@ -182,13 +183,23 @@ ambiguous, unsafe, and ungrounded proposals; derives type, normalization, minima
 preserves separately grounded conflicts. No compiler module imports a provider, issue output,
 calculator, retrieval, API, MCP, or agent capability. The adapter records proposal, admission and
 rejection counts, ordered rejection reasons, missing/unknown/negated classifications, and compiler
-latency before deterministically merging facts with the independent issue result into the unchanged
-public `CaseIntakeResult`. One rejected proposal does not remove another admitted fact or an
-independently detected issue. A provider failure at either boundary or structurally invalid compiler
+latency. Schema-valid issue proposals then pass through `issue_eligibility.py`, which uses only the
+raw `CaseIntakeInput` to require affirmative employee-termination semantics or contract-term-specific
+subject matter. It never consumes fact output. The adapter records internal issue rejection reasons
+before deterministically merging admitted facts and issues into the unchanged public
+`CaseIntakeResult`. One rejected fact proposal does not remove another admitted fact or an
+independently eligible issue. A provider failure at either boundary or structurally invalid compiler
 output fails the intake without exposing a partial result. Normal
-execution therefore uses two structured provider calls; with three structured attempts and the
-OpenAI SDK's two transport retries per attempt, the theoretical maximum is 18 HTTP transmissions per
-intake. This is Case Intake infrastructure, not MCP/tool-efficiency work.
+execution therefore uses two structured provider calls. Case Intake now disables SDK retries and
+`decision_support/intake_transport.py` owns one shared transport budget per boundary, independent
+of structured repairs. Defaults allow three transport retries across all structured attempts, with
+10-second exponential backoff, bounded positive jitter, a 60-second local delay cap, and a
+120-second cumulative retry-wait budget. Valid Retry-After/reset delays take precedence; a delay
+that cannot fit the remaining budget terminates rather than retrying early. Permanent HTTP errors
+do not retry. A pure-429 boundary stops after at most four HTTP attempts; mixed structured/transport
+failures permit at most six attempts per boundary (twelve per intake). Logs contain only allowlisted
+numeric timing/status fields and safe case identifiers, never provider bodies or arbitrary headers.
+This is Case Intake infrastructure, not MCP/tool-efficiency work.
 The legacy `present_asserted_count` and `present_admitted_count` audit fields mirror final compiler
 admissions only for existing development-evaluator compatibility; they no longer describe a
 provider-supplied evidence-status decision.
@@ -200,7 +211,26 @@ provider, endpoint, credentials, timeout, and retry machinery and introduce no n
 synthetic split-boundary experiment. It records boundary-specific success, retry and latency data;
 fact, issue, and cross-layer metrics; and the unchanged authorization gates in a write-once
 development claim/report. Its thin script cannot run the old-26 set, write release evidence, create
-a holdout, or create an RC identity.
+a holdout, or create an RC identity. The original synthetic v1 matrix remains immutable historical
+development evidence. Synthetic v2 is an additive development-only contract reconciliation whose
+manifest binds both hashes and changes only case 005 to reflect the pre-existing canonical rule that
+delayed-wage problem and payment-status facts may coexist.
+
+Hybrid V2 development configuration accepts either the historical Mistral registration or the
+authorized `gemini_openai_compatible` / `gemini-3.5-flash-lite` pair at the Gemini OpenAI-compatible
+endpoint. Both boundary models must match the selected registration. Temperature, timeout,
+concurrency and all quality thresholds remain fixed. New run configuration records SDK retries zero,
+the application transport policy and explicit request/inter-case pacing. Historical configuration
+defaults still deserialize, and historical split-v1 validation is unchanged.
+
+`evaluation/decision_support_provider_pacing.py` owns the optional development request-start gate;
+the extractor receives a hook, not evaluation-specific sleeps. The Hybrid runner exposes
+`--request-pacing-seconds` (default 10), `--inter-case-pacing-seconds` (default 1),
+`--rate-limit-max-retries`, and `--rate-limit-max-wait-seconds`. Transport/pacing configuration is
+included in the pre-call claim and three-run identity; no old blocked run may join a new stability
+set. Scoring and threshold logic are unchanged.
+`evaluation/decision_support_transport_probe.py` owns a write-once four-input transport probe with
+durable per-attempt telemetry and no quality metrics. Its script is only an acknowledged entrypoint.
 
 `evaluation/decision_support_hybrid_fact_development.py` additively owns the Hybrid Fact V2 replay
 of that same 28-row development matrix. It leaves the historical split-v1 schema and artifacts

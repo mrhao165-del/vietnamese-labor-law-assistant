@@ -65,7 +65,13 @@ def test_cli_uses_only_fixed_matrix_and_new_hybrid_run_namespace(
         "load_split_inference_synthetic_cases",
         lambda _: tuple(range(28)),
     )
-    monkeypatch.setattr(script, "OpenAIStructuredCaseIntakeExtractor", lambda _: object())
+    pacing_hooks: list[object] = []
+
+    def fake_extractor(_settings: object, *, before_request: object) -> object:
+        pacing_hooks.append(before_request)
+        return object()
+
+    monkeypatch.setattr(script, "OpenAIStructuredCaseIntakeExtractor", fake_extractor)
 
     async def fake_run(*args: object, **kwargs: object) -> object:
         calls.extend((args, kwargs))
@@ -82,6 +88,10 @@ def test_cli_uses_only_fixed_matrix_and_new_hybrid_run_namespace(
             "--live-development",
             "--acknowledge-not-release",
             ACKNOWLEDGEMENT,
+            "--request-pacing-seconds",
+            "12",
+            "--inter-case-pacing-seconds",
+            "3",
         ]
     )
 
@@ -96,6 +106,9 @@ def test_cli_uses_only_fixed_matrix_and_new_hybrid_run_namespace(
     )
     run_kwargs = calls[1]
     assert isinstance(run_kwargs, dict)
+    assert len(pacing_hooks) == 1
+    assert run_kwargs["request_pacing_seconds"] == 12
+    assert run_kwargs["inter_case_pacing_seconds"] == 3
     assert run_kwargs["matrix_path"] == (
         tmp_path.resolve() / "evaluation/development/decision_support/v1_1/post_rc2/"
         "split_inference_synthetic_v1.jsonl"

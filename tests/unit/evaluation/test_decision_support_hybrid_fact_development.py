@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -14,10 +16,18 @@ from vietnamese_labor_law_assistant.decision_support.enums import (
     VerificationStatus,
 )
 from vietnamese_labor_law_assistant.decision_support.fact_compiler import (
+    FactProposal,
     FactRejectionReasonCode,
+    compile_fact_proposals,
 )
 from vietnamese_labor_law_assistant.decision_support.intake import CaseIntakeTransportAudit
+from vietnamese_labor_law_assistant.decision_support.issue_eligibility import (
+    evaluate_issue_eligibility,
+)
+from vietnamese_labor_law_assistant.decision_support.issue_registry import FactKey
+from vietnamese_labor_law_assistant.decision_support.issues import IssueCode
 from vietnamese_labor_law_assistant.decision_support.models import (
+    CandidateIssue,
     CaseFact,
     CaseIntakeInput,
     CaseIntakeResult,
@@ -38,6 +48,129 @@ MATRIX_PATH = (
     REPO_ROOT / "evaluation/development/decision_support/v1_1/post_rc2/"
     "split_inference_synthetic_v1.jsonl"
 )
+V2_MATRIX_PATH = (
+    REPO_ROOT / "evaluation/development/decision_support/v1_1/post_rc2/"
+    "split_inference_synthetic_v2.jsonl"
+)
+V1_MATRIX_SHA256 = "61da4f246bb995672b1645442ef64f517597a0862ecd951a98a43e7fb35ce18a"
+V2_MANIFEST_PATH = (
+    REPO_ROOT / "evaluation/development/decision_support/v1_1/post_rc2/"
+    "split_inference_synthetic_v2_manifest.json"
+)
+
+
+def test_synthetic_v2_manifest_binds_both_matrices_and_governance() -> None:
+    manifest = json.loads(V2_MANIFEST_PATH.read_text(encoding="utf-8"))
+
+    assert manifest["classification"] == "DEVELOPMENT_CONTRACT_RECONCILIATION"
+    assert (
+        manifest["source_matrix"]["sha256"] == hashlib.sha256(MATRIX_PATH.read_bytes()).hexdigest()
+    )
+    assert (
+        manifest["reconciled_matrix"]["sha256"]
+        == hashlib.sha256(V2_MATRIX_PATH.read_bytes()).hexdigest()
+    )
+    assert manifest["changed_case_ids"] == ["split-inference-dev-005"]
+    assert manifest["governance"] == {
+        "not_release_holdout": True,
+        "not_rc1_or_rc2": True,
+        "not_old26": True,
+        "not_fresh_holdout": True,
+        "historical_v1_preserved": True,
+        "historical_stability_reports_rewritten": False,
+    }
+
+
+def test_synthetic_v2_reconciles_only_case_005_to_the_canonical_wage_contract() -> None:
+    assert hashlib.sha256(MATRIX_PATH.read_bytes()).hexdigest() == V1_MATRIX_SHA256
+    v1_cases = split_development.load_split_inference_synthetic_cases(MATRIX_PATH)
+    v2_cases = split_development.load_split_inference_synthetic_cases(V2_MATRIX_PATH)
+    changed_case_ids = tuple(
+        before.case_id
+        for before, after in zip(v1_cases, v2_cases, strict=True)
+        if before.model_dump(mode="json") != after.model_dump(mode="json")
+    )
+
+    assert changed_case_ids == ("split-inference-dev-005",)
+    case = next(item for item in v2_cases if item.case_id == changed_case_ids[0])
+    assert tuple(observation.fact_key for observation in case.expected_observations) == (
+        FactKey.WAGE_PAYMENT_PROBLEM,
+        FactKey.WAGE_PAYMENT_STATUS,
+    )
+    assert tuple(fact.fact_key for fact in case.expected_facts) == (
+        FactKey.WAGE_PAYMENT_PROBLEM,
+        FactKey.WAGE_PAYMENT_STATUS,
+    )
+    compiled = compile_fact_proposals(
+        CaseIntakeInput(source_text=case.source_text, source_ref=case.source_ref),
+        (
+            FactProposal(
+                fact_key=FactKey.WAGE_PAYMENT_PROBLEM,
+                source_span_text="chậm trả lương",
+            ),
+            FactProposal(
+                fact_key=FactKey.WAGE_PAYMENT_STATUS,
+                source_span_text="chậm trả lương",
+            ),
+        ),
+    )
+
+    assert compiled.rejections == ()
+    assert tuple(
+        (fact.fact_key, fact.fact_type, fact.raw_value, fact.normalized_value)
+        for fact in compiled.admitted_facts
+    ) == tuple(
+        (
+            fact.fact_key.value,
+            fact.fact_type.value,
+            fact.raw_value,
+            fact.normalized_value,
+        )
+        for fact in case.expected_facts
+    )
+
+
+def test_six_issue_zero_cases_are_exact_after_offline_issue_eligibility() -> None:
+    cases = split_development.load_split_inference_synthetic_cases(V2_MATRIX_PATH)
+    observed_proposals = {
+        "split-inference-dev-006": (IssueCode.EMPLOYEE_UNILATERAL_TERMINATION,),
+        "split-inference-dev-007": (IssueCode.CONTRACT_TERM,),
+        "split-inference-dev-018": (IssueCode.EMPLOYEE_UNILATERAL_TERMINATION,),
+        "split-inference-dev-019": (IssueCode.EMPLOYEE_UNILATERAL_TERMINATION,),
+        "split-inference-dev-020": (
+            IssueCode.CONTRACT_TERM,
+            IssueCode.EMPLOYEE_UNILATERAL_TERMINATION,
+        ),
+        "split-inference-dev-022": (IssueCode.EMPLOYEE_UNILATERAL_TERMINATION,),
+    }
+    correct = 0
+    for case in cases:
+        if case.case_id not in observed_proposals:
+            continue
+        eligibility = evaluate_issue_eligibility(
+            CaseIntakeInput(source_text=case.source_text, source_ref=case.source_ref),
+            tuple(
+                CandidateIssue(issue_code=issue_code)
+                for issue_code in observed_proposals[case.case_id]
+            ),
+        )
+        if tuple(issue.issue_code for issue in eligibility.admitted_issues) == (
+            case.expected_candidate_issues
+        ):
+            correct += 1
+
+    assert correct == 6
+
+
+def test_v2_fact_no_issue_contract_is_internally_exact_without_model_output() -> None:
+    cases = split_development.load_split_inference_synthetic_cases(V2_MATRIX_PATH)
+    records = tuple(_perfect_record(index, case) for index, case in enumerate(cases, start=1))
+
+    metrics = split_development.evaluate_split_inference_predictions(cases, records)
+
+    assert metrics.fact_metrics.fact_no_issue_case_count == 7
+    assert metrics.fact_metrics.fact_no_issue_correct_count == 7
+    assert metrics.fact_metrics.fact_no_issue_contract_accuracy == 1.0
 
 
 def _settings() -> Settings:
@@ -52,6 +185,58 @@ def _settings() -> Settings:
         llm_max_retries=2,
         agent_structured_output_max_retries=2,
     )
+
+
+def _gemini_settings() -> Settings:
+    return _settings().model_copy(
+        update={
+            "llm_provider": "gemini_openai_compatible",
+            "openai_base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+            "llm_model": "gemini-3.5-flash-lite",
+            "case_intake_fact_model": "gemini-3.5-flash-lite",
+            "case_intake_issue_model": "gemini-3.5-flash-lite",
+        }
+    )
+
+
+def test_registered_gemini_configuration_preserves_legacy_defaults_and_fixed_controls() -> None:
+    legacy = hybrid_development.validate_hybrid_provider_settings(_settings())
+    config = hybrid_development.validate_hybrid_provider_settings(_gemini_settings())
+    assert hybrid_development.HybridFactGenerationConfig().sdk_retries == 2
+    assert legacy.sdk_retries == 0
+    assert legacy.transport_policy is not None
+    assert config.provider == "gemini_openai_compatible"
+    assert config.fact_model == config.issue_model == "gemini-3.5-flash-lite"
+    assert config.temperature == legacy.temperature == 0
+    assert config.sdk_retries == legacy.sdk_retries == 0
+    assert config.transport_policy is not None
+    assert config.structured_retries == legacy.structured_retries == 2
+    assert config.timeout_seconds == legacy.timeout_seconds == 60
+    assert config.concurrency == legacy.concurrency == 1
+    assert config.inter_case_pacing_seconds == legacy.inter_case_pacing_seconds == 1
+    assert (
+        hybrid_development.HybridFactGenerationConfig.model_validate_json(config.model_dump_json())
+        == config
+    )
+
+
+@pytest.mark.parametrize(
+    "update",
+    [
+        {"openai_api_key": None},
+        {"openai_base_url": "https://api.mistral.ai/v1"},
+        {"case_intake_fact_model": "mistral-small-2603"},
+        {"case_intake_issue_model": "gemini-2.5-flash-lite"},
+        {"llm_timeout_seconds": 30},
+        {"case_intake_transport_max_wait_seconds": 301},
+        {"agent_structured_output_max_retries": 0},
+    ],
+)
+def test_gemini_registration_rejects_unapproved_configuration(update: dict[str, object]) -> None:
+    with pytest.raises(ValueError):
+        hybrid_development.validate_hybrid_provider_settings(
+            _gemini_settings().model_copy(update=update)
+        )
 
 
 class PerfectHybridExtractor:
@@ -100,10 +285,13 @@ def test_hybrid_gate_adds_non_present_admission_without_relaxing_thresholds() ->
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("gemini", [False, True])
 async def test_runner_writes_one_isolated_v2_run_and_aggregates_compiler_rejections(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    gemini: bool,
 ) -> None:
+    settings = _gemini_settings() if gemini else _settings()
     runs_root = tmp_path / "runs"
     monkeypatch.setattr(hybrid_development, "_HYBRID_FACT_RUNS_ROOT", runs_root)
     cases = split_development.load_split_inference_synthetic_cases(MATRIX_PATH)
@@ -115,7 +303,7 @@ async def test_runner_writes_one_isolated_v2_run_and_aggregates_compiler_rejecti
 
     report = await hybrid_development.run_hybrid_fact_development(
         cases,
-        _settings(),
+        settings,
         paths,
         extractor=extractor,
         run_id="hybrid-fact-v2-test-1",
@@ -149,8 +337,8 @@ async def test_runner_writes_one_isolated_v2_run_and_aggregates_compiler_rejecti
             FactRejectionReasonCode.DUPLICATE_PROPOSAL: 0,
         }.items()
     }
-    assert report.generation_config.fact_model == "mistral-small-2603"
-    assert report.generation_config.issue_model == "mistral-small-2603"
+    assert report.generation_config.fact_model == settings.resolved_case_intake_fact_model
+    assert report.generation_config.issue_model == settings.resolved_case_intake_issue_model
     assert (
         hybrid_development.validate_hybrid_fact_report(
             report_path=paths.report,
@@ -355,10 +543,14 @@ def _audit_for_case(
 
 def _expected_result(case: split_development.SplitInferenceSyntheticCase) -> CaseIntakeResult:
     facts: list[CaseFact] = []
-    search_offset = 0
+    search_offsets: dict[tuple[str, str], int] = {}
     for index, expected in enumerate(case.expected_facts, start=1):
-        start = case.source_text.index(expected.source_span_text, search_offset)
-        search_offset = start + len(expected.source_span_text)
+        occurrence_key = (expected.fact_key.value, expected.source_span_text)
+        start = case.source_text.index(
+            expected.source_span_text,
+            search_offsets.get(occurrence_key, 0),
+        )
+        search_offsets[occurrence_key] = start + len(expected.source_span_text)
         facts.append(
             CaseFact(
                 fact_id=f"CF-HYBRID-EXPECTED-{index}",

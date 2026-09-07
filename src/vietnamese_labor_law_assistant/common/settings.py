@@ -59,6 +59,10 @@ class Settings(BaseSettings):
     llm_provider: Literal["openai", "gemini_openai_compatible"] = "openai"
     llm_timeout_seconds: float = Field(default=60, gt=0)
     llm_max_retries: int = Field(default=2, ge=0, le=10)
+    case_intake_transport_max_retries: int = Field(default=3, ge=0, le=5)
+    case_intake_transport_initial_backoff_seconds: float = Field(default=10, gt=0, le=60)
+    case_intake_transport_max_backoff_seconds: float = Field(default=60, gt=0, le=120)
+    case_intake_transport_max_wait_seconds: float = Field(default=120, ge=0, le=300)
     guardrail_enabled: bool = True
     guardrail_canonical_source_path: Path = Path("data/processed/labor_law_clauses.jsonl")
     guardrail_semantic_lower_threshold: float = Field(default=0.35, ge=0, le=1)

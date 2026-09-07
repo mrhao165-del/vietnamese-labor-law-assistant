@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
-from vietnamese_labor_law_assistant.common.settings import get_settings
+from vietnamese_labor_law_assistant.common.settings import Settings, get_settings
 from vietnamese_labor_law_assistant.decision_support.intake import (
     OpenAIStructuredCaseIntakeExtractor,
 )
@@ -19,6 +19,9 @@ from vietnamese_labor_law_assistant.evaluation import (
 )
 from vietnamese_labor_law_assistant.evaluation import (
     decision_support_split_inference_development as split_development,
+)
+from vietnamese_labor_law_assistant.evaluation.decision_support_provider_pacing import (
+    DevelopmentRequestPacer,
 )
 
 ACKNOWLEDGEMENT = "HYBRID_FACT_V2_SYNTHETIC_NOT_RELEASE"
@@ -30,6 +33,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--live-development", action="store_true")
     parser.add_argument("--acknowledge-not-release")
+    parser.add_argument("--request-pacing-seconds", type=float, default=10)
+    parser.add_argument("--inter-case-pacing-seconds", type=float, default=1)
+    parser.add_argument("--rate-limit-max-retries", type=int)
+    parser.add_argument("--rate-limit-max-wait-seconds", type=float)
     args = parser.parse_args(argv)
     if not args.live_development:
         parser.error("--live-development is required for provider calls")
@@ -48,11 +55,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     try:
         settings = get_settings()
+        overrides = {}
+        if args.rate_limit_max_retries is not None:
+            overrides["case_intake_transport_max_retries"] = args.rate_limit_max_retries
+        if args.rate_limit_max_wait_seconds is not None:
+            overrides["case_intake_transport_max_wait_seconds"] = args.rate_limit_max_wait_seconds
+        if overrides:
+            settings = Settings.model_validate({**settings.model_dump(), **overrides})
+        pacer = DevelopmentRequestPacer(args.request_pacing_seconds)
         hybrid_development.validate_hybrid_provider_settings(settings)
     except ValueError:
         parser.error("Hybrid Fact development provider configuration is invalid")
     cases = split_development.load_split_inference_synthetic_cases(matrix_path)
-    extractor = OpenAIStructuredCaseIntakeExtractor(settings)
+    extractor = OpenAIStructuredCaseIntakeExtractor(settings, before_request=pacer.before_request)
     report = asyncio.run(
         hybrid_development.run_hybrid_fact_development(
             cases,
@@ -63,6 +78,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             started_at=datetime.now(UTC),
             completed_at=None,
             matrix_path=matrix_path,
+            request_pacing_seconds=args.request_pacing_seconds,
+            inter_case_pacing_seconds=args.inter_case_pacing_seconds,
         )
     )
     print(json.dumps(report.model_dump(mode="json"), ensure_ascii=False, indent=2))

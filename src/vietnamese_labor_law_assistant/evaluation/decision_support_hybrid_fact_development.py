@@ -22,6 +22,7 @@ from vietnamese_labor_law_assistant.decision_support.intake import (
     CANDIDATE_ISSUE_SYSTEM_PROMPT,
     FACT_EXTRACTION_SYSTEM_PROMPT,
 )
+from vietnamese_labor_law_assistant.decision_support.intake_transport import IntakeTransportPolicy
 from vietnamese_labor_law_assistant.evaluation.decision_support_split_inference_development import (
     AuditedCaseIntakeExtractor,
     SplitInferenceDevelopmentMetrics,
@@ -58,6 +59,7 @@ _PRODUCTION_PIPELINE_COMPONENTS = (
     "decision_support/fact_normalization.py",
     "decision_support/fact_policies.py",
     "decision_support/intake.py",
+    "decision_support/intake_transport.py",
     "decision_support/issue_registry.py",
     "decision_support/models.py",
 )
@@ -80,16 +82,40 @@ class HybridFactGenerationConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    provider: Literal["openai"] = "openai"
-    fact_model: Literal["mistral-small-2603"] = "mistral-small-2603"
-    issue_model: Literal["mistral-small-2603"] = "mistral-small-2603"
-    base_url: Literal["https://api.mistral.ai/v1"] = "https://api.mistral.ai/v1"
+    provider: Literal["openai", "gemini_openai_compatible"] = "openai"
+    fact_model: Literal["mistral-small-2603", "gemini-3.5-flash-lite"] = "mistral-small-2603"
+    issue_model: Literal["mistral-small-2603", "gemini-3.5-flash-lite"] = "mistral-small-2603"
+    base_url: Literal[
+        "https://api.mistral.ai/v1",
+        "https://generativelanguage.googleapis.com/v1beta/openai/",
+    ] = "https://api.mistral.ai/v1"
     temperature: Literal[0] = 0
     timeout_seconds: float = Field(default=60.0, ge=60.0, le=60.0)
-    sdk_retries: Literal[2] = 2
+    sdk_retries: Literal[0, 2] = 2
+    retry_stack_version: Literal["sdk_v1", "application_v2"] = "sdk_v1"
+    transport_policy: IntakeTransportPolicy | None = None
+    request_pacing_seconds: float = Field(default=0, ge=0, le=300)
     structured_retries: Literal[2] = 2
     concurrency: Literal[1] = 1
-    inter_case_pacing_seconds: float = Field(default=1.0, ge=1.0, le=1.0)
+    inter_case_pacing_seconds: float = Field(default=1.0, ge=0, le=300)
+
+    @model_validator(mode="after")
+    def validate_registered_provider_identity(self) -> HybridFactGenerationConfig:
+        if (self.sdk_retries == 0) != (self.transport_policy is not None):
+            raise ValueError("application transport policy requires SDK retries disabled")
+        if (self.sdk_retries == 0) != (self.retry_stack_version == "application_v2"):
+            raise ValueError("retry stack version must describe the active transport owner")
+        if self.provider == "gemini_openai_compatible":
+            model = "gemini-3.5-flash-lite"
+            endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/"
+        else:
+            model = "mistral-small-2603"
+            endpoint = "https://api.mistral.ai/v1"
+        if (self.fact_model, self.issue_model, self.base_url) != (model, model, endpoint):
+            raise ValueError(
+                "Hybrid Fact provider, boundary models and endpoint must match registration"
+            )
+        return self
 
 
 class HybridFactGateResults(BaseModel):
@@ -244,6 +270,22 @@ class HybridFactArtifactPaths:
 def validate_hybrid_provider_settings(settings: Settings) -> HybridFactGenerationConfig:
     """Reuse the registered config and require both production boundary models to match it."""
 
+    if settings.llm_provider == "gemini_openai_compatible":
+        if settings.openai_api_key is None:
+            raise ValueError("development provider API key is not configured")
+        return HybridFactGenerationConfig.model_validate(
+            {
+                "provider": settings.llm_provider,
+                "fact_model": settings.resolved_case_intake_fact_model,
+                "issue_model": settings.resolved_case_intake_issue_model,
+                "base_url": settings.openai_base_url,
+                "timeout_seconds": settings.llm_timeout_seconds,
+                "sdk_retries": 0,
+                "retry_stack_version": "application_v2",
+                "transport_policy": IntakeTransportPolicy.from_settings(settings),
+                "structured_retries": settings.agent_structured_output_max_retries,
+            }
+        )
     base: DevelopmentGenerationConfig = validate_development_provider_settings(settings)
     fact_model = settings.resolved_case_intake_fact_model
     issue_model = settings.resolved_case_intake_issue_model
@@ -256,7 +298,9 @@ def validate_hybrid_provider_settings(settings: Settings) -> HybridFactGeneratio
         base_url=base.base_url,
         temperature=base.temperature,
         timeout_seconds=base.timeout_seconds,
-        sdk_retries=base.sdk_retries,
+        sdk_retries=0,
+        retry_stack_version="application_v2",
+        transport_policy=IntakeTransportPolicy.from_settings(settings),
         structured_retries=base.structured_retries,
         concurrency=base.concurrency,
         inter_case_pacing_seconds=base.inter_case_pacing_seconds,
@@ -320,11 +364,19 @@ async def run_hybrid_fact_development(
     matrix_path: Path,
     now: Callable[[], datetime] = _utc_now,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    request_pacing_seconds: float = 0,
+    inter_case_pacing_seconds: float = 1,
 ) -> HybridFactDevelopmentReport:
     """Execute one label-isolated, paced, write-once Hybrid Fact V2 run."""
 
     _validate_output_namespace(paths, run_id)
-    generation_config = validate_hybrid_provider_settings(settings)
+    generation_config = HybridFactGenerationConfig.model_validate(
+        {
+            **validate_hybrid_provider_settings(settings).model_dump(),
+            "request_pacing_seconds": request_pacing_seconds,
+            "inter_case_pacing_seconds": inter_case_pacing_seconds,
+        }
+    )
     matrix_bytes = matrix_path.read_bytes()
     matrix_cases = load_split_inference_synthetic_cases(matrix_path)
     if tuple(cases) != matrix_cases:
@@ -345,10 +397,13 @@ async def run_hybrid_fact_development(
     _require_absent_outputs(paths)
     write_exclusive(paths.claim, canonical_json_bytes(claim.model_dump(mode="json")))
 
+    async def paced_case_sleep(_registered_legacy_delay: float) -> None:
+        await sleep(generation_config.inter_case_pacing_seconds)
+
     records = await capture_split_inference_predictions(
         cases,
         extractor=extractor,
-        sleep=sleep,
+        sleep=paced_case_sleep,
     )
     prediction_bytes = _prediction_jsonl_bytes(records)
     write_exclusive(paths.predictions, prediction_bytes)

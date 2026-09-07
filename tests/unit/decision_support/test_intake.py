@@ -198,7 +198,7 @@ async def test_default_compiler_deterministically_admits_a_supported_proposal() 
 
 
 @pytest.mark.asyncio
-async def test_default_compiler_rejects_missing_evidence_without_blocking_issue_boundary() -> None:
+async def test_default_compiler_and_issue_eligibility_reject_missing_only_evidence() -> None:
     source = case_input("Thông tin ngày nghỉ chưa được cung cấp.")
     client = ParseClient(
         [
@@ -217,9 +217,7 @@ async def test_default_compiler_rejects_missing_evidence_without_blocking_issue_
     ).extract_with_transport_audit(source)
 
     assert result.facts == []
-    assert [issue.issue_code for issue in result.candidate_issues] == [
-        IssueCode.EMPLOYEE_UNILATERAL_TERMINATION
-    ]
+    assert result.candidate_issues == []
     assert audit.fact_proposal_count == 1
     assert audit.fact_compiler_admitted_count == 0
     assert audit.fact_compiler_rejected_count == 1
@@ -227,6 +225,11 @@ async def test_default_compiler_rejects_missing_evidence_without_blocking_issue_
         "EVIDENCE_MISSING",
     )
     assert audit.missing_count == 1
+    assert audit.issue_proposal_count == 1
+    assert audit.issue_eligibility_admitted_count == 0
+    assert tuple(reason.value for reason in audit.issue_eligibility_rejection_reasons) == (
+        "ISSUE_TERMINATION_EVIDENCE_MISSING_OR_UNKNOWN_ONLY",
+    )
     assert audit.unknown_count == 0
     assert audit.negated_count == 0
     assert audit.non_present_excluded_count == 1
@@ -234,7 +237,35 @@ async def test_default_compiler_rejects_missing_evidence_without_blocking_issue_
 
 
 @pytest.mark.asyncio
-async def test_default_compiler_audits_each_rejection_without_removing_issue_output() -> None:
+async def test_issue_eligibility_filters_case_020_term_false_positive_after_provider() -> None:
+    source = case_input(
+        "Tôi muốn chấm dứt hợp đồng; chưa có thông tin về trường hợp báo trước đặc biệt."
+    )
+    client = ParseClient(
+        [
+            fact_result(),
+            issue_result("CONTRACT_TERM", "EMPLOYEE_UNILATERAL_TERMINATION"),
+        ]
+    )
+
+    result, audit = await OpenAIStructuredCaseIntakeExtractor(
+        settings(), client
+    ).extract_with_transport_audit(source)
+
+    assert result.facts == []
+    assert [issue.issue_code for issue in result.candidate_issues] == [
+        IssueCode.EMPLOYEE_UNILATERAL_TERMINATION
+    ]
+    assert audit.issue_proposal_count == 2
+    assert audit.issue_eligibility_admitted_count == 1
+    assert audit.issue_eligibility_rejected_count == 1
+    assert tuple(reason.value for reason in audit.issue_eligibility_rejection_reasons) == (
+        "ISSUE_CONTRACT_TERM_SIGNAL_ABSENT",
+    )
+
+
+@pytest.mark.asyncio
+async def test_default_compiler_and_issue_eligibility_audit_independent_rejections() -> None:
     source = case_input(
         "Hợp đồng có thời hạn 18 tháng. "
         "Thông tin ngày nghỉ chưa được cung cấp. "
@@ -272,9 +303,7 @@ async def test_default_compiler_audits_each_rejection_without_removing_issue_out
     ).extract_with_transport_audit(source)
 
     assert [fact.normalized_value for fact in result.facts] == [18]
-    assert [issue.issue_code for issue in result.candidate_issues] == [
-        IssueCode.EMPLOYEE_UNILATERAL_TERMINATION
-    ]
+    assert result.candidate_issues == []
     assert audit.fact_proposal_count == 5
     assert audit.fact_compiler_admitted_count == 1
     assert audit.fact_compiler_rejected_count == 4
